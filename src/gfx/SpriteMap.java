@@ -3,8 +3,8 @@ package gfx;
 import java.util.HashMap;
 import java.util.Map;
 
-import Datatypes.StringExt;
 import cont.TextureController;
+import datatypes.StringExt;
 
 public class SpriteMap {
 	private boolean hasUp;

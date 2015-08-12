@@ -1,9 +1,11 @@
 package obj.prt;
 
 import object.primitive.Drawable;
+import object.primitive.Positionable;
 
-public class Particle extends Drawable {
+public abstract class Particle extends Positionable {
 
-	public Particle(double x, double y, double z) {
+	public Particle(float x, float y, float z) {
+		super(x,y,z,false,false);
 	}
 }

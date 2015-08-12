@@ -1,6 +1,6 @@
 package window;
 
-import Datatypes.Inventory;
+import datatypes.Inventory;
 import io.Mouse;
 import obj.itm.Item;
 import obj.itm.ItemBlueprint;
@@ -21,7 +21,7 @@ public class ItemButton extends RectButton {
 		itemType = ItemController.get(name);
 	}
 	
-	public void draw(float frameX, float frameY) {
+	public byte draw(float frameX, float frameY) {
 		
 		float dX,dY, s, iX,iY;
 		dX = frameX+x();
@@ -61,6 +61,8 @@ public class ItemButton extends RectButton {
 			
 		GOGL.setColor(new RGBA(1,1,1,getGlow()*.5f));
 		GOGL.fillRectangle(dX,dY,w(),h());
+		
+		return -1;
 	}
 
 	private void buyOne() {

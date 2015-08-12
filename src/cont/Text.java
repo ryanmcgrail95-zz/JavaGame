@@ -1,5 +1,7 @@
 package cont;
 
+import datatypes.PrintString;
+import datatypes.StringExt;
 import io.Controller;
 import io.Mouse;
 import object.actor.Actor;
@@ -11,11 +13,11 @@ import gfx.Camera;
 import gfx.GLText;
 import gfx.GOGL;
 import gfx.RGBA;
-import Datatypes.PrintString;
 
 public final class Text {
+	private static StringExt fullString;
 	private static PrintString textString;
-	private static boolean isTalking = false;
+	private static boolean isTalking = false, isBoxAbove = false;
 	private static float onscreenFrac;
 	
 	// FX
@@ -25,13 +27,26 @@ public final class Text {
 	private Text() {};
 
 	public static void ini() {
+		fullString = new StringExt("");
 		textString = new PrintString("");
 		bounceTimer = new Timer(0,20);
 		shockTimer = new Timer(0,20);
 	}
 	
 	public static void set(String str) {
-		textString.set(str);
+		fullString.set(str);
+		getNextSection();
+	}
+	
+	public static void getNextSection() {
+		String nextStr = "", line;
+		
+		if(!fullString.isEmpty())		
+			for(int i = 0; i < 4; i++) {
+				line = fullString.chompLine();
+				nextStr += line + "\n";
+			}
+		textString.set(nextStr);
 	}
 	
 	private static boolean moveOnscreen() {
@@ -53,7 +68,11 @@ public final class Text {
 		float r = 24, p = 8;
 		float boxX, boxY;
 		boxX = r;
-		boxY = r - (1-onscreenFrac)*124 - Math2D.calcLenY(16,180*bounceTimer.getFraction());
+		
+		if(isBoxAbove)
+			boxY = r - (1-onscreenFrac)*124 - Math2D.calcLenY(16,180*bounceTimer.getFraction());
+		else
+			boxY = 480 + (-onscreenFrac)*124 - Math2D.calcLenY(16,180*bounceTimer.getFraction());
 		
 		if(isShaking()) {
 			boxX += shakeStrength*MathExt.rnd(-1,1);
@@ -68,11 +87,13 @@ public final class Text {
 		GOGL.setColor(new RGBA(0,0,0,.8f));
 		GOGL.fillRectangle(boxX,boxY, 640-(2*r), 100);
 		
+		float s = 1.0f;
+		
 		GOGL.forceColor(RGBA.WHITE);
-		GLText.drawString(boxX+p,boxY+p, 1,1, textString);
+		GLText.drawString(boxX+p,boxY+p, s,s, 8, textString);
 
 		if(moveOnscreen())
-			if(textString.advance()) {
+			if(textString.advance("blipMale")) {
 				GOGL.setColor(RGBA.WHITE);
 				float bX,bY,tX,tY;
 				bX = boxX+(640-2*r);
@@ -82,10 +103,13 @@ public final class Text {
 				GOGL.fillCircle(tX,tY, 8, 3);
 				
 				if(Controller.getActionPressed()) {
-					close();
-					
-					if(isTalking)
-						Camera.unlock();
+					if(fullString.isEmpty()) {
+						close();
+						if(isTalking)
+							Camera.unlock();
+					}
+					else
+						getNextSection();
 				}
 			}
 
@@ -115,14 +139,26 @@ public final class Text {
 		aX = Math2D.calcLenX(talkDis,talkDir-90);
 		aY = Math2D.calcLenY(talkDis,talkDir-90);
 		
-		a1.setPos(cX+aX,cY+aY);
-		a1.face(a2);
 		
-		a2.setPos(cX-aX,cY-aY);
-		a2.face(a1);
+		a1.taskClear();
+		a1.taskMoveTo(cX+aX,cY+aY);
+		a1.taskFace(a2);
+				
+		a2.taskClear();
+		a2.taskMoveTo(cX-aX,cY-aY);
+		a2.taskFace(a1);
 
 		Text.set(string);
-		Camera.focus(96,talkDir,10, a1,a2);
+		
+		boolean above = true;
+		isBoxAbove = above;
+		if(above) {
+			Camera.focus(96,talkDir,10, a1,a2);
+		}
+		else {
+			Camera.focus(96,talkDir,-10, a1,a2);
+			Camera.setFocusTranslation(0,0,-15);
+		}
 		Camera.smooth(10);
 		Camera.lock();		
 	}

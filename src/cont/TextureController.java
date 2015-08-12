@@ -3,6 +3,7 @@ package cont;
 import fl.FileExt;
 import gfx.GOGL;
 import gfx.TextureExt;
+import image.filter.BGEraserFilter;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -30,87 +31,52 @@ public class TextureController {
 	private static Map<String, TextureExt> texMap = new HashMap<String, TextureExt>();
 	private static float time = 0;
 	
-	
-	public static void update(float deltaT) {
-		time += 1*deltaT;
-		
-		if(time > 360)
-			time -= 360;
-	}
-	
 	public static float getTime() {
 		return time;
 	}
 	
 		
-	public static TextureExt loadTexture(String fileName, String name, byte method) {
+	public static TextureExt load(String fileName, String name, byte method) {
 	    TextureExt texExt;
 	    
+	    	    
+	    try {
+		    if(fileName.endsWith(".gif"))
+		    	texExt = loadMulti(fileName, method);
+		    else
+		    	texExt = loadSingle(fileName); 
+	        //Add Texture to Map
+	        	texMap.put(name, texExt);
+	        	
+	        return texExt;
+	    } catch(IOException e) {
+	    	GameController.end("Failed to load texture: " + name + ".");
+	    }
 	    
-	    System.out.println(fileName);
-	    
-	    if(fileName.endsWith(".gif"))
-	    	texExt = loadMultiTexture(fileName, method);
-	    else
-	    	texExt = loadSingleTexture(fileName);
-	    	        
-        //Add Texture to Map
-        	texMap.put(name, texExt);
-        	
-        return texExt;
+	    return null;
 	}
 	
 	
-	private static TextureExt loadSingleTexture(String fileName) {
+	private static TextureExt loadSingle(String fileName) throws IOException {
+
 		//Load Image
-		//TextureLoader loader = new TextureLoader(fileName, null);
-        //ImageComponent2D image = loader.getImage();     
-		
-		//File f = new File("bin/"+fileName);
-		//System.out.println(f.getAbsolutePath());
-		
-		BufferedImage img = ImageController.loadImage(fileName);
-		
-		//ImageComponent2D image = new ImageComponent2D(ImageComponent2D.FORMAT_RGBA, img);
-	
-	    //Get Texture from Image
-	        //Texture2D texture = new Texture2D(Texture.BASE_LEVEL, Texture.RGBA, image.getWidth(), image.getHeight());
-	        //texture.setImage(0, image);
-	        	        		
-	        TextureExt texExt = new TextureExt(GOGL.createTexture(img, false), img);//texture);
+		TextureExt texExt = new TextureExt(ImageLoader.load(fileName));
 	        
         return texExt;
 	}
 	
-	private static TextureExt loadMultiTexture(String fileName, byte method) {
+	private static TextureExt loadMulti(String fileName, byte method) throws IOException {
 		List<BufferedImage> frames;
-		List<Texture> texs = new ArrayList<Texture>();
 		Texture texture;
 		
-		try {
-			frames = getFrames(FileExt.get(fileName));
-			
-			
-			
-			for(BufferedImage i : frames) {
-				if(method == M_BGALPHA)
-					eraseBackground(i);
-								
-				//image = new ImageComponent2D(ImageComponent2D.FORMAT_RGBA8, i);
-								
-			    //Get Texture from Image
-					texture = GOGL.createTexture(i, false);
-					//texture = new Texture2D(Texture2D.BASE_LEVEL, Texture2D.RGBA, image.getWidth(), image.getHeight());
-			        //texture.setImage(0, image);
-			        
-		        texs.add(texture);
-			}
-			
-			return new TextureExt(texs, frames);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+		
+		frames = getFrames(FileExt.get(fileName));		
+
+		if(method == M_BGALPHA)
+			for(BufferedImage i : frames)
+				(new BGEraserFilter()).filter(i,i);
+		
+		return new TextureExt(frames);
 	}
 	
 	
@@ -126,24 +92,6 @@ public class TextureController {
 	    return frames;
 	}
 	
-	public static void eraseBackground(BufferedImage img) {
-		Graphics g;
-		int bg, erase;
-		int w, h;
-						
-		g = img.getGraphics();
-		w = img.getWidth();
-		h = img.getHeight();
-		
-		bg = img.getRGB(0, h-1);
-		erase = (new Color(0f, 0f, 0f, 0f)).getRGB();
-		
-		for(int x = 0; x < w; x++)
-			for(int y = 0; y < h; y++)
-				if(img.getRGB(x, y) == bg) {
-					img.setRGB(x, y, erase);
-				}
-	}
 	
 	public static BufferedImage addAlpha(BufferedImage bi) {
 	     int w = bi.getWidth();
@@ -156,28 +104,26 @@ public class TextureController {
 	     return bia;
 	}
 	
-	public static TextureExt getTextureExt(String name) {
-		return texMap.get(name);
-	}
-	
-	public static Texture getTexture(String name) {
-		return texMap.get(name).getFrame(0);
-	}
+	public static TextureExt getTextureExt(String name) {return texMap.get(name);}
+	public static Texture getTexture(String name) 		{return texMap.get(name).getFrame(0);}
 
 	public static void ini() {
-        TextureController.loadTexture("Resources/Images/Shadows/shadow.png", "texShadow", TextureController.M_NORMAL);
-
-		TextureController.loadTexture("Resources/Images/wall.png", "texBricks", TextureController.M_NORMAL);
-        TextureController.loadTexture("Resources/Images/Shadows/blockShadow.png", "texBlockShadow", TextureController.M_NORMAL);
+		load("Resources/Images/Shadows/shadow.png", "texShadow", TextureController.M_NORMAL);
+	
+		load("Resources/Images/wall.png", "texBricks", TextureController.M_NORMAL);
+        load("Resources/Images/Shadows/blockShadow.png", "texBlockShadow", M_NORMAL);
         
-        TextureController.loadTexture("Resources/Images/Items/coin.gif", "texCoin", TextureController.M_BGALPHA);
+        load("Resources/Images/Items/coin.gif", "texCoin", M_BGALPHA);
+        
+        load("Resources/Images/bg.png", "texPicross", M_NORMAL);
         
         //Load Particles
-        TextureController.loadTexture("Resources/Images/Particles/dust.gif", "texDust", TextureController.M_BGALPHA);
+        load("Resources/Images/Particles/dust.gif", "texDust", M_BGALPHA);
         
+        load("Resources/Images/gameboy.png", "texGameboy", M_NORMAL);
 
         //BattleStar Images
-        TextureController.loadTexture("Resources/Images/Battle/damageStar.gif", "texDamageStar", TextureController.M_BGALPHA);
-        TextureController.loadTexture("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", TextureController.M_BGALPHA);
+        load("Resources/Images/Battle/damageStar.gif", "texDamageStar", M_BGALPHA);
+        load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
 	}
 }

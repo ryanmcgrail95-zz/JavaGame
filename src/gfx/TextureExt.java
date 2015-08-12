@@ -33,15 +33,13 @@ public class TextureExt {
 		}
 	}
 	
-	public TextureExt(Texture texture, BufferedImage img) {
-		//PROBLEM
-		addFrame(texture, img);
-	}
-	
-	public TextureExt(List<Texture> textures, List<BufferedImage> imgs) {
+	public TextureExt(BufferedImage img) {
+		addFrame(img);
+	}	
+	public TextureExt(List<BufferedImage> imgs) {
 		
-		//PROBLEM?
-		frameList = textures;
+		for(BufferedImage i : imgs)
+			addFrame(i);
 		imgList = imgs;
 		imageNumber = frameList.size();
 	}
@@ -50,8 +48,8 @@ public class TextureExt {
 		return imageNumber;
 	}
 	
-	public void addFrame(Texture frame, BufferedImage img) {
-		frameList.add(frame);
+	public void addFrame(BufferedImage img) {
+		frameList.add(GOGL.createTexture(img, false));
 		imgList.add(img);
 		imageNumber++;
 	}
@@ -168,7 +166,7 @@ public class TextureExt {
 				cau.setScale(10);
 				cau.filter(waterImg, waterImg);
 				
-				TextureController.eraseBackground(waterImg);
+				//TextureController.eraseBackground(waterImg);
 				
 				BlurFilter blCau = new BlurFilter();
 				blCau.filter(waterImg, waterImg);
@@ -219,7 +217,7 @@ public class TextureExt {
 			case E_EDGE:
 				LaplaceFilter e = new LaplaceFilter();
 				e.filter(curImg, outImg);
-				TextureController.eraseBackground(outImg);
+				//TextureController.eraseBackground(outImg);
 				break;
 				
 			case E_DISSOLVE:

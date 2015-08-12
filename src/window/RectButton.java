@@ -4,11 +4,11 @@ import io.Mouse;
 
 public abstract class RectButton extends Button {
 
-	public RectButton(float x, float y, float w, float h) {
+	public RectButton(int x, int y, int w, int h) {
 		super(x, y, w, h);
 	}
 	
 	public boolean checkMouse() {		
-		return Mouse.checkRectangle(getScreenX(),getScreenY(), w(),h());
+		return getParent().checkRectangle(x(),y(),w(),h());
 	}
 }

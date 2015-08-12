@@ -12,11 +12,11 @@ import javax.swing.JPanel;
 
 import gfx.GOGL;
 import object.primitive.Updatable;
-import resource.sound.SoundController;
+import resource.sound.Sound;
 import time.Delta;
 
 
-public class GameController extends Frame implements WindowListener {	
+public class GameController extends JFrame implements WindowListener {	
 
 	private static GameController instance;
 	private boolean isRunning = true;
@@ -40,10 +40,11 @@ public class GameController extends Frame implements WindowListener {
         // We'll ask the width and height by this 
 
     	this.setVisible(true);
-    	setSize(GOGL.SCREEN_WIDTH, GOGL.SCREEN_HEIGHT);
+    	//setSize(GOGL.SCREEN_WIDTH, GOGL.SCREEN_HEIGHT);
+    	setSize(GOGL.SCREEN_WIDTH+2*GOGL.BORDER_LEFT, GOGL.SCREEN_HEIGHT+GOGL.BORDER_LEFT+GOGL.BORDER_TOP);
     	setResizable(false);
     	    	
-    	SoundController.ini();
+    	Sound.ini();
         GOGL.start3D(this);
 	    
         
@@ -84,7 +85,7 @@ public class GameController extends Frame implements WindowListener {
 	          // update our FPS counter if a second has passed since
 	          // we last recorded
 	          if (lastFpsTime >= 1000000000) {
-	             System.out.println("(FPS: "+fps+")");
+	             //System.out.println("(FPS: "+fps+")");
 	             lastFpsTime = 0;
 	             fps = 0;
 	          }
@@ -110,7 +111,7 @@ public class GameController extends Frame implements WindowListener {
 	    } 	
 
 	public void windowClosing(WindowEvent arg0) {
-		System.exit(0);		
+		end("");
 	}
 
 	public void windowActivated(WindowEvent arg0) {}
@@ -119,4 +120,29 @@ public class GameController extends Frame implements WindowListener {
 	public void windowDeiconified(WindowEvent arg0) {}
 	public void windowIconified(WindowEvent arg0) {}
 	public void windowOpened(WindowEvent arg0) {}
+
+	public static void end(String string) {
+		if(string != "")
+			System.out.println(string);
+		
+        Sound.unload();
+		
+		System.exit(0);
+	}
+
+	/*public static BufferedImage getScreenshot() {
+		Rectangle rec = getInstance().getBounds();
+		BufferedImage img = null;
+	    try {
+			img = new Robot().createScreenCapture(rec);
+		} catch (AWTException e) {
+			e.printStackTrace();
+		}
+	    
+	    // CHANGE ME LATER
+	    BufferedImage wtf =  new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+	    wtf.getGraphics().drawImage(img, 0, 0, null);
+	    
+	    return wtf;
+	}*/
 }

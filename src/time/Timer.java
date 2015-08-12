@@ -9,11 +9,17 @@ import functions.MathExt;
 public class Timer {
 	private float time, maxTime;
 	private static List<Timer> timerList = new ArrayList<>();
-	private boolean isActive;
+	private boolean isActive, isAutomatic;
 	
 	
 	
 	// CONSTRUCTORS
+		public Timer(float time, boolean isActive) {
+			this.time = this.maxTime = time;
+			this.isActive = isActive;
+			
+			timerList.add(this);
+		}
 		public Timer(float time, float timeMax) {
 			this.time = time;
 			this.maxTime = timeMax;
@@ -52,8 +58,11 @@ public class Timer {
 			tick(1);
 		}
 		public void tick(float deltaTime) {
-			if(isActive)
+			if(isActive) {
 				time = MathExt.contain(0, time-deltaTime, time);
+				if(isAutomatic)
+					check();
+			}
 		}
 		
 		
@@ -98,5 +107,14 @@ public class Timer {
 		}
 		public float getFraction() {
 			return time/maxTime;
+		}
+		public boolean getActive() {
+			return isActive;
+		}
+		public void setMax(float mT) {
+			maxTime = mT;
+		}
+		public float getMax() {
+			return maxTime;
 		}
 }

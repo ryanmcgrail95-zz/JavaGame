@@ -41,4 +41,9 @@ public class Controller {
 	public static boolean getActionPressed() {
 		return IO.getAButtonPressed();
 	}
+
+
+	public static float getDPadDir() {
+		return Keyboard.getWASDDir();
+	}
 }

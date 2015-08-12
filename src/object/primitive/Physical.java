@@ -1,6 +1,6 @@
 package object.primitive;
-import Datatypes.SortedList;
-import Datatypes.vec3;
+import datatypes.vec3;
+import datatypes.lists.CleanList;
 import object.environment.FloorBlock;
 import functions.Math2D;
 import functions.MathExt;
@@ -8,15 +8,13 @@ import gfx.Camera;
 import gfx.GOGL;
 
 
-public abstract class Physical extends Drawable {
-	private static SortedList<Physical> physicalList = new SortedList<Physical>();
+public abstract class Physical extends Positionable {
+	private static CleanList<Physical> physicalList = new CleanList<Physical>();
 	//protected final static float CHAR_SPEED = 1, MAX_SPEED = CHAR_SPEED*2.6f; //CHAR_SPEED*1.5
-	protected final static float GRAVITY_ACCEL = .8f, JUMP_SPEED = Math2D.calcSpeed(24,GRAVITY_ACCEL);
+	protected final static float GRAVITY_ACCEL = .5f, //.8f
+			JUMP_SPEED = Math2D.calcSpeed(64,GRAVITY_ACCEL);
 	protected float maxSpeed;
-	
-	protected float x, xP, y, yP, z, zP;
-	private float xVel, yVel, zVel, direction;
-	
+		
 	protected boolean inAir, onFloor;
 	protected FloorBlock curFloor = null;
 	protected float floorZ = 0;
@@ -30,14 +28,8 @@ public abstract class Physical extends Drawable {
 	protected boolean autoXYVel = true;	
 	
 	
-	public Physical(float nX, float nY, float nZ) {
-		super(true);
-		
-		x = xP = nX;
-		y = yP = nY;
-		z = zP = nZ;
-		
-		xVel = yVel = zVel = 0;
+	public Physical(float x, float y, float z) {
+		super(x,y,z,true,false);
 		
 		maxSpeed = MathExt.INFINITY;
 		
@@ -48,10 +40,6 @@ public abstract class Physical extends Drawable {
 		super.destroy();
 		
 		physicalList.remove(this);
-	}
-	
-	public static void clean() {
-		physicalList.clean();
 	}
 	
 	public abstract boolean collide(Physical other);
@@ -70,64 +58,22 @@ public abstract class Physical extends Drawable {
 		return didCol;
 	}
 	
-	public void update(float deltaT) {
-		super.update(deltaT);
-		
+	public void update() {		
 		updatePosition();
-		
 		collideAll();
 	}
 	
 	public void updatePosition() {
-		xP = x;
-		yP = y;
-		zP = z;
-		
-		
 		//Contain Velocity
 		containXYSpeed(maxSpeed);
-
 				
-		//Add Velocity to Position
-		if(autoXYVel) {
-			x += xVel;
-			y += yVel;
-		}
-		z += zVel;
+		super.updatePosition();
 		
-		zVel -= GRAVITY_ACCEL;
-		
-		direction = getDirection();
-	}
-	
-	
-	public float calcDis(Physical other) {
-		return Math2D.calcPtDis(x, y, other.x, other.y);
-	}
-	
-	public float calcDir(Physical other) {
-		return Math2D.calcPtDir(x, y, other.x, other.y);
+		addZVelocity(-GRAVITY_ACCEL);
 	}
 
 	
-	//ACCESSOR AND MUTATOR FUNCTIONS
-		public void setX(float x) 	{this.x = x;}
-		public void setY(float y) 	{this.y = y;}
-		public void setZ(float z) 	{this.z = z;}
-		
-		public float getX() 		{return x;}
-		public float getY() 		{return y;}
-		public float getZ() 		{return z;}
-		public vec3 getPosition() 	{return new vec3(x,y,z);}
-
-		public float getXPrevious() {return xP;}
-		public float getYPrevious() {return yP;}
-		public float getZPrevious() {return zP;}
-		
-		public float getXVelocity() {return xVel;}
-		public float getYVelocity() {return yVel;}
-		public float getZVelocity() {return zVel;}
-		
+	//ACCESSOR AND MUTATOR FUNCTIONS		
 		public boolean getInAir() {
 			return inAir;
 		}
@@ -139,54 +85,22 @@ public abstract class Physical extends Drawable {
 		
 		public void didCollideFloor(float floorZ) {
 			boolean isItem = (type == T_ITEM);
-
-		    /*if(object_get_parent(object_index) == parPlayer)
-		        if(enterPipe == 3)
-		            enterPipe = 0;*/
 			    
 			this.floorZ = floorZ;
 			onFloor = true;
 			
-			z = floorZ;
+			setZ(floorZ);
 
 			land();
-			        
-			/*if(type == T_PLAYER)
-			    if(global.currentAction == "stomp_drop" || global.currentAction == "stomp_up")
-			    { 
-			        if(stompTimer == -1) {
-			            sound_play(sndStomp12);
-			            stompTimer = 5;
-			            global.cameraUp = 2;
-			        }
-			        if(stompTimer == 0) {
-			            sprite = sprStill;
-			            global.currentAction = "";
-			            zRotate = 0
-			        }
-			        if(stompTimer == 3)
-			            global.cameraUp = 0;
-			    }*/
 		}
 		
 		
-		public void setCurrentFloor(FloorBlock floorBlock) {
-			this.curFloor = floorBlock;
-		}
+		public void setCurrentFloor(FloorBlock floorBlock) {this.curFloor = floorBlock;}
+		public FloorBlock getCurrentFloor() {return curFloor;}
+		public float getFloorZ() {return floorZ;}
 		
-		public FloorBlock getCurrentFloor() {
-			return curFloor;
-		}
-		public float getFloorZ() {
-			return floorZ;
-		}
-		
-		public boolean isPlayer() {
-			return (type == T_PLAYER);
-		}
-		public boolean isItem() {
-			return (type == T_ITEM);
-		}
+		public boolean isPlayer() {return (type == T_PLAYER);}
+		public boolean isItem() {return (type == T_ITEM);}
 		
 		public abstract void land();
 		
@@ -198,14 +112,14 @@ public abstract class Physical extends Drawable {
 			boolean didCol;
 			float vX, vY, lineDis, segDis, curDir, wallDir, outDir;
 			
-			vX = xVel;
-			vY = yVel;
+			vX = getXVelocity();
+			vY = getYVelocity();
 			
-			lineDis = Math2D.calcLineDis(x, y, x1, y1, x2, y2, false);
-			segDis = Math2D.calcLineDis(x, y, x1, y1, x2, y2, true);
+			lineDis = Math2D.calcLineDis(x(), y(), x1, y1, x2, y2, false);
+			segDis = Math2D.calcLineDis(x(), y(), x1, y1, x2, y2, true);
 			
-			curDir = Math2D.calcLineDir(x,y,x1,y1,x2,y2,false);
-			wallDir = Math2D.calcLineDir(x-10000*vX,y-10000*vY,x1,y1,x2,y2,false);
+			curDir = calcLineDir(x1,y1,x2,y2,false);
+			wallDir = Math2D.calcLineDir(x()-10000*vX,y()-10000*vY,x1,y1,x2,y2,false);
 			
 			//if(Math.abs(Math2D.calcAngDiff(wallDir,direction)) >= 90)
 			outDir = wallDir+180;
@@ -213,109 +127,56 @@ public abstract class Physical extends Drawable {
 			
 			didCol = (segDis <= size);
 			
-			if(didCol) {	
-				x += Math2D.calcLenX(size-lineDis,outDir);
-				y += Math2D.calcLenY(size-lineDis,outDir);
-			}
+			if(didCol)
+				step(size-lineDis,outDir);
 			
 			return didCol;
 		}
 		
-		public boolean collideSegment(float x1, float y1, float x2, float y2) {
+		public boolean collideSegment(float x1, float y1, float x2, float y2) {return collideSegment(x1,y1, x2,y2, false);}
+		public boolean collideSegment(float x1, float y1, float x2, float y2, boolean oneWay) {
 			boolean didCol;
 			float dis, dir;
 			
-			dis = Math2D.calcLineDis(x, y, x1, y1, x2, y2, true);
+			dis = calcLineDis(x1, y1, x2, y2, true);
 			didCol = (dis <= size);
 			
+			if(oneWay)
+				if(Math.abs(Math2D.calcAngDiff(calcLineDir(x1,y1,x2,y2,true),Math2D.calcPtDir(x1,y1,x2,y2)-90)) > 90)
+					didCol = false;
+					
 			if(didCol) {
-				dir = Math2D.calcLineDir(x,y,x1,y1,x2,y2,true)+180;
+				dir = calcLineDir(x1,y1,x2,y2,true)+180;
 				
-				x += Math2D.calcLenX(size-dis,dir);
-				y += Math2D.calcLenY(size-dis,dir);
+				step(size-dis,dir);
 			}
 			
 			return didCol;
 		}
 		
-		private float calcCamDis() {
-			return Camera.calcPerpDistance(x,y);
+		public boolean collideCircle(float x, float y, int r) {
+			float dis, dir;
+			dis = calcPtDis(x,y);
+			
+			if(dis < r) {
+				dir = calcPtDir(x,y)+180;
+				step(r-dis,dir);
+				return true;
+			}
+			else
+				return false;
+		}
+		
+		public boolean collideRectangle(float x, float y, float w, float h) {
+			return (collideSegment(x+w,y-h,x-w,y-h,true) ||
+					collideSegment(x-w,y+h,x+w,y+h,true) || 
+					collideSegment(x-w,y-h,x-w,y+h,true) || 
+					collideSegment(x+w,y+h,x+w,y-h,true));
 		}
 		
 		
 	// Velocity Functions
-		public void setVelocity(float nV) {
-			setXVelocity(nV);
-			setYVelocity(nV);
-			setZVelocity(nV);
-		}
-		public void setVelocity(float nX, float nY) {
-			setXVelocity(nX);
-			setYVelocity(nY);
-		}
-		public void setXVelocity(float nX) {
-			xVel = nX;
-		}
-		public void setYVelocity(float nY) {
-			yVel = nY;
-		}
-		public void setZVelocity(float nZ) {
-			zVel = nZ;
-		}
-		public void setXYSpeed(float newSpd) {
-			float dir = getDirection();
-			
-			xVel = Math2D.calcLenX(newSpd, dir);
-			yVel = Math2D.calcLenY(newSpd, dir);
-		}
-		public float getXYSpeed() {
-			return Math2D.calcLen(xVel,yVel);
-		}
-		public void addXYSpeed(float addAmt) {
-			setXYSpeed(getXYSpeed() + addAmt);
-			containXYSpeed(maxSpeed);
-		}
-		public float getSpeed() {
-			return Math2D.calcLen(xVel,yVel,zVel);
-		}
+
 		
 		//protected final static float CHAR_SPEED = 1, MAX_SPEED = CHAR_SPEED*2.6f; //CHAR_SPEED*1.5
-
-		public void containXYSpeed(float maxSpeed) {
-			float spd, f;
-			spd = getXYSpeed();
-					
-			if(spd == 0)
-				return;
-			
-			f = (float) (MathExt.contain(0, spd, maxSpeed)/spd);
-			xVel *= f;
-			yVel *= f;
-		}
-		public void containSpeed(float maxSpeed) {
-			float spd, f;
-			spd = getSpeed();
-					
-			if(spd == 0)
-				return;
-			
-			f = (float) Math.sqrt(MathExt.contain(0, spd, maxSpeed)/spd);
-			xVel *= f;
-			yVel *= f;
-			zVel *= f;
-		}
-
-		public void setDirection(float newDir) {
-			float xySpd;
-			xySpd = getXYSpeed();
-			
-			xVel = Math2D.calcLenX(xySpd, newDir);
-			yVel = Math2D.calcLenY(xySpd, newDir);
-		}
-		public float getDirection() {
-			if(getXYSpeed() == 0)
-				return direction;
-			else
-				return Math2D.calcPtDir(0,0,xVel,yVel);
-		}
 }

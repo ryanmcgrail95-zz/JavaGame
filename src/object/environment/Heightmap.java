@@ -3,22 +3,24 @@ package object.environment;
 import io.IO;
 import io.Mouse;
 import object.actor.Player;
+import object.primitive.Collideable;
+import object.primitive.Drawable;
 import object.primitive.Physical;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.Camera;
 import gfx.GOGL;
 import gfx.TextureExt;
-import Datatypes.LinearGrid;
-import Datatypes.mat3;
-import Datatypes.vec2;
-import Datatypes.vec3;
 
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
+import datatypes.LinearGrid;
+import datatypes.mat3;
+import datatypes.vec2;
+import datatypes.vec3;
 
-public class Heightmap extends Physical {
+public class Heightmap extends Drawable implements Collideable {
 	private static Heightmap instance;
 	private float gridSize;
 	private LinearGrid heightGrid;
@@ -28,17 +30,17 @@ public class Heightmap extends Physical {
 	
 	public Heightmap(float gridSize, float maxHeight, String fileName) {
 		
-		super(0,0,0);
+		super(false,false);
 		instance = this;
 		
 		doUpdates = false;
 		this.gridSize = gridSize;
-		loadFromTexture(maxHeight, TextureController.loadTexture(fileName, fileName, TextureController.M_BGALPHA));
+		loadFromTexture(maxHeight, TextureController.load(fileName, fileName, TextureController.M_BGALPHA));
 	}
 	
 	public Heightmap(float gridSize, float maxHeight, TextureExt tex) {
 
-		super(0,0,0);
+		super(false,false);
 		instance = this;
 		
 		doUpdates = false;
@@ -52,11 +54,19 @@ public class Heightmap extends Physical {
 		
 		float[][] grid = new float[width][height];
 		normalGrid = new vec3[width][height];
-				
+	
+		float maxH, minH;
+		maxH = 0;
+		minH = 1000000;
+		
 		for(int x = 0; x < width; x++)
-			for(int y = 0; y < height; y++)
-				grid[x][y] = maxHeight*tex.getPixelColor(x,y).getValue();
-				
+			for(int y = 0; y < height; y++) {
+				grid[x][y] = maxHeight*tex.getPixelColor(x,y).getRi();
+
+				maxH = Math.max(maxH,grid[x][y]);
+				minH = Math.min(minH,grid[x][y]);
+			}
+						
 		heightGrid = new LinearGrid(grid);
 		
 		calcNormals();
@@ -83,7 +93,7 @@ public class Heightmap extends Physical {
 				get(x,y-1) - get(x,y+1),
 				gridSize*2);
 		
-		return v.norm();
+		return (vec3) v.norm();
 	}
 	public void calcNormals() {
 		for(int x = 0; x < width; x++)
@@ -105,11 +115,8 @@ public class Heightmap extends Physical {
 		
 		return false;
 	}
-
-	public void land() {
-	}
 	
-	public boolean draw() {
+	public void draw() {
 		
 		vec3 norm;
 				
@@ -141,7 +148,6 @@ public class Heightmap extends Physical {
 		}
 		GOGL.setColor(1,1,1);
 		GOGL.disableLighting();
-		return false;
 	}
 
 	public void smooth(int rad) {
@@ -168,32 +174,33 @@ public class Heightmap extends Physical {
 		return new vec3(x,y,getZ(x,y));
 	}
 	public vec3 generateRandomPointAbove(float minZ) {
-		vec3 pt;
+		vec3 pt;	
+		do {
+			pt = generateRandomPoint();
+		}
+		while(pt.z() < minZ);
 		
+		return pt;
+	}
+	public vec3 generateRandomPointBetween(float bottom, float top) {
+		vec3 pt;
 		do
 			pt = generateRandomPoint();
-		while(pt.get(2) < minZ);
+		while(pt.z() < bottom || pt.z() > top);
 		
 		return pt;
 	}
 	
 	public vec3 raycastPoint(float mouseX, float mouseY) {
 		vec3 camNorm;
-		float pX, pY, pZ;
+		vec3 pos;
 		float dir, dirZ;
-		float nX,nY,nZ;
 		
-		pX = Camera.getX();
-		pY = Camera.getY();
-		pZ = Camera.getZ();
-		
+		pos = Camera.getPosition();
 		camNorm = Camera.getNormal();
-		nX = camNorm.get(0);
-		nY = camNorm.get(1);
-		nZ = camNorm.get(2);
 		
-		dir = Math2D.calcPtDir(0,0, nX,nY);
-		dirZ = Math2D.calcPtDir(0,0, Math2D.calcPtDis(0,0,nX,nY), nZ);
+		dir = Math2D.calcPtDir(0,0, camNorm.x(),camNorm.y());
+		dirZ = Math2D.calcPtDir(0,0, Math2D.calcPtDis(0,0,camNorm.x(),camNorm.y()),camNorm.z());
 		
 		//dir += (320-mouseX)/320*40;
 		
@@ -203,33 +210,25 @@ public class Heightmap extends Physical {
 		uv.set(2, uv.get(2)+uv.len()*.05f); //.15f
 		
 		mat3 dirMat = mat3.fromEuler(Camera.getShaderNormal());
-		vec3 dirVec = dirMat.mult(uv.norm());
+		vec3 dirVec = dirMat.mult((vec3) uv.norm());
 			dirVec.println();
 			float dX, dY, dZ;
 			dX = dirVec.get(0);
 			dY = dirVec.get(1);
 			dZ = dirVec.get(2);
 		
-		nX = -dZ;
-		nY = -dX;
-		nZ = dY;
+		camNorm.set(-dZ,-dX,dY);
 		
-		/*nX = Math2D.calcPolarX(1, dir,dirZ);
-		nY = Math2D.calcPolarY(1, dir,dirZ);
-		nZ = Math2D.calcPolarZ(1, dir,dirZ);*/
 
-		if(nZ > 0)
+		if(camNorm.z() > 0)
 			return new vec3(0,0,0);
 		
 		float jumpAmt = 20;
 		
-		while(pZ > getZ(pX,pY)) {
-			pX += jumpAmt*nX;
-			pY += jumpAmt*nY;
-			pZ += jumpAmt*nZ;
-		}
+		while(pos.z() > getZ(pos.x(),pos.y()))
+			pos.adde( camNorm.mult(jumpAmt) );
 		
-		return new vec3(pX,pY,pZ);
+		return pos;
 	}
 
 	public vec3 raycastMouse() {return raycastPoint(Mouse.getMouseX(), Mouse.getMouseY());}
@@ -251,4 +250,8 @@ public class Heightmap extends Physical {
 		heightGrid = new LinearGrid(grid);
 		calcNormals();
 	}
+
+	public void update() {}
+	public boolean checkOnscreen() {return true;}
+	public float calcDepth() {return 0;}
 }

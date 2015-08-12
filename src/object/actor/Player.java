@@ -2,14 +2,9 @@ package object.actor;
 
 import obj.itm.ItemBlueprint;
 import object.environment.Heightmap;
+import io.Controller;
 import io.IO;
 import io.Mouse;
-import btl.DamageStar;
-import resource.sound.SoundController;
-import sts.Stat;
-import cont.CharacterController;
-import cont.Messages;
-import functions.Math2D;
 import gfx.Camera;
 import gfx.GOGL;
 import gfx.Overlay;
@@ -26,8 +21,8 @@ public class Player extends Actor {
 	}
 
 	//PARENT FUNCTIONS
-		public void update(float deltaT) {
-			super.update(deltaT);
+		public void update() {
+			super.update();
 			
 			if(Mouse.getRightMouse()) {
 				centerCamera(1000, 90, -89.9f);
@@ -37,7 +32,12 @@ public class Player extends Actor {
 				centerCamera(180, camDirection, -15);
 				Overlay.enable();
 			}
-		}		
+		}
+		
+	public void draw() {
+		
+		super.draw();
+	}
 	
 	//Static Functions
 	protected void control() {
@@ -62,7 +62,7 @@ public class Player extends Actor {
 		float cDir = Camera.getDirection();
 		
 		//MOVING
-			float moveDir = IO.getWASDDir();
+			float moveDir = Controller.getDPadDir();
 			
 			if(moveDir != -1)
 				stopMovingToPoint();
@@ -107,7 +107,7 @@ public class Player extends Actor {
 		instance.canControl = controllable;
 		
 		if(!controllable && stopCompletely) {
-			instance.setVelocity(0);			
+			instance.setVelocity(0,0,0);
 			instance.isMoving = false;
 		}
 	}

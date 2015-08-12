@@ -3,9 +3,9 @@ package object.actor.body;
 import java.util.ArrayList;
 import java.util.List;
 
+import datatypes.vec2;
+import datatypes.vec3;
 import time.Timer;
-import Datatypes.vec2;
-import Datatypes.vec3;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;

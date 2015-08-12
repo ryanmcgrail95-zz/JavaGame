@@ -1,134 +1,179 @@
 package object.primitive;
+import functions.Math2D;
+import gfx.Camera;
 import gfx.CameraFX;
+import gfx.GLText;
 import gfx.GOGL;
+import gfx.Gameboy;
 import gfx.Overlay;
 import gfx.RGBA;
 import gfx.Shape;
-import gui.PauseMenu;
-import io.Controller;
-import io.IO;
 import io.Mouse;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.Comparator;
 
-import Datatypes.SortedList;
 import cont.Messages;
 import cont.Text;
+import datatypes.StringExt;
+import datatypes.lists.CleanList;
 import obj.prt.Floaties;
 import object.actor.Player;
+import object.environment.Tree;
 import time.Timer;
 import window.Window;
 
-public abstract class Drawable extends Instantiable {
-	private static SortedList<Drawable> drawList = new SortedList<Drawable>();
-	private static SortedList<Drawable> hoverList = new SortedList<Drawable>();
+public abstract class Drawable extends Updatable {
+	private static CleanList<Drawable> renderList = new CleanList<Drawable>();
+	private static CleanList<Drawable> drawList = new CleanList<Drawable>();
+	private static CleanList<Drawable> hoverList = new CleanList<Drawable>();	
+	private static CleanList<Drawable> onscreenList = new CleanList<Drawable>();
+	private static CleanList<Drawable> onscreenHoverList = new CleanList<Drawable>();
+	
 	private static int colR = 1, colG = 0, colB = 0;
 	
 	// Mouse-Selection Variables
 	protected boolean isSelected = false;
-	private static Timer selectTimer = new Timer(10);
+	private static Timer selectTimer = new Timer(10), sortTimer = new Timer(60);
 
 
 	protected int R, G, B;
-	protected Shape shape;
-	protected boolean visible = true;
+	protected boolean visible = true, isHoverable = false, isRenderable = false;	
+	protected String name;
 	
-	public Drawable() {
-		super();
-		drawList.add(this);
-	}
+
 	
-	public Drawable(boolean hoverable) {
-		
-		R = colR;
-		G = colG;
-		B = colB;
-		
+	public Drawable(boolean hoverable, boolean renderable) {		
 		drawList.add(this);
 		
 		if(hoverable)
 			generateHoverColor();
+		if(renderable)
+			renderList.add(this);
 	}
 	
 	private void generateHoverColor() {
+				
+		R = colR; G = colG; B = colB;
+		
 		colR++;
 		if(colR > 255) {
-			colG++;
+			colR = 0;	colG++;
 			
-			if(colG > 255)
-				colB++;
+			if(colG > 255) {
+				colG = 0;	colB++;
+			}
 		}
 			
-		hoverList.add(this);
+		isHoverable = true;
 	}
 
-		//PARENT FUNCTIONS
-		public void update(float deltaT) {		
-			super.update(deltaT);
-		}
+	//PARENT FUNCTIONS
+	public abstract void draw();
+	
+	public void render() {}
+	public void hover() {}
 		
-		public boolean draw() {
-			return false;
-		}
-		public void hover() {
-		}
-		
-		public void destroy() {
-			drawList.remove(this);
+	public void destroy() {
+		drawList.remove(this);
+		if(isHoverable)
 			hoverList.remove(this);
-			
-			super.destroy();
-			if(shape != null)
-				shape.destroy();
-		}
+		if(isRenderable)
+			renderList.remove(this);
+		super.destroy();
+	}
 		
 		
 	//PERSONAL FUNCTIONS
-		public void setVisible(boolean visible) {
-			this.visible = visible;
-		}
+	public void setVisible(boolean visible) {this.visible = visible;}
+	public abstract boolean checkOnscreen();
+	public abstract float calcDepth();	
 	
-		
-		
 	//GLOBAL FUNCTIONS
-		public static void drawAll() {
-			int hSi = hoverList.size(), dSi = drawList.size();
-			Drawable d;
+	public static void presort() {		
+		onscreenList.clear();
+		onscreenHoverList.clear();
+		
+		byte addHover = 2;
+		if(selectTimer.check()) {
+			if(Window.checkMouseAll())
+				addHover = 1;
+			else
+				addHover = 0;
+		}
+		
+		// Sort by Depth
+		int dSi = drawList.size(), i, k;
+		for(Drawable d : drawList)
+			if(d.visible)
+				if(d.calcDepth() < Camera.getViewDistance())
+					if(d.checkOnscreen()) {
+						onscreenList.add(d);
+						
+						if(addHover == 0) {
+							if(d.isHoverable)
+								onscreenHoverList.add(d);
+						}
+						else if(addHover == 1)
+							d.isSelected = false;
+					}
+			
+		//onscreenList.sort(Drawable.Comparators.DEPTH);
+	}
+	
+		public static void display() {
+						
+			presort();
+			
+			int hSi = onscreenHoverList.size(), dSi = onscreenList.size();
 			
 			Mouse.resetCursor();
+			        	
 			
+			//GOGL.setViewport(0,0,640,480);
+
 			GOGL.setOrtho();
-			
+			for(Drawable d : renderList)
+				d.render();
 			Window.renderAll();
 			
+			
 			GOGL.setPerspective();
+			//GOGL.enableDepth();
 
-			if(selectTimer.check()) {
-				
+			if(onscreenHoverList.size() > 0) {
 				GOGL.allowLighting(false);
 				GOGL.clearScreen();
 				
-				for(int i = 0; i < hSi; i++) {
-					d = hoverList.get(i);
+				for(Drawable d : onscreenHoverList) {
 					d.isSelected = false;
 					
 					GOGL.forceColor(new RGBA(d.R/255f,d.G/255f,d.B/255f));
 					
-					if(d.visible)
-						d.draw();
+					d.draw();
 				}
 			
-				RGBA idColor = Mouse.getPixelColor();
-				float cR, cG, cB;
-				for(int i = 0; i < hSi; i++) {
-					d = hoverList.get(i);
-					
-					cR = d.R/255f;
-					cG = d.G/255f;
-					cB = d.B/255f;
-					
-					if(cR == idColor.getR() && cG == idColor.getG() && cB == idColor.getB()) {
+				RGBA idRGBA = Mouse.getPixelRGBA();
+				
+				int r,g,b;
+				r = idRGBA.getRi();
+				g = idRGBA.getGi();
+				b = idRGBA.getBi();
+				
+				if(r < 0)	r += 256;
+				if(g < 0)	g += 256;
+				if(b < 0)	b += 256;
+
+				int cR, cG, cB;
+				for(Drawable d : onscreenHoverList) {
+					cR = d.R;
+					cG = d.G;
+					cB = d.B;
+
+					if(cR == r && cG == g && cB == b) {
 						d.isSelected = true;
+						d.hover();
 						break;
 					}
 				}
@@ -136,105 +181,46 @@ public abstract class Drawable extends Instantiable {
 				GOGL.allowLighting(true);
 				GOGL.unforceColor();
 			}
-			
-			GOGL.clearScreen();
-			
+	}
 
-			//Draw BG
-			GOGL.setOrtho(-1000);
-			RGBA skyTop = new RGBA(82,142,165), skyBottom = new RGBA(198,255,255);
-			float tY = 140,bY = 300;
-			GOGL.setColor(skyTop);
-			GOGL.fillRectangle(0,0,640,tY);
-			GOGL.fillVGradientRectangle(0,tY, 640,bY-tY, skyTop, skyBottom, 10);
-			GOGL.setColor(skyBottom);
-			GOGL.fillRectangle(0,bY,640,480-bY);			
-			
-			
+	public static int getNumber() {return drawList.size();}
+		
+	public static class Comparators {
+		public final static Comparator<Drawable> DEPTH = new Comparator<Drawable>() {
+            public int compare(Drawable o1, Drawable o2) {
+                return (int) (o1.calcDepth() - o2.calcDepth());
+            }
+        };
+	}
+
+	public static void draw3D() {
+		
+		//Draw BG
+		GOGL.setOrtho(-1000);
+		RGBA skyTop = new RGBA(82,142,165), skyBottom = new RGBA(198,255,255);
+		float tY = 140,bY = 300;
+		GOGL.setColor(skyTop);
+		GOGL.fillRectangle(0,0,640,tY);
+		GOGL.fillVGradientRectangle(0,tY, 640,bY-tY, skyTop, skyBottom, 10);
+		GOGL.setColor(skyBottom);
+		GOGL.fillRectangle(0,bY,640,480-bY);
+		
+					
+		if(Camera.checkMapView())
+			GOGL.setOrthoPerspective();
+		else
 			GOGL.setPerspective();
-			for(int i = 0; i < dSi; i++) {
-				d = drawList.get(i);
-								
-				if(d.visible) {
-					d.draw();
-					
-					if(d.isSelected)
-						d.hover();
-				}
-			}
-			Floaties.draw();
-			Shape.drawAll();
-			
-			
-			GOGL.setOrtho();
-						
-			Overlay.draw();
-			
-			// Drawing 3D Metal Bar
-				/*GOGL.enableLighting();
-				GOGL.setOrtho(999);
-				GOGL.transformClear();
-				GOGL.transformTranslation(320,240,0);
-				GOGL.transformRotationX(90);
-				GOGL.transformRotationX(-30);
-				GOGL.transformRotationZ(GOGL.getTime());
-				GOGL.transformScale(10,7,10);
-				GOGL.transformRotationZ(45);
-					GOGL.draw3DFrustem(0,0,1,3.5f,2f,.8f,4);
-					GOGL.draw3DFrustem(4f,1f,4);
-				GOGL.transformClear();
-				GOGL.disableLighting();*/
+		
+		
+		for(Drawable d : onscreenList) {
+			d.draw();
 				
-			// Drawing Anvil
-				/*GOGL.enableLighting();
-				GOGL.setOrtho(999);
-				GOGL.transformClear();
-				GOGL.transformTranslation(320,240,0);
-				GOGL.transformRotationX(90);
-				GOGL.transformRotationX(-30);
-				GOGL.transformRotationZ(GOGL.getTime());
-				GOGL.transformScale(10,7,10);
-				GOGL.transformRotationZ(45);
-				
-					GOGL.transformRotationZ(-45);
-						GOGL.transformTranslation(2,0,0);
-					GOGL.transformRotationZ(45);
-					
-					GOGL.draw3DFrustem(0,0,3f,1f,3f,2f,8);
-					
-					GOGL.transformRotationZ(-45);
-						GOGL.transformTranslation(-2,0,0);
-					GOGL.transformRotationZ(45);
-										
-					GOGL.draw3DFrustem(0,0,2.5f,4f,4f,3f,4);
-					GOGL.draw3DFrustem(0,0,1.5f,3f,2f,1f,4);
-					GOGL.draw3DFrustem(4f,1.5f,4);
-				GOGL.transformClear();
-				GOGL.disableLighting();*/			
+			if(d.isSelected)
+				d.hover();
 		}
 		
-		public static void clean() {
-			drawList.clean();
-			hoverList.clean();
-		}
 		
-		public static void sort() {
-			int si = drawList.size();
-			float dist;
-			
-			for(int i = 0; i < si; i++) {
-				dist = drawList.get(i).calcCamDis();
-				drawList.setValue(i, dist);
-			}
-			
-			drawList.sortReverse();
-		}
-
-		private float calcCamDis() {
-			return 0;
-		}
-
-		public static int getNumber() {
-			return drawList.size();
-		}
+		Floaties.draw();
+		Shape.drawAll();
+	}
 }

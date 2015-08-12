@@ -1,20 +1,23 @@
-package Datatypes;
+package datatypes;
 
+import datatypes.lists.CleanList;
 import io.IO;
 import io.Mouse;
 import functions.Math2D;
+import gfx.GLText;
 import gfx.GOGL;
 import gfx.RGBA;
 import obj.itm.Item;
 import obj.itm.ItemBlueprint;
 import obj.itm.ItemController;
 import object.actor.Actor;
+import object.actor.Player;
 import object.environment.Heightmap;
 
 public class Inventory {
 	private Actor owner;
 	private float onScreenF = 0;
-	private SortedList<Item> itemList;
+	private CleanList<Item> itemList;
 	private static final byte S_VALUE = 0, S_NAME = 1;
 	private byte sortType = S_VALUE;
 	private int startInd;
@@ -24,7 +27,7 @@ public class Inventory {
 		
 		startInd = -1;
 		
-		itemList = new SortedList<Item>();
+		itemList = new CleanList<Item>();
 		for(int i = 0; i < 4*7; i++)
 			itemList.add(null);
 	}
@@ -66,8 +69,9 @@ public class Inventory {
 					// Draw 3D Rotating Model
 					if(it != null) {						
 						Mouse.setFingerCursor();
-						
+
 						GOGL.enableLighting();
+
 						GOGL.setOrtho();
 						GOGL.transformClear();
 						GOGL.transformTranslation(535,120,0);
@@ -85,13 +89,14 @@ public class Inventory {
 						if(startInd == -1)
 							startInd = ind;
 					}
-					else if(itemList.get(startInd) != null) {
-						if(startInd == ind)
-							itemList.get(startInd).use();
-						else
-							itemList.swap(startInd, ind);
-						startInd = -1;
-					}
+					else if(startInd > -1)
+						if(itemList.get(startInd) != null) {
+							if(startInd == ind)
+								itemList.get(startInd).use(Player.getInstance());
+							else
+								itemList.swap(startInd, ind);
+							startInd = -1;
+						}
 				}
 
 				if(it != null && startInd != ind) {
@@ -104,7 +109,7 @@ public class Inventory {
 						GOGL.setColor(RGBA.WHITE);
 					else
 						GOGL.setColor(new RGBA(0,1,.5f));
-					GOGL.drawString(dX,dY, .7f,.7f, getStackString(it.getStackNum(),it.getStackMax()));
+					GLText.drawString(dX,dY, .7f,.7f, getStackString(it.getStackNum(),it.getStackMax()));
 					GOGL.setColor(RGBA.WHITE);
 				}
 				
@@ -169,34 +174,15 @@ public class Inventory {
 	public void sort() {
 		switch(sortType) {
 			case S_VALUE:
-				sortValue(true);
+				itemList.sort(Item.Comparators.VALUE);
 				break;
 				
 			case S_NAME:
-				sortName(true);
+				itemList.sort(Item.Comparators.NAME);
 				break;
 		}
 	}
 	
-	public void sortName(boolean forward) {
-		String str;
-		char curC;
-		int si = itemList.size();
-		
-		for(int i = 0; i < si; i++)
-			itemList.setString(i, itemList.get(i).getName());
-		
-		itemList.sort(SortedList.M_STRING, forward);
-	}
-	
-	public void sortValue(boolean forward) {
-		int si = itemList.size();
-		
-		for(int i = 0; i < si; i++)
-			itemList.setValue(i, itemList.get(i).getValue());
-		
-		itemList.sort(SortedList.M_NUMBER, forward);
-	}
 	
 	public String getStackString(int num, int max) {
 		String str;
@@ -269,6 +255,5 @@ public class Inventory {
 			add("Coin",num);
 	}
 	
-	public SortedList<Item> getItemList() {return itemList;
-	}
+	public CleanList<Item> getItemList() {return itemList;}
 }

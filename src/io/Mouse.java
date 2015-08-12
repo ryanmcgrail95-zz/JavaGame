@@ -4,6 +4,7 @@ import functions.Math2D;
 import gfx.GOGL;
 import gfx.RGBA;
 
+import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -127,21 +128,29 @@ public class Mouse implements MouseListener, MouseMotionListener {
 	public static boolean getLeftClick() {
 		return leftClick;
 	}
+	public static boolean getRightClick() {
+		return rightClick;
+	}
 
 	
 
 	// MOUSE MOVEMENT
 	
+	public void setMousePick(int x, int y) {
+		mouseX = x;
+		mouseY = y;
+		//mouseX = 1.f*(x-GOGL.BORDER_LEFT)/(GOGL.SCREEN_WIDTH-2*GOGL.BORDER_LEFT)*640;
+		//mouseY = 1.f*(y-GOGL.BORDER_TOP)/(GOGL.SCREEN_HEIGHT-GOGL.BORDER_LEFT-GOGL.BORDER_TOP)*480;
+	}
+	
 	public void mouseDragged(MouseEvent arg0) {
-		mouseX = 1.f*(arg0.getX()-GOGL.BORDER_LEFT)/(GOGL.SCREEN_WIDTH-2*GOGL.BORDER_LEFT)*640;
-		mouseY = 1.f*(arg0.getY()-GOGL.BORDER_TOP)/(GOGL.SCREEN_HEIGHT-GOGL.BORDER_LEFT-GOGL.BORDER_TOP)*480;
+		setMousePick(arg0.getX(),arg0.getY());
 	}
 	public void mouseMoved(MouseEvent arg0) {
 		wMX = arg0.getX();
 		wMY = arg0.getY();
 		
-		mouseX = 1.f*(arg0.getX()-GOGL.BORDER_LEFT)/(GOGL.SCREEN_WIDTH-2*GOGL.BORDER_LEFT)*640;
-		mouseY = 1.f*(arg0.getY()-GOGL.BORDER_TOP)/(GOGL.SCREEN_HEIGHT-GOGL.BORDER_LEFT-GOGL.BORDER_TOP)*480;		
+		setMousePick(arg0.getX(),arg0.getY());		
 	}
 
 	
@@ -164,8 +173,11 @@ public class Mouse implements MouseListener, MouseMotionListener {
 			setArrowCursor();
 	}
 	
-	public static RGBA getPixelColor() {
+	public static Color getPixelColor() {
 		return GOGL.getPixelColor(getMousePickX(), getMousePickY());
+	}
+	public static RGBA getPixelRGBA() {
+		return GOGL.getPixelRGBA(getMousePickX(), getMousePickY());
 	}
 	
 	

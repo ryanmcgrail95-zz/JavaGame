@@ -1,8 +1,8 @@
-package Datatypes;
+package datatypes;
 
 import functions.Math2D;
 
-public final class vec4 extends vec {
+public class vec4 extends vec {
 	
 	
 	public vec4() {
@@ -14,7 +14,7 @@ public final class vec4 extends vec {
 		super(4,a,b,c,d);
 	}
 
-	public vec4(vec4 other) {
+	public vec4(vec other) {
 		super(4);
 		set(other);
 	}
@@ -22,22 +22,9 @@ public final class vec4 extends vec {
 	public vec4(vec3 abc, float d) {
 		super(4, abc.get(0), abc.get(1), abc.get(2), d);
 	}
-
-	public void set(vec4 other) {
-		super.set(other);
-	}
 	
 	public float len3() {
 		return Math2D.calcLen(get(0),get(1),get(2));
-	}
-	
-	public vec4 copy() {
-		return new vec4(this);
-	}
-	
-	public vec4 norm() {
-		vec4 v = new vec4(this);
-		return (vec4) v.norme();
 	}
 	
 	public vec4 norm3() {
@@ -47,17 +34,6 @@ public final class vec4 extends vec {
 	}
 	
 	// Operators
-	public vec4 add(vec4 other) {
-		vec4 newV = new vec4(this);
-		newV.adde(other);
-		
-		return newV;
-	}
-	public float dot(vec4 other) {
-		return super.dot(other);
-	}
-	
-
 	public vec4 add3(vec4 other) {
 		vec4 newV = new vec4();
 		
@@ -75,14 +51,7 @@ public final class vec4 extends vec {
 		
 		return newV;
 	}
-	
-	public vec4 mult(float val) {
-		vec4 newV = new vec4(this);
-		newV.multe(val);		
 		
-		return newV;
-	}
-	
 	public vec4 mult3(vec4 other) {
 		vec4 newV = new vec4();
 		

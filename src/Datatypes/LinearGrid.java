@@ -1,4 +1,4 @@
-package Datatypes;
+package datatypes;
 
 import functions.Math2D;
 import functions.MathExt;

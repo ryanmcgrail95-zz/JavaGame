@@ -1,20 +1,23 @@
 package object.actor.body;
 
-import Datatypes.vec3;
+import datatypes.mat4;
+import datatypes.vec3;
 import obj.prt.Dust;
-import resource.sound.SoundController;
+import resource.sound.Sound;
 import io.IO;
 import functions.Math2D;
 import functions.MathExt;
+import gfx.Camera;
 import gfx.GOGL;
 
 public class Body {
 	
 	private Cycle runCycle, walkCycle, standCycle, cycle1, cycle2;
-	private float index, frac, direction;
+	private float index, frac, toFrac, prevDir;
 	private final static int A_STAND = 0, A_MOVE = 1;
 	public final static byte C_STAND = 0, C_WALK = 1, C_RUN = 2;
 	private boolean isMoving;
+	private float sideRotAngle;
 	
 	public Body() {
 		index = 0;
@@ -67,16 +70,20 @@ public class Body {
 		
 		return true;
 	}
+	
+	public void step() {
+		frac += (toFrac - frac)/5;
+		if(frac < .05)
+			frac = 0;
+	}
 
 
 	public void stand() {
 		
 		if(animate(C_STAND, C_WALK))
 			frac = 1;
-				
-		frac += (0 - frac)/5;
-		if(frac < .05)
-			frac = 0;
+		
+		toFrac = 0;
 		
 		if(frac == 0)
 			isMoving = false;
@@ -85,30 +92,30 @@ public class Body {
 		
 		isMoving = true;
 		animate(C_WALK, C_RUN);
-		frac += (0 - frac)/divSpeed;
+		toFrac = 0;
 	}
 	public void run(float divSpeed) {
 		
 		isMoving = true;
 		animate(C_WALK, C_RUN);
-		frac += (1 - frac)/divSpeed;
+		toFrac = 1;
 	}
 	
 	
 	public vec3 getBody(float index) {
-		return cycle2.getBody(index).mult(frac).add(cycle1.getBody(index).mult(1-frac));
+		return (vec3) cycle2.getBody(index).mult(frac).add(cycle1.getBody(index).mult(1-frac));
 	}
 	public vec3 getUpperArm(float index) {
-		return cycle2.getUpperArm(index).mult(frac).add(cycle1.getUpperArm(index).mult(1-frac));
+		return (vec3) cycle2.getUpperArm(index).mult(frac).add(cycle1.getUpperArm(index).mult(1-frac));
 	}
 	public vec3 getLowerArm(float index) {
-		return cycle2.getLowerArm(index).mult(frac).add(cycle1.getLowerArm(index).mult(1-frac));
+		return (vec3) cycle2.getLowerArm(index).mult(frac).add(cycle1.getLowerArm(index).mult(1-frac));
 	}
 	public vec3 getUpperLeg(float index) {
-		return cycle2.getUpperLeg(index).mult(frac).add(cycle1.getUpperLeg(index).mult(1-frac));
+		return (vec3) cycle2.getUpperLeg(index).mult(frac).add(cycle1.getUpperLeg(index).mult(1-frac));
 	}
 	public vec3 getLowerLeg(float index) {
-		return cycle2.getLowerLeg(index).mult(frac).add(cycle1.getLowerLeg(index).mult(1-frac));
+		return (vec3) cycle2.getLowerLeg(index).mult(frac).add(cycle1.getLowerLeg(index).mult(1-frac));
 	}
 
 	
@@ -123,8 +130,19 @@ public class Body {
 		// Footstep
 		if(isMoving)
 			if(MathExt.between(prevIndex, 6, index) || MathExt.between(prevIndex, 12, index)) {
-				SoundController.playSound("Footstep");
-	            new Dust(x+Math2D.calcLenX(5,direction+180),y+Math2D.calcLenY(5,direction+180),z, 0, true);
+				Sound.play("Footstep");
+				
+				float fX,fY,fZ, backLen = -2;
+				fX = x+Math2D.calcLenX(backLen,dir+180);
+				fY = y+Math2D.calcLenY(backLen,dir+180);
+				fZ = z;
+				
+				float sideAmt = Math2D.calcLenX(5,index/12*360);
+				fX += Math2D.calcLenX(sideAmt, dir+90);
+				fY += Math2D.calcLenY(sideAmt, dir+90);
+				
+	            new Dust(fX,fY,fZ-8, 0, true);
+	            new Footstep(fX,fY,fZ-16, dir+180, 20, 40);	            
 			}
 
 		if(index >= frameNum)
@@ -136,6 +154,27 @@ public class Body {
 		f = frac;
 		iF = 1-f;
 		
+		
+		mat4 mat;
+		
+		float a = 0, sideAmt = 0, side = -2;
+		if(cycle1 == walkCycle) {
+			a = Math2D.calcLenX(3,index/6*360);
+			sideAmt = Math2D.calcLenY(side,index/12*360);
+		}
+		x += Math2D.calcLenX(a, dir);
+		y += Math2D.calcLenY(a, dir);
+		
+		
+		x += Math2D.calcLenX(sideAmt, dir+90);
+		y += Math2D.calcLenY(sideAmt, dir+90);
+		
+		
+		/*if(cycle1 == walkCycle)
+			turnRot = Math2D.calcAngDiff(prevDir,dir)*10;
+		else*/
+		prevDir = dir;
+		
 
 		float w, h, uLen, useIndex, bLen;
 		bLen = 24;
@@ -143,7 +182,8 @@ public class Body {
 		h = 4;
 		uLen = w - h/2;
 		
-		float frameNum = 12;
+		float frameNum = 12, sideRot;
+		sideRot = sideRotAngle - sideAmt/side*2;
 		
 		/*float dis = MathExt.min(Math.abs(index-0), Math.abs(index-6), Math.abs(index-12)), disF;
 		disF = dis/3;
@@ -152,6 +192,12 @@ public class Body {
 		
 		index += disF*.5;*/
 		
+		float mX,mY,mZ;
+		mX = x;
+		mY = y; 
+		mZ = z+w;
+		
+		
 		step(x,y,z,dir);
 
 		
@@ -159,16 +205,19 @@ public class Body {
 		
 		
 		//GOGL.enableShader("Main");
-		GOGL.passViewMatrix();
-		GOGL.passProjectionMatrix();
+		//GOGL.passViewMatrix();
+		//GOGL.passProjectionMatrix();
 		
 		// Draw Body
-		GOGL.transformTranslation(x, y, z+w);
+		GOGL.transformTranslation(mX,mY,mZ);
 		
 		GOGL.transformRotationZ(dir);
-		GOGL.transformRotationY(getBody(useIndex).y());
+		GOGL.transformRotationX(sideRot);
 		
-		GOGL.passModelMatrix();
+		
+		GOGL.transformRotationY(getBody(useIndex).y());
+				
+		//GOGL.passModelMatrix();
 		GOGL.draw3DBlock(-h/2,-h/2,0, h, h, bLen);
 		
 		GOGL.transformClear();
@@ -178,10 +227,11 @@ public class Body {
 			if(useIndex >= frameNum)
 				useIndex -= frameNum;
 						
-			GOGL.transformTranslation(x, y, z+w);
+			GOGL.transformTranslation(mX,mY,mZ);
 	
 			GOGL.transformRotationZ(dir);
 			GOGL.transformTranslation(0,i*h,0);
+			GOGL.transformRotationX(sideRot);
 
 			GOGL.transformRotationY(getBody(useIndex).y());
 			GOGL.transformTranslation(0,0,bLen);
@@ -205,10 +255,11 @@ public class Body {
 			if(useIndex >= frameNum)
 				useIndex -= frameNum;
 						
-			GOGL.transformTranslation(x, y, z+w);
+			GOGL.transformTranslation(mX,mY,mZ);
 	
 			GOGL.transformRotationZ(dir);
 			GOGL.transformTranslation(0,i*h,0);
+			GOGL.transformRotationX(sideRot);
 			
 			GOGL.transformRotationY(getUpperLeg(useIndex).y());
 			GOGL.draw3DBlock(0,-h/2,-h/2, w, h, h);
@@ -224,5 +275,10 @@ public class Body {
 		
 		GOGL.disableShaders();
 
+	}
+
+
+	public void setSideRotation(float sideRotAngle) {
+		this.sideRotAngle = sideRotAngle;
 	}
 }

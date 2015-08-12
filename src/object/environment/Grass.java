@@ -9,12 +9,12 @@ import functions.Math2D;
 import functions.MathExt;
 import gfx.GOGL;
 import gfx.TextureExt;
-import Datatypes.LinearGrid;
-import Datatypes.vec3;
 
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
+import datatypes.LinearGrid;
+import datatypes.vec3;
 
 public class Grass extends Physical {
 	private List<Grasslet> strands = new ArrayList<Grasslet>();

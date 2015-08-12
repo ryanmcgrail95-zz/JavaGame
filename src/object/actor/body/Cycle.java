@@ -1,6 +1,6 @@
 package object.actor.body;
 
-import Datatypes.vec3;
+import datatypes.vec3;
 import functions.MathExt;
 import gfx.GOGL;
 

@@ -2,6 +2,9 @@ package object.actor;
 
 import io.Controller;
 import object.primitive.Physical;
+import resource.sound.SecondaryMusicSource;
+import resource.sound.Sound;
+import resource.sound.SoundSource;
 import cont.Text;
 import functions.Math2D;
 import functions.MathExt;
@@ -11,38 +14,45 @@ import gfx.GOGL;
 public class NPC extends Actor {
 	private String text, toScript;
 	private boolean isSpeaking = false, noWait = false, canTalk = false;
+	private SecondaryMusicSource music;
 
 	
 	public NPC(float x, float y, float z) {
 		super(x,y,z);
+		
+		music = new SecondaryMusicSource(x,y,z, 100,400, "courtBegins","Godot");
 	}
 	
 	
 	public void talk(Actor other) {
-		Text.talk(this,Player.getInstance(), "Hello...! How are you do?");
+		Text.talk(this,Player.getInstance(), "Hello...! How are you do?\nHmmm...\nOkay.\nHuh?\nI wish I were cool.");
 	}
 	public boolean collide(Physical other) {
 		
 		if(other.isPlayer()) {
 			if(calcDis(other) < 32) {
+				/*if(other.getZVelocity() < 0)
+					((Actor) other).bounceOffHead();*/
+				
 				canTalk = true;
 				Controller.setActionText("Talk");
 				
-				if(!Text.isActive() && Controller.getActionPressed())
+				if(!Text.isActive() && Controller.getActionPressed()) {
+					other.stop();
+					stop();
 					talk(Player.getInstance());
+				}
 			}
 			else
 				canTalk = false;
-				
-				/*if(other.getZVelocity() < 0)
-					die();*/
 		}
 				
 		return false;
 	}
 	
-	public boolean draw() {
+	public void draw() {
 		super.draw();
+		
 		
 		
 		if(canTalk) {
@@ -61,8 +71,6 @@ public class NPC extends Actor {
 			
 			GOGL.disableLighting();
 		}
-			
-		return true;
 	}
 	
 	protected void control() {

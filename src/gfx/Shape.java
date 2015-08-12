@@ -170,11 +170,11 @@ public class Shape { //extends BranchGroup {
 			GOGL.transformClear();
 			
 			
-			GOGL.setColor(GOGL.C_WHITE);
+			GOGL.setColor(RGBA.WHITE);
 						
 			
 			if(tex != null) {
-				GOGL.unbind(tex);
+				GOGL.unbind();
 				GOGL.disableBlending();
 			}
 		}
@@ -229,7 +229,7 @@ public class Shape { //extends BranchGroup {
 
 			
 			if(tex != null) {
-				GOGL.unbind(tex);
+				GOGL.unbind();
 				GOGL.disableBlending();
 			}
 		}
@@ -272,7 +272,7 @@ public class Shape { //extends BranchGroup {
 			GOGL.setColor(1,1,1,1);			
 			
 			if(tex != null) {
-				GOGL.unbind(tex);
+				GOGL.unbind();
 				GOGL.disableBlending();
 			}
 		}

@@ -1,5 +1,6 @@
 package gfx;
 
+
 import object.actor.Player;
 import sts.Stat;
 import window.Window;
@@ -12,7 +13,6 @@ public class Overlay {
 	
 	public static void draw() {
 		if(isEnabled)
-			
 			if(Text.isActive())
 				Text.draw();
 			else if(Window.isWindowOpen())

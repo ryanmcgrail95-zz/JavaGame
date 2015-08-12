@@ -1,9 +1,11 @@
 package window;
 
+import io.Mouse;
+
 public abstract class GUIDrawable extends GUIObject {
 	private float x, y, w, h;
 
-	public GUIDrawable(float x, float y, float w, float h) {
+	public GUIDrawable(int x, int y, int w, int h) {
 		super(true);
 		x(x);
 		y(y);
@@ -11,7 +13,7 @@ public abstract class GUIDrawable extends GUIObject {
 		h(h);
 	}
 	
-	public abstract void draw(float x, float y);
+	public abstract byte draw(float x, float y);
 	
 	public float x()	 	{return x;}
 	public void x(float x) 	{this.x = x;}
@@ -21,6 +23,8 @@ public abstract class GUIDrawable extends GUIObject {
 	public void w(float w) 	{this.w = w;}
 	public float h()	 	{return h;}
 	public void h(float h) 	{this.h = h;}
+	
+		
 	
 	public float getScreenX() {
 		if(getParent() == null)

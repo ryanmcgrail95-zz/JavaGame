@@ -130,15 +130,13 @@ public class MathExt {
 	}
 
 	public static float snap(float val, float grid) {
-		return grid*MathExt.rnd(val/grid);
+		return grid*Math.round(val/grid);
 	}	
 	public static float wrap(float mi, float value, float ma) {
 		float diff = ma - mi;
 		
-		if(value < mi)
-			value += diff;
-		else if(value > ma)
-			value -= diff;
+		while(value < mi)	value += diff;
+		while(value > ma)	value -= diff;
 		
 		return value;
 	}

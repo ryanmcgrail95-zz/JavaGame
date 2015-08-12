@@ -1,4 +1,6 @@
-package Datatypes;
+package datatypes;
+
+import resource.sound.Sound;
 
 
 public class PrintString extends StringExt {
@@ -46,7 +48,16 @@ public class PrintString extends StringExt {
 		return fallAmts[i];
 	}
 	
-	public boolean advance() {
+	
+	public boolean advance(int times) {
+		boolean state = false;
+		for(int i = 0; i < times; i++)
+			state = state || advance();
+		return state;
+	}
+	
+	public boolean advance() {return advance("");}
+	public boolean advance(String soundName) {
 		for(int i = 0; i < fallNum; i++)
 			fallAmts[i] += (1. - fallAmts[i])/4;
 		
@@ -55,6 +66,9 @@ public class PrintString extends StringExt {
 				waitTimer--;
 			}
 			else {
+				if(soundName != "")
+					Sound.play(soundName);
+				
 				waitTimer = WAIT_TIMER_MAX;
 				
 				printedStr += str.charAt(len);
@@ -73,5 +87,10 @@ public class PrintString extends StringExt {
 	
 	public boolean isNull() {
 		return (str.length() == 0);
+	}
+
+
+	public String getFull() {
+		return str;
 	}
 }

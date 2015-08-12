@@ -1,5 +1,6 @@
 package object.environment;
 
+import cont.Messages;
 import io.IO;
 import io.Mouse;
 import gfx.GOGL;
@@ -10,11 +11,13 @@ public class Water extends Drawable {
 	float seaLevel;
 	
 	public Water(float seaLevel) {
-		super(true);
+		super(true,false);
 		this.seaLevel = seaLevel;
+		
+		name = "water";
 	}
 	
-	public boolean draw() {
+	public void draw() {
 		Player pl = Player.getInstance();
 
 		float x, y;
@@ -30,17 +33,14 @@ public class Water extends Drawable {
 		GOGL.transformClear();
 		
 		//GOGL.disableShaders();
-		
-		return false;
 	}
 	
 	public void hover() {
+				
 		Player pl = Player.getInstance();
 		
 		if(pl.getInventory().findItem("Empty Bucket") != null) {
-			GOGL.setOrtho();
-			GOGL.drawStringS(0,0,"Fill Empty Bucket with Water");
-			GOGL.setPerspective();
+			Messages.setActionMessage("Fill Empty Bucket with Water");
 			
 			Mouse.setFingerCursor();
 			
@@ -48,4 +48,8 @@ public class Water extends Drawable {
 				pl.getInventory().replaceItem("Empty Bucket", "Water Bucket");
 		}
 	}
+
+	public void update() {}
+	public boolean checkOnscreen() {return true;}
+	public float calcDepth() {return 0;}
 }

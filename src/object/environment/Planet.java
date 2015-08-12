@@ -1,11 +1,11 @@
 package object.environment;
 
+import datatypes.mat4;
+import datatypes.vec3;
+import datatypes.vec4;
 import functions.Math2D;
 import gfx.GOGL;
 import object.actor.Player;
-import Datatypes.mat4;
-import Datatypes.vec3;
-import Datatypes.vec4;
 
 public class Planet extends Heightmap {
 

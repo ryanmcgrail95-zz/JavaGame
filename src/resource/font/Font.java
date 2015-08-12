@@ -2,9 +2,11 @@ package resource.font;
 
 import gfx.TextureExt;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import cont.GameController;
 import cont.TextureController;
 
 public class Font {
@@ -40,6 +42,7 @@ public class Font {
 			// Load Symbols
 			addChar('.');
 			addChar('!');
+			addChar('\'');
 			addChar('?');
 			addChar(';');
 			addChar(':');
@@ -62,7 +65,9 @@ public class Font {
 				addChar((char) i);
 			}
 			private void addChar(char c, String fileName) {
-				TextureExt cTex = TextureController.loadTexture(fileName, fileName, TextureController.M_BGALPHA);				
+				TextureExt cTex;
+
+				cTex = TextureController.load(fileName, fileName, TextureController.M_BGALPHA);
 				fontMap.put(c, cTex);
 			}
 

@@ -1,4 +1,4 @@
-package Datatypes;
+package datatypes;
 
 public class mat3 {
 	vec3 mat[];

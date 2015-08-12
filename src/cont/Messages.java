@@ -1,17 +1,24 @@
 package cont;
 
+import gfx.GLText;
 import gfx.GOGL;
 import gfx.RGBA;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.jogamp.opengl.util.texture.Texture;
 
+import datatypes.PrintString;
+import datatypes.lists.CleanList;
+
 public class Messages {
-	private static List<Message> messageList = new ArrayList<Message>();
+	private static CleanList<Message> messageList = new CleanList<Message>();
+	private static PrintString actionString = new PrintString("");
 	
 	private static class Message {
 		private String text;
@@ -33,16 +40,10 @@ public class Messages {
 			return (steps <= -1);
 		}
 
-		public String getText() {
-			return text;
-		}
-		public float getTime() {
-			return steps;
-		}
+		public String getText() 		{return text;}
+		public float getTime() 			{return steps;}
 
-		public void set(String newStr) {
-			text = newStr;
-		}
+		public void set(String newStr) {text = newStr;}
 		public void setTime(float newSteps) {
 			steps = newSteps;
 		}
@@ -80,43 +81,40 @@ public class Messages {
 	
 	public static void draw() {
 		List<Message> destroyList = new ArrayList<Message>();
-		Message curMessage;
 		int dY = 0;
-		float sX, sY;
+		float sX, sY, curTime;
 		sX = 1.5f;
 		sY = 1.5f;
 
-		for(int i = 0; i < messageList.size(); i += 1) {
-			curMessage = messageList.get(i);
-			
+		if(!actionString.isEmpty()) {
+			actionString.advance(2);
+			GLText.drawString(0,dY,1,1,0,actionString);
+			dY += 12;
+		}
+
+		for(Message curMessage : messageList) {			
 		    //Iterate Timers for Messages
 			curMessage.incrementTime(1);
 		    
 		    //Sort Through and Eliminate Messages Whose Timers are -1
-		    if(curMessage.isDone()) {
-		        destroyList.add(curMessage);   
-		    }
+		    if(curMessage.isDone())
+		    	messageList.remove();
 		    else {
 		    	//draw_set_font(fntRetro);
 
-		    	float alpha, curTime;
 		    	curTime = curMessage.getTime();
-		    	if(curTime < 20)
-		    		alpha = curTime/20;
-		    	else
-		    		alpha = 1;
-
+		    	
 	    	    //Draw Message
-		    	GOGL.drawStringS(0,dY, curMessage.getText(), new RGBA(1f,1f,1f,alpha));
+		    	GOGL.drawStringS(0,dY, curMessage.getText(), new RGBA(1f,1f,1f,(curTime < 20) ? curTime/20 : 1));
 	    	    
 	    	    //Move Next Message Down
 	    	    dY += 12;
 		    }
 		}
-		
-		
-		//Remove Old Messages
-		for(Message m : destroyList)
-			messageList.remove(m);
+	}
+	
+	public static void setActionMessage(String str) {
+		if(actionString.getFull().compareTo(str) != 0)
+			actionString.set(str);
 	}
 }

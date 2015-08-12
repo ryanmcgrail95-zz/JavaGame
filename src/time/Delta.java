@@ -41,7 +41,7 @@ public final class Delta {
 				return speedFrac*targetFPS/fps;
 		}
 		private static float convert(float timeVal) {
-			return calcDeltaTime()*timeVal;
+			return timeVal; //calcDeltaTime()*timeVal;
 		}
 	
 	
@@ -58,7 +58,7 @@ public final class Delta {
 			
 			if(delta == 0)
 				return;
-			
+						
 			fps = targetFPS/delta;
 		}
 	

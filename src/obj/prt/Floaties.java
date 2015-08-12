@@ -1,8 +1,8 @@
 package obj.prt;
 
+import datatypes.lists.CleanList;
 import object.actor.Actor;
 import object.actor.Player;
-import Datatypes.SortedList;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.Camera;
@@ -11,7 +11,7 @@ import gfx.RGBA;
 
 public class Floaties {
 	private static Floaties instance;
-	private static SortedList<Floatlet> particles = new SortedList<Floatlet>();
+	private static CleanList<Floatlet> particles = new CleanList<Floatlet>();
 	private static float radius = 64;
 	
 	private class Floatlet {
@@ -106,9 +106,7 @@ public class Floaties {
 		if(particles.size() < 15)
 			particles.add(instance.new Floatlet());
 		
-		for(int i = 0; i < particles.size(); i++)
-			particles.get(i).draw();
-		
-		particles.clean();
+		for(Floatlet f : particles)
+			f.draw();
 	}
 }

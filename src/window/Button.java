@@ -3,7 +3,7 @@ package window;
 public abstract class Button extends GUIDrawable {
 	private float glow;
 
-	public Button(float x, float y, float w, float h) {
+	public Button(int x, int y, int w, int h) {
 		super(x, y, w, h);
 	}
 	

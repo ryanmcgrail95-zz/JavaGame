@@ -29,10 +29,10 @@ public final class ItemController {
 		
 		
 		private static void addItem(String name, byte type, String sprFilename, String info, int value) {
-			addItem(name, type, TextureController.loadTexture(sprFilename, name, TextureController.M_BGALPHA), info, value, 1);
+			addItem(name, type, TextureController.load(sprFilename, name, TextureController.M_BGALPHA), info, value, 1);
 		}
 		private static void addItem(String name, byte type, String sprFilename, String info, int value, int maxStackSize) {
-			addItem(name, type, TextureController.loadTexture(sprFilename, name, TextureController.M_BGALPHA), info, value, maxStackSize);
+			addItem(name, type, TextureController.load(sprFilename, name, TextureController.M_BGALPHA), info, value, maxStackSize);
 		}
 		private static void addItem(String name, byte type, TextureExt sprite, String info, int value, int stackMax) {
 			ItemBlueprint blueprint = new ItemBlueprint(name, type, sprite, info, value, stackMax);

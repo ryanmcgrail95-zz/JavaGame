@@ -1,165 +1,228 @@
 package resource.sound;
 
-import com.jogamp.openal.*;
-import com.jogamp.openal.util.*;
-
-import fl.FileExt;
-
-import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.jogamp.openal.AL;
+import com.jogamp.openal.ALException;
+import com.jogamp.openal.ALFactory;
+import com.jogamp.openal.util.ALut;
+import com.jogamp.openal.util.WAVData;
+import com.jogamp.openal.util.WAVLoader;
+
+import cont.GameController;
+import datatypes.vec3;
+import fl.FileExt;
+import functions.Math2D;
+import gfx.GOGL;
 
 public class Sound {
-	boolean valid;
-	
-	
-	float volume = 1;
-	
-    // Buffers hold sound data.
-    int[] buffer = new int[1];
-    // Sources are points emitting sound.
-    List<int[]> source = new ArrayList<int[]>();
+	private static Map<String, SoundBuffer> bufferMap = new HashMap<String, SoundBuffer>();
+    private static AL al = ALFactory.getAL();
 
+    private static float listenerX, listenerY, listenerZ;
     
-    int[] format = new int[1];
-    int[] size = new int[1];
-    ByteBuffer[] data = new ByteBuffer[1];
-    int[] freq = new int[1];
-    int[] loop = new int[1];
+    private static SoundSource curMusic = null, newMusic = null;
+    private static List<SoundSource> sourceList = new ArrayList<SoundSource>();
+	private static List<SoundBuffer> bufferList = new ArrayList<SoundBuffer>();
     
-    
-    
+	
+	public static void ini() {
+		
+		//Initialize OpenAL
+		ALut.alutInit();
 
-    public Sound(AL al, String fileName) {
-        valid = !(loadALData(al, fileName) == AL.AL_FALSE);
+        //LOAD SOUNDS
+		loadSound("BlockCrumble", "Resources/Sounds/FX/sndBlockCrumble.wav");
+        loadSound("Footstep", "Resources/Sounds/FX/sndFootstep.wav",.5f);
+        loadSound("Spin", "Resources/Sounds/FX/sndSpin.wav");
+        loadSound("Jump", "Resources/Sounds/FX/sndJump.wav", 50); 
+
+        loadSound("blipMale", "Resources/Sounds/FX/sndBlipMale.wav", 80); 
+        
+		loadSound("Overworld", "Resources/Sounds/Music/overworld.wav", .05f, true);
+		loadSound("Godot", "Resources/Sounds/Music/godot.wav", .05f, true);		
+		loadSound("courtBegins", "Resources/Sounds/Music/courtBegins.wav", .05f, true);
+				
+		playMusic("Overworld");
 	}
-    
-	public Sound(AL al, String fileName, float volume) {
-        valid = !(loadALData(al, fileName) == AL.AL_FALSE);
-        this.volume = volume;
-	}
 	
-
-	private int loadALData(AL al, String fileName) {
-        // variables to load into
-   
-
-        // Load wav data into a buffer.
-        al.alGenBuffers(1, buffer, 0);
-        if(al.alGetError() != AL.AL_NO_ERROR)
-            return AL.AL_FALSE;
-
-
-        ALut.alutLoadWAVFile(FileExt.get(fileName), format, data, size, freq, loop);
-        al.alBufferData(buffer[0], format[0], data[0], size[0], freq[0]);
-
- 
-        // Do another error check and return.
-        if(al.alGetError() == AL.AL_NO_ERROR)
-            return AL.AL_TRUE;
-
-        return AL.AL_FALSE;
-    }
-
-
-	    /*static void killALData() {
-	        al.alDeleteBuffers(1, buffer, 0);
-	        al.alDeleteSources(1, source, 0);
-	        ALut.alutExit();
-	    }*/
-	    
-	
-	public void playSound(AL al, int[] src) {
-        al.alSourcePlay(src[0]);
-	}
-	public void playSound(AL al, int index) {
-        al.alSourcePlay(source.get(index)[0]);
+	public static SoundBuffer get(String name) {
+		return bufferMap.get(name);
 	}
 
-	
-	public int[] playSound(AL al, double x, double y, double z, double vX, double vY, double vZ, boolean loop) {
-		int[] src = new int[1];
+	private static void playMusic(String name) {playMusic(get(name));}
+	private static void playMusic(SoundBuffer music) {
+		if(curMusic == null) {
+			curMusic = new SoundSource(music, true);
+			curMusic.setFadeAmount(0);
+			curMusic.play();
+			newMusic = null;
+		}
+		else if(curMusic.getParentBuffer() != music)
+			newMusic = new SoundSource(music, true);
+	}
+
+	public static void update() {
 		
 		
-		// Position of the source sound.
+		// UPDATE MUSIC
+		// If newMusic is not NULL, fade out current music then fade in new music.
+		// Otherwise, fade in new music;
+		if(newMusic != null) {
+			
+			curMusic.fade(0);
+			if(curMusic.getVolume() == 0) {
+				// Stop Old Music
+				curMusic.destroy();
+
+				// Switch Music
+				curMusic = newMusic;
+				newMusic = null;
+
+				curMusic.setFadeAmount(0);
+				curMusic.play();
+			}
+		}
+		else
+			curMusic.fade(1);	
+	}
+	
+	
+	public static void duckMusic(SoundSource other, float frac) {
+		curMusic.setFadeAmount(frac);
+		other.setFadeAmount(1-frac);
+	}
+	public static void setMusicVolume(float volumePerc) {
+		curMusic.setFadeAmount(volumePerc);
+	}
+	
+	
+	
+	public static void clean() {
+		List<SoundSource> toRemove = new ArrayList<SoundSource>();
+
+		for(SoundSource src : sourceList)
+			if(src.isStopped())
+				toRemove.add(src);
+		for(SoundSource src : toRemove) {
+			src.destroy();
+			sourceList.remove(src);
+		}
+	}
+		
+		
+	public static void loadSound(String name, String fileName) {loadSound(name,fileName,1,false);}
+	public static void loadSound(String name, String fileName, float volume) {loadSound(name,fileName,volume,false);}
+	public static void loadSound(String name, String fileName, boolean loop) {loadSound(name,fileName,1,loop);}
+	public static void loadSound(String name, String fileName, float volume, boolean loop) {
+		SoundBuffer snd = SoundLoader.load(fileName);
+
+		snd.setVolume(volume);
+		
+		bufferMap.put(name, snd);
+		bufferList.add(snd);
+	}
+	
+	
+	public static void updateListener(double cX, double cY, double cZ, double vX, double vY, double vZ, double nDirX, double nDirY, double nDirZ, double nUpX, double nUpY, double nUpZ) {
+		// Position of the listener.
+	    float[] listenerPos = {(float) cX, (float) cY, (float) cZ};
+
+	    // Velocity of the listener.
+	    float[] listenerVel = {(float) vX, (float) vY, (float) vZ};
+
+	    // Orientation of the listener. (first 3 elements are "at", second 3 are "up")
+	    float[] listenerOri = {(float) nDirX, (float) nDirY, (float) nDirZ,  (float) nUpX, (float) nUpY, (float) nUpZ};
+		
+		al.alListenerfv(AL.AL_POSITION,	listenerPos, 0);
+	    al.alListenerfv(AL.AL_VELOCITY,    listenerVel, 0);
+	    al.alListenerfv(AL.AL_ORIENTATION, listenerOri, 0);
+	}
+	
+	public static void unload() {
+		for(SoundSource s : sourceList)
+			s.destroy();
+		for(SoundBuffer s : bufferList)
+			s.destroy();
+		try {
+			ALut.alutExit();
+		}
+		catch(Exception e) {
+		}
+	}
+
+	
+	public static SoundSource play(String name) {
+		return play(name, listenerX, listenerY, listenerY, 0,0,0, false);
+	}
+	public static SoundSource play(String name, boolean doLoop) {
+		return play(name, listenerX, listenerY, listenerY, 0,0,0, doLoop);
+	}
+	public static SoundSource play(String name, double x, double y, double z, double vX, double vY, double vZ) {
+		return play(name, x,y,z, vX,vY,vZ, false);
+	}
+	public static SoundSource play(String name, double x, double y, double z, double vX, double vY, double vZ, boolean doLoop) {
+		
 	    float[] sourcePos = {(float) x, (float) y, (float) z};
-
-	    // Velocity of the source sound.
 	    float[] sourceVel = {(float) vX, (float) vY, (float) vZ};
-	    
-	    
-		
-        // Bind buffer with a source.
-        al.alGenSources(1, src, 0);
-        
-        al.alSourcei (src[0], AL.AL_BUFFER,   buffer[0]   );
-        al.alSourcef (src[0], AL.AL_PITCH,    1.0f);
-        al.alSourcef (src[0], AL.AL_GAIN,     volume);
-        al.alSourcefv(src[0], AL.AL_POSITION, sourcePos, 0);
-        al.alSourcefv(src[0], AL.AL_VELOCITY, sourceVel, 0);
 
-        if(loop)
-        	al.alSourcei (src[0], AL.AL_LOOPING,  1);
-        else
-        	al.alSourcei (src[0], AL.AL_LOOPING,  0);
-
-        source.add(src);
-        //ages.add(0);
+        SoundSource src = new SoundSource(get(name), sourcePos, sourceVel, doLoop);
+        src.play();
         
-        
-        playSound(al, src);
+        sourceList.add(src);
         
         return src;
 	}
-	    
-	public void pauseSound(AL al, int index) {
-        al.alSourcePause(source.get(index)[0]);
-	}
+	
+	
+	
+	public static AL al() {return al;}
 
-	public void stopSound(AL al, int index) {
-        al.alSourceStop(source.get(index)[0]);
-	}
+	public static vec3 getListenerPosition() {return new vec3(listenerX,listenerY,listenerZ);}
+	public static vec3 getListenerVelocity() {return new vec3(0,0,0);}
 	
 	
-	public void clean(AL al) {
-		List<int[]> toRemove = new ArrayList<int[]>();
-		
-		int[] src;
-		for(int i = 0; i < source.size(); i++) {
-			
-			src = source.get(i);			
-			
-			int[] state = new int[1];
-			    
-			al.alGetSourcei(src[0], AL.AL_SOURCE_STATE, state, 0);
-			    
-			if(state[0] != AL.AL_PLAYING) {
-				toRemove.add(src);
+	private static class SoundLoader {
+		public static SoundBuffer load(String fileName) {return load(fileName,1);}
+		public static SoundBuffer load(String fileName, float volume) {
+			ByteBuffer[] data = new ByteBuffer[1];
+		    int[] 	buffer = new int[1],
+		    		format = new int[1],
+		    		size = new int[1],
+		    		freq = new int[1],
+		    		loop = new int[1];
+
+	        // Load wav data into a buffer.
+	        al.alGenBuffers(1, buffer, 0);
+
+	        //if(fileName.endsWith(".wav"))
+			try {
+			    WAVData wd = WAVLoader.loadFromStream(FileExt.get(fileName));
+			    format[0] = wd.format;
+			    data[0] = wd.data;
+			    size[0] = wd.size;
+			    freq[0] = wd.freq;
+			    loop[0] = wd.loop ? AL.AL_TRUE : AL.AL_FALSE;
+			} catch (Exception e) {
+			    throw new ALException(e);
 			}
-		}
-		
-		for(int[] done : toRemove) {
-			al.alDeleteSources(1, done, 0);
-			source.remove(done);
-		}
-	}
-
-	public int getNumPlaying() {
-		return source.size();
-	}
-
-	public void kill(AL al) {
-		al.alDeleteBuffers(1, buffer, 0);
-		for(int[] s : source)
-			al.alDeleteSources(1, s, 0);
-	}
-
-	public void killSource(AL al, int[] src) {
-		if(source.contains(src)) {
-			al.alDeleteSources(1, src, 0);
-			source.remove(src);
+	        
+	        
+	        al.alBufferData(buffer[0], format[0], data[0], size[0], freq[0]);
+	        	
+	        SoundBuffer buf = new SoundBuffer(buffer, format, size, freq);
+	        
+	        // Do another error check and return.
+	        if(al.alGetError() != AL.AL_NO_ERROR) {
+	            System.err.println("Failed to load " + fileName + ". Exiting program.");
+	            System.exit(2);
+	        }
+	        
+	        return buf;
 		}
 	}
 }

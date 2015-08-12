@@ -1,11 +1,11 @@
 package gfx;
 
 import resource.font.Font;
-import Datatypes.PrintString;
-import Datatypes.StringExt;
 
 import com.jogamp.opengl.util.texture.Texture;
 
+import datatypes.PrintString;
+import datatypes.StringExt;
 import functions.Math2D;
 import functions.MathExt;
 
@@ -70,7 +70,7 @@ public class GLText {
 		char c;
 		
 		
-		float fH = curFont.getHeight();
+		float fH = curFont.getHeight();		
 		float dX = x, dY = y;
 		
 		for(int i = 0; i < len; i++) {
@@ -80,7 +80,7 @@ public class GLText {
 				dX += curFont.getWidth()*xS;
 			else if(c == '\n') {
 				dX = x;
-				dY += fH*yS;
+				dY += fH*yS;				
 			}
 			else
 				dX += drawChar(dX,dY,xS,yS,c);
@@ -100,7 +100,7 @@ public class GLText {
 		}
 		drawString(x,y,xS,yS,str);
 	}
-	public static void drawString(float x, float y, float xS, float yS, PrintString str) {
+	public static void drawString(float x, float y, float xS, float yS, float lineSpace, PrintString str) {
 		int len = str.length();
 		char c;
 		
@@ -118,7 +118,7 @@ public class GLText {
 				dX += fW*xS;
 			else if(c == '\n') {
 				dX = x;
-				dY += fH*yS;
+				dY += (fH+lineSpace)*yS;
 			}
 			else {				
 				if(i+n >= len) {
@@ -202,6 +202,7 @@ public class GLText {
 		return maxW;
 	}
 	
+	public static float getStringHeight(String str) {return getStringHeight(1,1,str);}
 	public static float getStringHeight(float xS, float yS, String str) {
 		int len = str.length();
 		char c;

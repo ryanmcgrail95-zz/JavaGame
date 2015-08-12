@@ -1,23 +1,32 @@
 package object.actor;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import brain.Name;
 import cont.Text;
+import datatypes.Inventory;
+import datatypes.vec2;
+import datatypes.vec3;
+import datatypes.vec4;
+import datatypes.lists.CleanList;
+import interfaces.Useable;
 import io.Mouse;
-import Datatypes.Inventory;
-import Datatypes.SortedList;
-import Datatypes.vec2;
-import Datatypes.vec3;
-import Datatypes.vec4;
 import obj.itm.Item;
 import obj.itm.ItemBlueprint;
 import obj.prt.Dust;
 import object.actor.body.Body;
 import object.environment.Floor;
 import object.environment.Heightmap;
+import object.environment.ResourceMine;
 import object.primitive.Physical;
-import resource.sound.SoundController;
+import object.primitive.Positionable;
+import resource.sound.Sound;
 import sts.Stat;
 import time.Timer;
+import window.StoreGUI;
 import functions.Math2D;
+import functions.Math3D;
 import functions.MathExt;
 import gfx.Camera;
 import gfx.GOGL;
@@ -26,9 +35,12 @@ import gfx.SpriteMap;
 import gfx.TextureExt;
 
 public abstract class Actor extends Physical {
-	private SortedList<Actor> actorList = new SortedList<Actor>();
+	private CleanList<Actor> actorList = new CleanList<Actor>();
 	
 	private float prevSpeed;
+	
+	
+	private float sideRotAngle = 0;
 	
 	private static float SP_FRAC = 2f/3;
 	private static float SP_WALK = 9;
@@ -91,12 +103,134 @@ public abstract class Actor extends Physical {
 		
 		protected Timer rollTimer, attackTimer;
 	
-	//FOLLOW VARIABLES
-		private static final byte FOLLOW_NUM = 30;
-		private float[] followXP = new float[FOLLOW_NUM],
-				followYP = new float[FOLLOW_NUM],
-				followD = new float[FOLLOW_NUM];
-		private boolean[] followJP = new boolean[FOLLOW_NUM];
+		
+	
+	public static final byte T_MOVETO = 0, T_USE = 1, T_RUNSTORE = 2, T_MOVENEAR = 3, T_CHASE = 4, T_FACE = 5, T_TALKTO = 6, T_TALKING = 7, T_RESOURCEMINING = 8;
+	private List<Task> taskList = new ArrayList<Task>();
+	
+	public void taskClear() {
+		taskList.clear();
+	}
+	public void taskMoveTo(Positionable other) {
+		taskMoveTo(other.getX(),other.getY());
+	}
+	public void taskMoveTo(float x, float y) {
+		taskList.add(new Task(T_MOVETO, new vec4(x,y,0,1), null,null, null,null, null, 0));
+	}
+	public void taskMoveNear(Positionable other, float r) {
+		taskMoveNear(other.x(),other.y(),r);
+	}
+	public void taskMoveNear(float x, float y, float r) {
+		taskList.add(new Task(T_MOVENEAR, new vec4(x,y,0,1), null,null, null,null, null, r));
+	}
+	public void taskChase(Actor other) {
+		taskList.add(new Task(T_CHASE, other));
+	}
+	public void taskUse(Useable obj) {
+		taskList.add(new Task(T_USE, this, obj));
+	}
+	public void taskRunStore() {
+		taskList.add(new Task(T_RUNSTORE));
+	}
+	public void taskFace(Actor other) {
+		taskList.add(new Task(T_FACE, other));
+	}
+	public void taskResourceMine(ResourceMine other) {
+		taskList.add(new Task(T_RESOURCEMINING, this, other));
+	}
+	
+	
+	public boolean checkTask(byte type) {
+		return (taskList.size() > 0) ? (taskList.get(0).getType() == type) : false;
+	}
+	public boolean isTaskMoving() {
+		return checkTask(T_MOVETO) || checkTask(T_MOVENEAR);
+	}
+	public boolean isRunningStore() {
+		return checkTask(T_RUNSTORE);
+	}
+	public boolean isTalking() {
+		return checkTask(T_TALKING);
+	}
+	public boolean isResourceMining() {
+		return checkTask(T_RESOURCEMINING);
+	}
+	
+	private class Task {
+		private byte type;
+		private vec4 toPoint;
+		private Item myItem, targetItem;
+		private Actor myActor, targetActor;
+		private Useable targetUseable;
+		private float targetValue;
+		private ResourceMine targetResourceMine;
+		
+		public Task(byte type) {this.type = type;}
+		public Task(byte type, Actor targetActor) {
+			this.type = type;
+			this.targetActor = targetActor;
+		}
+		public Task(byte type, Actor myActor, ResourceMine targetResourceMine) {
+			this.type = type;
+			this.myActor = myActor;
+			this.targetResourceMine = targetResourceMine;
+		}
+		public Task(byte type, Actor myActor, Useable targetUseable) {
+			this.type = type;
+			this.myActor = myActor;
+			this.targetUseable = targetUseable;
+		}
+		public Task(byte type, vec4 toPoint, Item myItem, Item targetItem, Actor myActor, Actor targetActor, Useable targetUseable, float targetValue) {
+			this.type = type;
+			this.toPoint = toPoint;
+			this.myItem = myItem;
+			this.targetItem = targetItem;
+			this.myActor = myActor;
+			this.targetActor = targetActor;
+			this.targetUseable = targetUseable;
+			this.targetValue = targetValue;
+		}
+		
+		public void perform() {
+			boolean done = false;
+			
+			if(type == T_MOVETO) {
+				if(move(toPoint.get(3) == 1, toPoint.xy())) {
+					stop();
+					done = true;
+				}
+			}
+			else if(type == T_MOVENEAR) {
+				if(move(toPoint.get(3) == 1, toPoint.xy()) || calcPtDis(toPoint.x(),toPoint.y()) < targetValue) {
+					stop();
+					done = true;
+				}
+			}
+			else if(type == T_USE) {
+				targetUseable.use(myActor);
+				done = true;
+			}
+			else if(type == T_CHASE) {
+				if(move(true, targetActor))
+					done = true;
+			}
+			else if(type == T_FACE) {
+				if(face(targetActor))
+					done = true;
+			}
+			else if(type == T_RESOURCEMINING) {
+				if(targetResourceMine.mine(myActor))
+					done = true;
+			}
+			
+			if(done)
+				taskList.remove(this);
+		}
+
+		public byte getType() {
+			return type;
+		}
+	}
 		
 		
 	public Actor(float x, float y, float z) {
@@ -107,7 +241,6 @@ public abstract class Actor extends Physical {
 		faceDirection = camDirection = 0;
 		size = 10;		
 		
-		followIni();
 				
 		myBody = new Body();
 		inv = new Inventory(this);
@@ -115,6 +248,8 @@ public abstract class Actor extends Physical {
 		
 		rollTimer = new Timer(0,60);
 		attackTimer = new Timer(0,2);
+		
+		name = Name.generateHumanName(Name.G_EITHER);
 	}
 	
 	public void die() {
@@ -124,17 +259,17 @@ public abstract class Actor extends Physical {
 	
 
 	//PARENT FUNCTIONS
-		public void update(float deltaT) {
+		public void update() {
 			
 			prevSpeed = getXYSpeed();
 			
-			super.update(deltaT);
-						
-			followUpdate();
-			
+			super.update();
+									
 			if(canControl())
 				control();
 			updateAdvancedMotion();
+			
+			myBody.step();
 		}
 				
 	public boolean collide(Physical other) {		
@@ -146,22 +281,9 @@ public abstract class Actor extends Physical {
 		public float getHeight() {
 			return height;
 		}
-		
-		public void followIni() {
-			//Initializes the variables for an animated object, so other objects can follow it.	
-		
-			for(byte i = 0; i < FOLLOW_NUM; i += 1) {
-			    followXP[i] = x;
-			    followYP[i] = y;
-			    followD[i] = getDirection();
-			    followJP[i] = false;
-			}
-		}
 	
-		public boolean draw() {
-			myBody.draw(x,y,z+16, faceDirection);
-							
-			return true;
+		public void draw() {
+			myBody.draw(x(),y(),z()+16, faceDirection);
 		}
 		
 		/*public void updatePosition() {
@@ -170,7 +292,7 @@ public abstract class Actor extends Physical {
 			setFaceDir(getDirection());
 		}*/
 		
-		public void setFaceDir(float toDir) {
+		public boolean setFaceDir(float toDir) {
 			
 			if(prevSpeed < .1)			
 				faceDirection = faceToDirection = toDir;
@@ -178,6 +300,8 @@ public abstract class Actor extends Physical {
 				faceDirection = faceToDirection = toDir;
 			else
 				faceToDirection = toDir;
+			
+			return (faceDirection == toDir);
 		}
 		
 		public void setCameraDir(float toDir) {
@@ -198,47 +322,19 @@ public abstract class Actor extends Physical {
 			camDirection += Math2D.calcSmoothTurn(camDirection, camDir, 10);
 		}
 		
-	//UPDATE FUNTIONS
-		public void followUpdate() {
-			//Updates the follow variables.
-		
-			for(byte i = FOLLOW_NUM-1; i > 0; i -= 1) {
-			    followXP[i] = followXP[i-1];
-			    followYP[i] = followYP[i-1];
-			    followD[i] = followD[i-1];
-			    followJP[i] = followJP[i-1];
-			}
-		
-			followXP[0] = x;
-			followYP[0] = y;	
-			followD[0] = getDirection();
-			followJP[0] = false;
-		}	
 		
 	
 	public void land() {
 	    setZVelocity(0);
+	    isJumping = false;
 
 	    if(inAir) {
 	    	inAir = false;
 
 			float cDir = Camera.getDirection();
-	        new Dust(x+Math2D.calcLenX(7,cDir-90),y+Math2D.calcLenY(7,cDir-90),z+4, 0, false);
-	        new Dust(x+Math2D.calcLenX(7,cDir+90),y+Math2D.calcLenY(7,cDir+90),z+4, 0, false);
+	        //new Dust(x+Math2D.calcLenX(7,cDir-90),y+Math2D.calcLenY(7,cDir-90),z+4, 0, false);
+	        //new Dust(x+Math2D.calcLenX(7,cDir+90),y+Math2D.calcLenY(7,cDir+90),z+4, 0, false);
 	    }
-	}
-	
-	public float getFollowX() {
-		return followXP[FOLLOW_NUM-1];
-	}
-	public float getFollowY() {
-		return followYP[FOLLOW_NUM-1];
-	}
-	public float getFollowDirection() {
-		return followD[FOLLOW_NUM-1];
-	}
-	public boolean getFollowJump() {
-		return followJP[FOLLOW_NUM-1];
 	}
 	
 	
@@ -258,19 +354,17 @@ public abstract class Actor extends Physical {
 		if(isRolling())
 			addXYSpeed( (rollSpeed - getXYSpeed())/5 );
 		
-		// MOVE TO POINT
-		if(toPoint.get(3) == 1) {
-			if(move(true, new vec2(toPoint.get(0), toPoint.get(1))))
-				toPoint.set(3,0);
-		}
+		// PERFORM TASKS
+		if(!taskList.isEmpty())
+			taskList.get(0).perform();
 	}
 	
 	
 	protected boolean canMove() {
-		return !isRolling() && !isAttacking() && !Text.isActive();
+		return !isRolling() && !isAttacking() && !isResourceMining(); // && !Text.isActive();
 	}
 	protected boolean canControl() {
-		return !isAttacking() && !Text.isActive();
+		return !isAttacking() && !Text.isActive() && !isTaskMoving() && !isResourceMining();
 	}
 	
 
@@ -298,7 +392,10 @@ public abstract class Actor extends Physical {
 		else
 			spd = SP_WALK;
 
-		move(spd, moveDir, true);
+		move(spd, moveDir, true);		
+	}
+	protected boolean move(boolean isRunning, Actor other) {
+		return move(isRunning, other.getPos().xy());
 	}
 	protected boolean move(boolean isRunning, vec2 toPoint) {
 		
@@ -307,7 +404,7 @@ public abstract class Actor extends Physical {
 			spd = maxSpeed;
 		else
 			spd = SP_WALK;
-
+		
 		if(getXYSpeed() < Math2D.calcPtDis(getX(),getY(), toPoint)) {
 			move(spd, Math2D.calcPtDir(getX(),getY(), toPoint), false);
 			return false;
@@ -319,6 +416,8 @@ public abstract class Actor extends Physical {
 	}
 	protected void move(float spd, float moveDir, boolean useCamera) {
 
+		float toAng = 0, toSpd = 1;
+		
 		if(!canMove())
 			return;
 		
@@ -332,6 +431,9 @@ public abstract class Actor extends Physical {
 			if(!inAir) {
 				isMoving = true;
 				
+				toAng = Math2D.calcAngDiff(getDirection(), cDir-90+moveDir)*.7f;
+				toSpd = 5;
+				
 				setDirection(cDir-90+moveDir);
 				addXYSpeed( (spd - getXYSpeed())/5 );
 				
@@ -342,7 +444,7 @@ public abstract class Actor extends Physical {
 				else
 					myBody.animate(Body.C_WALK, Body.C_RUN, 1); //f
 			}
-
+			
 			float d = cDir - 90 + moveDir;
 			if(useCamera) {
 				// Rotate Camera Angle Based on Held Direction
@@ -357,7 +459,7 @@ public abstract class Actor extends Physical {
 			}
 			
 			setFaceDir(d);
-			setDirection(faceDirection); //d
+			setDirection(faceDirection); //d			
 		}
 		
 		// Otherwise, Not Moving
@@ -365,16 +467,24 @@ public abstract class Actor extends Physical {
 			isMoving = false;
 			
 			if(!inAir) {
-				addXYSpeed((0 - getXYSpeed())/3f);
+				addXYSpeed((0 - getXYSpeed())/4f); // 3
 
 				if(getXYSpeed() < .01)
 					setXYSpeed(0);
 			}
 			
 			myBody.stand();
+			
+			toAng = 0;
+			toSpd = 2;
 		}
+		
+		sideRotAngle += (toAng - sideRotAngle)/5;
+		
+		myBody.setSideRotation(sideRotAngle);
 	}
-	protected void stop() {
+	
+	public void stop() {
 		setXYSpeed(0);
 		isMoving = false;
 		myBody.stand();
@@ -384,12 +494,12 @@ public abstract class Actor extends Physical {
 	
 	public void centerCamera(float camDis, float camDir, float camZDir) {
 		float cX, cY, cZ, camX, camY, camZ;
-		cX = x;
-		cY = y;
+		cX = x();
+		cY = y();
 		cZ = floorZ+height;
-		camX = cX + Math2D.calcPolarX(camDis, camDir+180, camZDir);
-		camY = cY + Math2D.calcPolarY(camDis, camDir+180, camZDir);
-		camZ = cZ + Math2D.calcPolarZ(camDis, camDir, camZDir+180);
+		camX = cX + Math3D.calcPolarX(camDis, camDir+180, camZDir);
+		camY = cY + Math3D.calcPolarY(camDis, camDir+180, camZDir);
+		camZ = cZ + Math3D.calcPolarZ(camDis, camDir, camZDir+180);
 		
 		Camera.setProjection(camX, camY, camZ,  cX, cY, cZ);
 		Camera.stiff();
@@ -397,29 +507,15 @@ public abstract class Actor extends Physical {
 
 	public void moveToPoint(vec3 pt) 	{moveToPoint(pt.x(),pt.y(),pt.z());}
 	public void moveToPoint(float x, float y, float z) {
-		toPoint.set(0,x);
-		toPoint.set(1,y);
-		toPoint.set(2,z);
-		toPoint.set(3,1);
+		taskMoveTo(x,y);
 	}
-	public void moveToLenDir(float len, float dir) {moveToPoint(x+Math2D.calcLenX(len,dir),y+Math2D.calcLenY(len,dir),z);}	
+	public void moveToLenDir(float len, float dir) {moveToPoint(x()+Math2D.calcLenX(len,dir),y()+Math2D.calcLenY(len,dir),z());}	
 	public void stopMovingToPoint() 	{toPoint.set(3,0);}
 	
 	
 	// INTERACTING WITH OTHER ACTORS
-	protected float calcDis(Actor a) {
-		return Math2D.calcPtDis(x,y,a.getX(),a.getY());
-	}
-	protected float calcDir(Actor a) {
-		return Math2D.calcPtDir(x,y,a.getX(),a.getY());
-	}
-	public void setPos(float x, float y) {
-		setX(x);
-		setY(y);
-	}
-	public void face(Actor a) {
-		float dir = calcDir(a);
-		setFaceDir(dir);
+	public boolean face(Actor a) {
+		return setFaceDir(calcDir(a));
 	}
 	public void follow(Actor a) {
 		float dis, dir;
@@ -453,27 +549,20 @@ public abstract class Actor extends Physical {
 		stat.damage(amt);
 	}
 	
+	
+	protected void bounceOffHead() {
+		setZVelocity(5);
+	}
+	
 	protected void jump() {
-		float jumpSpeed;
-		/*switch(chrctr)
-		{
-		    case "mario": jumpSpeed = JUMP_SPEED; break;
-		    
-		    case "luigi": jumpSpeed = 1.25f*JUMP_SPEED; break;
-		    
-		    case "peach":
-		    case "darkpeach": jumpSpeed = .4f*JUMP_SPEED; break;
-		    
-		    default: jumpSpeed = JUMP_SPEED; break;
-		}*/
-		
+		float jumpSpeed;		
 		jumpSpeed = JUMP_SPEED;
 		
 		setZVelocity(jumpSpeed);
-		z += getZVelocity();
+		addZ(getZVelocity());
 		//buttonPrevious[0] = 1;
 		isJumping = true;
-		SoundController.playSound("Jump");
+		Sound.play("Jump");
 		    
 		
 		inAir = true;
@@ -494,16 +583,21 @@ public abstract class Actor extends Physical {
 	}
 	
 	// Inventory
-	public Inventory getInventory() {
-		return inv;
-	}
+	public Inventory getInventory() {return inv;}
 	public void addCoins(int num) {inv.addCoins(num);}
+
+	public boolean checkOwns(String itemName) {return (inv.findItem(itemName) != null);}
+	
+	public void giveTo(Actor other, String name) {
+		if(checkOwns(name)) {
+		}
+	}
 	
 	public void give(Item it) {inv.add(it);}
 	public void give(String name, int amount) {inv.add(name, amount);}
-	public void give(ItemBlueprint itemType, int amount) {inv.add(itemType, amount);}
-	
-	private void dropItems() {inv.dropAll(new vec3(x,y,Heightmap.getInstance().getZ(x,y)));}
+	public void give(ItemBlueprint itemType, int amount) {inv.add(itemType, amount);}	
+	private void replaceItem(String itOri, String itNew) {inv.replaceItem(itOri, itNew);}
+	private void dropItems() {inv.dropAll(new vec3(x(),y(),Heightmap.getInstance().getZ(x(),y())));}
 	public void buyItem(ItemBlueprint itemType, int value) {
 		if(inv.getCoinNum() >= value) {
 			give(itemType,1);
@@ -513,5 +607,16 @@ public abstract class Actor extends Physical {
 	
 	public Stat getStat() {
 		return stat;
+	}
+	public void cook() {
+		replaceItem("Empty Bucket", "Water Bucket");
+	}
+	
+	public void hover() {
+		Player p = Player.getInstance();
+		
+		if(Mouse.getLeftClick())
+			if(isRunningStore())
+				StoreGUI.open(name);
 	}
 }

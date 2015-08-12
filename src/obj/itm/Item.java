@@ -1,22 +1,28 @@
 package obj.itm;
 
+import java.util.Comparator;
+
+import interfaces.Useable;
 import io.IO;
 import io.Mouse;
 import gfx.GOGL;
+import gfx.RGBA;
 import gfx.TextureExt;
-import Datatypes.Inventory;
-import Datatypes.SortedList;
-import Datatypes.vec3;
 
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.Messages;
+import datatypes.Inventory;
+import datatypes.vec3;
+import datatypes.lists.CleanList;
 import object.actor.Actor;
 import object.actor.Player;
+import object.primitive.Drawable;
 import object.primitive.Physical;
+import resource.model.Model;
 
 
-public abstract class Item extends Physical {
+public abstract class Item extends Physical implements Useable {
 	private ItemBlueprint blueprint;
 	private Inventory parent;
 	private int stackNum;
@@ -65,7 +71,7 @@ public abstract class Item extends Physical {
 	        setXYSpeed(getXYSpeed()*.3f);
 	    }
 	    else
-	    	setVelocity(0);
+	    	setVelocity(0,0,0);
 	}
 	
 	public void hover() {
@@ -75,49 +81,21 @@ public abstract class Item extends Physical {
 		GOGL.drawStringS(0,0, "Pick up a " + getName() + ".");
 		GOGL.setPerspective();
 		
-		if(Mouse.getLeftClick())
-			Player.getInstance().give(this);
+		if(Mouse.getLeftClick()) {
+			Player pl = Player.getInstance();
+			
+			pl.taskMoveTo(this);
+		}
 	}
 	
-	public boolean draw() {
-		//GOGL.draw3DSphere(x,y,z,20);
-				
+	public void draw() {				
+		GOGL.setColor(RGBA.WHITE);
+		
 		GOGL.enableLighting();
-		GOGL.transformClear();
-		GOGL.transformTranslation(x,y,z);
+		transformTranslation();
 		drawModel(blueprint.getName());
 		GOGL.transformClear();
 		GOGL.disableLighting();
-		
-	// Drawing Anvil
-		/*GOGL.enableLighting();
-		GOGL.setOrtho(999);
-		GOGL.transformClear();
-		GOGL.transformTranslation(320,240,0);
-		GOGL.transformRotationX(90);
-		GOGL.transformRotationX(-30);
-		GOGL.transformRotationZ(GOGL.getTime());
-		GOGL.transformScale(10,7,10);
-		GOGL.transformRotationZ(45);
-		
-			GOGL.transformRotationZ(-45);
-				GOGL.transformTranslation(2,0,0);
-			GOGL.transformRotationZ(45);
-			
-			GOGL.draw3DFrustem(0,0,3f,1f,3f,2f,8);
-			
-			GOGL.transformRotationZ(-45);
-				GOGL.transformTranslation(-2,0,0);
-			GOGL.transformRotationZ(45);
-								
-			GOGL.draw3DFrustem(0,0,2.5f,4f,4f,3f,4);
-			GOGL.draw3DFrustem(0,0,1.5f,3f,2f,1f,4);
-			GOGL.draw3DFrustem(4f,1.5f,4);
-		GOGL.transformClear();
-		GOGL.disableLighting();*/
-	
-		
-		return false;
 	}
 	
 	public static void drawModel(String name) {
@@ -160,13 +138,14 @@ public abstract class Item extends Physical {
 				break;
 				
 			case "Empty Bowl":
-				GOGL.transformScale(.25f);
-				GOGL.transformScale(10);
+				//GOGL.transformScale(.25f);
+				//GOGL.transformScale(10);
 				GOGL.transformRotationZ(45);
-					GOGL.setLightColori(128,103,57);
+				Model.MOD_BOWL.draw();
+					/*GOGL.setLightColori(128,103,57);
 					GOGL.draw3DFrustem(1.5f,2f,.5f,6);
 					GOGL.draw3DFrustem(0,0,.5f, 1.5f,4f,2f,6,false);
-					GOGL.draw3DFrustem(0,0,.5f, 2f,4f,2f,6,false);					
+					GOGL.draw3DFrustem(0,0,.5f, 2f,4f,2f,6,false);*/			
 				break;
 
 			case "Logs":
@@ -185,9 +164,7 @@ public abstract class Item extends Physical {
 		
 		GOGL.setColor(1,1,1,1);
 	}
-	
-	public abstract void use();
-	
+		
 	public boolean collide(Physical other) {
 		if(!doUpdates)
 			return false;
@@ -233,7 +210,7 @@ public abstract class Item extends Physical {
 		
 		public void giveTo(Actor a) {giveTo(a.getInventory());}
 		public void giveTo(Inventory inv) {			
-			SortedList<Item> list = inv.getItemList();
+			CleanList<Item> list = inv.getItemList();
 			int size = list.size();
 			Item it;
 			
@@ -264,7 +241,7 @@ public abstract class Item extends Physical {
 			}
 			
 			// Otherwise, Can't be Owned!!
-			makeReal(inv.getOwner().getPosition());
+			makeReal(inv.getOwner().getPos());
 		}
 		public void makeReal(vec3 pt) {makeReal(pt.x(),pt.y(),pt.z());}
 		public void makeReal(float x, float y, float z) {
@@ -272,10 +249,22 @@ public abstract class Item extends Physical {
 			visible = true;
 			doUpdates = true;
 			
-			this.x = x;
-			this.y = y;
-			this.z = z;
+			setPos(x,y,z);
 		}
 
 	public Actor getOwner() {return parent.getOwner();}
+	
+	
+	public static class Comparators {
+		public final static Comparator<Item> VALUE = new Comparator<Item>() {
+            public int compare(Item o1, Item o2) {
+                return (int) (o1.getValue() - o2.getValue());
+            }
+        };
+        public final static Comparator<Item> NAME = new Comparator<Item>() {
+            public int compare(Item o1, Item o2) {
+                return (int) o1.getName().compareTo(o2.getName());
+            }
+        };
+	}
 }

@@ -1,4 +1,4 @@
-package Datatypes;
+package datatypes;
 
 import functions.Math2D;
 
@@ -21,85 +21,94 @@ public abstract class vec {
 		set(values);
 	}
 	
+	public vec copy() {
+		switch(SIZE) {
+			case 2: return new vec2(this);
+			case 3: return new vec3(this);
+			case 4: return new vec4(this);
+			default: throw new UnsupportedOperationException();
+		}
+	}
+	
 	public final void set(int index, float value) {
 		if(index < 0 || index >= SIZE)
-			return;
-		else
-			array[index] = value;
+			throw new IndexOutOfBoundsException();
+		array[index] = value;
+	}
+	public final void set(float... values) {
+		if(values.length != SIZE)
+			throw new IndexOutOfBoundsException();
+		for(int i = 0; i < SIZE; i++)
+			set(i,values[i]);
 	}
 	
-	protected final void set(float... values) {
-		if(values.length == SIZE)
-			for(int i = 0; i < SIZE; i++)
-				set(i,values[i]);
-	}
-	
-	protected final void set(vec other) {
-		if(other.SIZE == SIZE)
-			set(other.array);
+	public final void set(vec other) {
+		if(other.SIZE != SIZE)
+			throw new UnsupportedOperationException();
+		set(other.array);
 	}
 	
 	public final float get(int index) {
 		if(index < 0 || index >= SIZE)
-			return 0;
+			throw new IndexOutOfBoundsException();
 		else
 			return array[index];
 	}
 	
-	public final float len() {
-		return Math2D.calcLen(array);
-	}
+	public final float len() {return Math2D.calcLen(array);}
+
 	
 	
 	// SELF-MODIFYING
-	protected vec norme() {
-		return dive(len());
-	}
-	protected vec adde(float val) {		
+	public vec norm() 	{return copy().norme();}
+	public vec norme() 	{return dive(len());}
+
+	public vec inv() {return mult(-1);}
+	public vec inve() {return multe(-1);}
+	
+	public vec add(float val) {return copy().adde(val);}
+	public vec adde(float val) {		
 		for(int i = 0; i < SIZE; i++)
 			set(i, array[i]+val);
-		
-		return this;
-	}
-	protected vec sube(float val) {		
-		for(int i = 0; i < SIZE; i++)
-			set(i, array[i]-val);
-		
-		return this;
-	}
-	protected vec adde(vec other) {
-		if(other.SIZE == SIZE)
-			for(int i = 0; i < SIZE; i++)
-				set(i, array[i]+other.array[i]);
-		
-		return this;
-	}
-	protected vec sube(vec other) {
-		if(other.SIZE == SIZE)
-			for(int i = 0; i < SIZE; i++)
-				set(i, array[i]-other.array[i]);
-		
 		return this;
 	}
 	
-	protected vec multe(float val) {		
+	public vec add(vec other) {return copy().adde(other);}
+	public vec adde(vec other) {
+		if(other.SIZE != SIZE)
+			throw new UnsupportedOperationException();
+
 		for(int i = 0; i < SIZE; i++)
-			set(i, array[i]*val);
+			set(i, array[i]+other.array[i]);
 		
 		return this;
 	}
-	protected vec dive(float val) {
-		if(val == 0)
-			return this;
-		else
-			return multe(1/val);
+
+	public vec sub(float val) {return add(-val);}
+	public vec sube(float val) {return adde(-val);}
+	public vec sub(vec other) {return add(other.inv());}
+	public vec sube(vec other) {return adde(other.inv());}
+	
+	public vec mult(float val) {return copy().multe(val);}
+	public vec multe(float val) {
+		for(int i = 0; i < SIZE; i++)
+			set(i, array[i]*val);	
+		return this;
 	}
-	protected float dot(vec other) {
-		float value = 0;
+	
+	public vec div(float val) {return copy().dive(val);}
+	public vec dive(float val) {
+		if(val == 0)	throw new ArithmeticException();
+		else			return multe(1/val);
+	}
+	
+	public final float dot(vec other) {
+		if(other.SIZE != SIZE)
+			throw new UnsupportedOperationException();
 		
-		if(other.SIZE == SIZE)
-			for(int i = 0; i < SIZE; i++)
-				value += array[i]*other.array[i];
+		float value = 0;
+		for(int i = 0; i < SIZE; i++)
+			value += array[i]*other.array[i];
 		
 		return value;
 	}
@@ -125,4 +134,25 @@ public abstract class vec {
 		
 		return array;
 	}
+	
+	
+	
+	
+	public void x(float x) {set(0,x);}
+	public void y(float y) {set(1,y);}
+	public void z(float z) {set(2,z);}
+	public void w(float w) {set(3,w);}
+	public float x() {return get(0);}
+	public float y() {return get(1);}
+	public float z() {return get(2);}
+	public float w() {return get(3);}
+
+	public vec2 xy() {return new vec2(x(),y());}
+	public vec2 yx() {return new vec2(y(),x());}
+	public vec2 xz() {return new vec2(x(),z());}
+	public vec2 zx() {return new vec2(z(),x());}
+	public vec2 yz() {return new vec2(y(),z());}
+	public vec2 zy() {return new vec2(z(),y());}
+	
+	public vec3 xyz() {return new vec3(x(),y(),z());}
 }

@@ -2,15 +2,39 @@ package gfx;
 
 import java.awt.Color;
 import java.nio.FloatBuffer;
+import java.util.Comparator;
 
+import datatypes.vec4;
+import obj.itm.Item;
 import functions.Math2D;
 import functions.MathExt;
 
-public class RGBA {
-	public static final RGBA WHITE = new RGBA(1,1,1,1), RED = new RGBA(1,0,0,1), BLACK = new RGBA(0,0,0,1);
-	private float R, G, B, A;
+public class RGBA{
+	public static final RGBA
+		WHITE = new RGBA(1,1,1,1), 
+		RED = new RGBA(1,0,0,1),
+		GREEN = new RGBA(0,1,0,1),
+		BLUE = new RGBA(0,0,1,1),
+		MAGENTA = new RGBA(1,0,1,1),
+		YELLOW = new RGBA(1,1,0,1),
+		CYAN = new RGBA(0,1,1,1),
+		BLACK = new RGBA(0,0,0,1);
+	private float R,G,B,A;
 	
-	public RGBA(float R, float G, float B, float A) {
+	public RGBA(float R, float G, float B, float A) {set(R,G,B,A);}
+	public RGBA(float R, float G, float B) 			{set(R,G,B,1);}
+	public RGBA(int rgba) 							{set(rgba);}
+	public RGBA(Color color) 						{set(color.getRGB());}
+
+	public void set(int rgba) {
+		Color c = new Color(rgba);
+		
+		this.R = c.getRed()/255f;
+		this.G = c.getGreen()/255f;
+		this.B = c.getBlue()/255f;
+		this.A = c.getAlpha()/255f;
+	}
+	public void set(float R, float G, float B, float A) {
 		if(R > 1 || G > 1 || B > 1) {
 			R /= 255;
 			G /= 255;
@@ -22,45 +46,21 @@ public class RGBA {
 		this.B = B;
 		this.A = A;
 	}
-	public RGBA(float R, float G, float B) {
-		if(R > 1 || G > 1 || B > 1) {
-			R /= 255;
-			G /= 255;
-			B /= 255;
-		}
+	
+	public float R() {return R;}	
+	public float G() {return G;}
+	public float B() {return B;}
+	public float A() {return A;}
+	public float getR() {return R;}	
+	public float getG() {return G;}
+	public float getB() {return B;}
+	public float getA() {return A;}
 		
-		this.R = R;
-		this.G = G;
-		this.B = B;
-		this.A = 1;
-	}
-
-	public RGBA(int rgba) {
-		Color c = new Color(rgba);
-				
-		R = c.getRed();
-		G = c.getGreen();
-		B = c.getBlue();
-		A = c.getAlpha();
-	}
-
-	public float getR() {
-		return R;
-	}	
-	public float getG() {
-		return G;
-	}
-	public float getB() {
-		return B;
-	}
-	public float getA() {
-		return A;
-	}
+	public int getRi() {return (int) Math.round(R*255);}	
+	public int getGi() {return (int) Math.round(G*255);}
+	public int getBi() {return (int) Math.round(B*255);}
 	
-	public float getValue() {
-		return (float) (R*.27 + G*.71 + B*.07);
-	}
-	
+	public float getValue() {return (float) (R*.27 + G*.71 + B*.07);}
 	public void invert() {
 		R = 1-R;
 		G = 1-G;
@@ -85,16 +85,53 @@ public class RGBA {
 		}
 
 	public float[] getArray() {
-		float[] array = new float[4];
-		array[0] = R;
-		array[1] = G;
-		array[2] = B;
-		array[3] = A;
-		
-		return array;
+		return new float[] {R,G,B,A};
 	}
 
 	public void println() {
 		System.out.println(R + ", " + G + ", " + B + ", " + A);
+	}
+	
+	public static RGBA randomizeAboveValue(float value) {
+		RGBA rnd;
+		do
+			rnd = RGBA.randomize();
+		while (rnd.getValue() < value);
+		
+		return rnd;
+	}
+	
+	public Color getColor() {
+		return new Color(R,G,B,A);
+	}
+
+	public static class Comparators {
+		public final static Comparator<RGBA> RED = new Comparator<RGBA>() {
+            public int compare(RGBA o1, RGBA o2) {
+                return (int) (o1.getR() - o2.getR());
+            }
+        };
+        public final static Comparator<RGBA> GREEN = new Comparator<RGBA>() {
+            public int compare(RGBA o1, RGBA o2) {
+                return (int) (o1.getG() - o2.getG());
+            }
+        };
+        public final static Comparator<RGBA> BLUE = new Comparator<RGBA>() {
+            public int compare(RGBA o1, RGBA o2) {
+                return (int) (o1.getB() - o2.getB());
+            }
+        };
+        public final static Comparator<RGBA> VALUE = new Comparator<RGBA>() {
+            public int compare(RGBA o1, RGBA o2) {
+                return (int) (o1.getValue() - o2.getValue());
+            }
+        };
+	}
+
+	public float[] getRGBArray() {
+		return new float[] {R,G,B};
+	}
+	public void setA(float alpha) {
+		A = alpha;
 	}
 }

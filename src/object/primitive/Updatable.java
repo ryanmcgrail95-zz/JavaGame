@@ -3,13 +3,13 @@ package object.primitive;
 import gfx.Camera;
 import io.IO;
 import io.Mouse;
-import resource.sound.SoundController;
+import resource.sound.Sound;
 import time.Timer;
-import Datatypes.SortedList;
 import cont.TextureController;
+import datatypes.lists.CleanList;
 
 public abstract class Updatable {
-	private static SortedList<Updatable> updateList = new SortedList<Updatable>();
+	private static CleanList<Updatable> updateList = new CleanList<Updatable>();
 	protected boolean doUpdates;
 
 
@@ -18,46 +18,36 @@ public abstract class Updatable {
 		updateList.add(this);
 	}
 	
-	public abstract void update(float deltaT);
+	public abstract void update();
 	
 	public void destroy() {
 		updateList.remove(this);
 	}
-	
-	public static void clean() {
-		updateList.clean();
-	}
+
 		
 	//Global Functions
-		public static void updateAll(float deltaT) {
+		public static void updateAll() {
 			IO.update();
-			TextureController.update(deltaT);
 			Camera.update();
+			Sound.update();
 			Timer.tickAll(1);
 			
 			
-		    						
-			Updatable u;
-			for(int i = 0; i < updateList.size(); i++) {
-				u = updateList.get(i);
-				
+			for(Updatable u : updateList) {				
 				if(u.doUpdates)
-					u.update(deltaT);
+					u.update();
 			}
-			
-			Drawable.sort();
-			
-			Drawable.clean();
-			Updatable.clean();
-			Physical.clean();
-			Environmental.clean();
-			SoundController.clean();
+						
+			Sound.clean();
 		}
 
 		public static int getNumber() {
 			return updateList.size();
 		}	
 		
+		public void disableUpdates() {
+			updateList.remove(this);
+		}
 		public void setDoUpdates(boolean should) {
 			doUpdates = should;
 		}

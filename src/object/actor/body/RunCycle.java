@@ -1,6 +1,6 @@
 package object.actor.body;
 
-import Datatypes.vec3;
+import datatypes.vec3;
 import functions.MathExt;
 import gfx.GOGL;
 
@@ -9,7 +9,7 @@ public class RunCycle extends Cycle {
 	public RunCycle() {
 		super();
 		frameNum = 12;
-		speed = .3f;
+		speed = .4f;
 
 		iniBody();
 		iniLegs();

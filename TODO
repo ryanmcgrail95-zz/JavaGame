@@ -1,0 +1,23 @@
+
+
+- Useable
+	- trees/ore veins stop player, give item & exp every # steps
+	- when used, become empty, have to wait again
+
+- Radar
+	- Scanning for Objects
+
+ITEMS
+	- Books
+		- loading
+		- drawing pages
+		- flipping pages
+		- learning locations (adding to map)
+
+IMAGES
+	- Painting Texture onto Another Texture
+		- (for map)
+	- GrayscaleAlphaFilter
+		- set alpha of each pixel to the red component
+	- Hand-drawn Sketch Shader
+		- https://www.shadertoy.com/view/MsSGD1 

@@ -1,6 +1,7 @@
 package sts;
 
-import Datatypes.SortedList;
+import brain.Name;
+import datatypes.lists.CleanList;
 import object.actor.Actor;
 import functions.Math2D;
 import functions.MathExt;
@@ -11,7 +12,7 @@ import gfx.RGBA;
 public class Stat {
 	public static final byte 	EXP_WOODCUTTING = 0,
 								EXP_FIREMAKING = 1;
-	private static SortedList<Stat> instanceList = new SortedList<Stat>();
+	private static CleanList<Stat> instanceList = new CleanList<Stat>();
 	private Actor owner;
 	private String name;
 	private float hp, toHP, maxHP, fp, maxFP, bp;
@@ -19,6 +20,9 @@ public class Stat {
 	
 	public Stat(Actor owner) {
 		this.owner = owner;
+		
+		name = Name.generateHumanName(Name.G_MALE);
+		
 		statExp = new float[2];
 		
 		toHP = hp = maxHP = 10;
@@ -102,26 +106,22 @@ public class Stat {
 		}
 
 
-		public void drawOverhead() {
-			drawOverhead(owner.getX(), owner.getY(), owner.getZ()+owner.getHeight()+8);
-		}
+		public void drawOverhead() {drawOverhead(owner.getX(), owner.getY(), owner.getZ()+owner.getHeight()+8);}
 		public void drawOverhead(float x, float y, float z) {
 			int[] pt = GOGL.calcScreenPt(x,y,z);
-			GOGL.setOrtho();
-				GLText.drawStringCentered(pt[0],pt[1], 1,1, "<<"+name+">>");
-				
-				float dX, dY, dW, dH, f;
-				dW = 150;
-				dH = 15;
-				dX = pt[0]-dW/2;//16;
-				dY = pt[1]-dH/2 + 20;//480 - (dX+dH);
-				
-				if(Math.abs(toHP - hp) > .05) {
-					dX += MathExt.rnd(-2,2);
-					dY += MathExt.rnd(-2,2);
-				}
-				GOGL.drawFillBar(dX,dY,dW,dH, hp/maxHP);
-			GOGL.setPerspective();
+			GLText.drawStringCentered(pt[0],pt[1], 1,1, "<<"+name+">>");
+			
+			float dX, dY, dW, dH, f;
+			dW = 150;
+			dH = 15;
+			dX = pt[0]-dW/2;//16;
+			dY = pt[1]-dH/2 + 20;//480 - (dX+dH);
+			
+			if(Math.abs(toHP - hp) > .05) {
+				dX += MathExt.rnd(-2,2);
+				dY += MathExt.rnd(-2,2);
+			}
+			GOGL.drawFillBar(dX,dY,dW,dH, hp/maxHP);
 		}
 
 

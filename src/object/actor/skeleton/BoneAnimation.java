@@ -1,6 +1,6 @@
 package object.actor.skeleton;
 
-import Datatypes.vec3;
+import datatypes.vec3;
 
 public class BoneAnimation {
 	private int numFrames, numIndices;
@@ -34,7 +34,7 @@ public class BoneAnimation {
 				
 				iF = 1-f;
 
-				return next.mult(f).add(prev.mult(iF));
+				return (vec3) next.mult(f).add((vec3) prev.mult(iF));
 			}
 		}
 				

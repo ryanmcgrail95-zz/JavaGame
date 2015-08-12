@@ -1,6 +1,9 @@
-package Datatypes;
+package datatypes;
+
+import java.util.List;
 
 import functions.Math2D;
+import functions.Math3D;
 import functions.MathExt;
 
 public final class vec3 extends vec {
@@ -14,51 +17,13 @@ public final class vec3 extends vec {
 		super(3,a,b,c);
 	}
 
-	public vec3(vec3 other) {
+	public vec3(vec other) {
 		super(3);
 		set(other);
 	}
 	
-	public void set(vec3 other) {
-		super.set(other);
-	}
-	
-	public vec3 copy() {
-		return new vec3(this);
-	}
-	
-	public vec3 norm() {
-		vec3 v = new vec3(this);
-		return (vec3) v.norme();
-	}
-	
 		
-	// Operators
-	public vec3 add(vec3 other) {
-		vec3 newV = new vec3(this);
-		newV.adde(other);
-		
-		return newV;
-	}
-	public vec3 subtract(vec3 other) {
-		vec3 newV = new vec3(this);
-		newV.sube(other);
-		
-		return newV;
-	}
-
-	public float dot(vec3 other) {
-		return super.dot(other);
-	}
-	
-	
-	public vec3 mult(float num) {
-		vec3 newV = new vec3(this);
-		newV.multe(num);
-		
-		return newV;
-	}
-		
+	// Operators		
 	public vec3 cross(vec3 other) {
 		vec3 newV = new vec3();
 		
@@ -84,6 +49,16 @@ public final class vec3 extends vec {
 		return arrays;
 	}
 	
+	public static float[][] convert(List<vec3> list) {
+		int si = list.size();
+		float[][] outArray = new float[si][3];
+		
+		for(int i = 0; i < si; i++)
+			outArray[i] = list.get(i).array;
+		
+		return outArray;
+	}
+	
 	public vec3 interpolate(vec3 other, float frac) {
 		float f = MathExt.contain(0, frac, 1), iF = 1-f;
 		vec3 newVec = new vec3();
@@ -94,13 +69,27 @@ public final class vec3 extends vec {
 		return newVec;
 	}
 
-	public float x() {
-		return get(0);
+	
+	public static vec3 rnd(float maxR) {
+		return Math3D.calcPolarCoords(MathExt.rnd()*maxR,MathExt.rnd(360),MathExt.rnd(180));
 	}
-	public float y() {
-		return get(1);
+
+	
+	public float xyLen() {
+		return Math2D.calcLen(x(),y());
 	}
-	public float z() {
-		return get(2);
+	public void setDirection(float direction) {
+		float xySpd = xyLen();
+		x(Math2D.calcLenX(xySpd, direction));
+		y(Math2D.calcLenY(xySpd, direction));
+	}
+	public float getDirection() {
+		return Math2D.calcPtDir(0,0,x(),y());
+	}
+
+	public void setXYLen(float newSpd) {
+		float dir = getDirection();
+		x(Math2D.calcLenX(newSpd, dir));
+		y(Math2D.calcLenY(newSpd, dir));
 	}
 }

@@ -1,9 +1,10 @@
 package obj.itm;
 
 import gfx.TextureExt;
-import Datatypes.Inventory;
 
 import com.jogamp.opengl.util.texture.Texture;
+
+import datatypes.Inventory;
 
 public class ItemBlueprint {
 	private int value;

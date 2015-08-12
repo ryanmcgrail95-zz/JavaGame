@@ -1,5 +1,7 @@
 package object.environment;
 
+import datatypes.lists.CleanList;
+import interfaces.Useable;
 import io.Mouse;
 import functions.MathExt;
 import gfx.GOGL;
@@ -10,28 +12,54 @@ import object.primitive.Environmental;
 import object.primitive.Physical;
 import time.Timer;
 
-public class Fire extends Environmental {
+public class Fire extends Environmental implements Useable {
 	
 	private float fireHeight, fireRadius, fireDir, fireDirZ;
 	private Timer flickerTimer;
 	
+	private CleanList<Firelet> list = new CleanList<Firelet>();
+	
 	public Fire(float x, float y) {
-		super(x,y,true);
+		super(x,y,true,false);
 		flickerTimer = new Timer(3);
+	}
+	
+	
+	public class Firelet {
+		float fX,fY,fZ;
+		float dir = 0;
+		
+		public Firelet(float aX, float aY, float aZ) {
+			fX = x() + aX;
+			fY = y() + aY;
+			fZ = z() + aZ;
+		}
+		
+		public void draw() {
+			dir += 2;
+			
+			GOGL.transformClear();
+			GOGL.transformTranslation(fX,fY,fZ);
+			GOGL.draw3DFrustem(3,5,3);
+			GOGL.transformClear();
+			
+			if(dir > 360)
+				list.remove();
+		}
 	}
 	
 	
 	public void hover() {
 		Mouse.setFingerCursor();
 		if(Mouse.getLeftClick()) {
-			Player.getInstance().moveToPoint(getX(),getY(),getZ());
-			
-			// Using the Fire
-			// ???
+			Player p = Player.getInstance();
+			p.taskClear();
+			p.taskMoveTo(x(),y());
+			p.taskUse(this);
 		}
 	}
 		
-	public boolean draw() {
+	public void draw() {
 
 		if(flickerTimer.check()) {
 			fireHeight = MathExt.rnd(14,20);
@@ -65,9 +93,15 @@ public class Fire extends Environmental {
 		GOGL.draw3DFrustem(0,0,2, 0, fireRadius, fireBH);
 		GOGL.draw3DFrustem(0,0,2+fireBH, fireRadius, 0, fireTH);
 		GOGL.transformClear();
- 		
-		return false;
+		
+		for(Firelet f : list)
+			f.draw();
 	}
 
 	public boolean collide(Physical other) {return false;}
+
+
+	public void use(Actor user) {
+		user.cook();
+	}
 }

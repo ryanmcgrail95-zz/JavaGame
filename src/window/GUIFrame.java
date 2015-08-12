@@ -1,33 +1,46 @@
 package window;
 
+import functions.Math2D;
+import gfx.FBO;
 import gfx.GOGL;
 import gfx.RGBA;
+import gfx.TextureRenderer;
+import io.Mouse;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jogamp.opengl.util.awt.TextureRenderer;
+import com.jogamp.opengl.FBObject;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
+import datatypes.vec2;
+
 public class GUIFrame extends GUIDrawable {
-	private TextureRenderer renderTex;
+	private FBO fbo;
 	private List<GUIDrawable> drawList;
 	private List<GUIObject> nondrawList;
+	private float scale = 1;
+
 	
-	public GUIFrame(float x, float y, float w, float h) {
-		super(x, y, w, h);
-		
-//		//renderTex = new TextureRenderer((int)w,(int)h,true,false);
+	public GUIFrame(int x, int y, int w, int h) {
+		super(x,y, w, h);
 		
 		drawList = new ArrayList<GUIDrawable>();
 		nondrawList = new ArrayList<GUIObject>();
+		
+		fbo = new FBO(GOGL.gl,w,h);
 	}
 	
 	public void destroy() {
 		drawList.clear();
 		nondrawList.clear();
 		//super.destroy();
-		//renderTex.dispose();
+	}
+	
+	public void setScale(float scale) {
+		this.scale = scale;
 	}
 	
 	public void add(GUIObject obj) {
@@ -39,18 +52,58 @@ public class GUIFrame extends GUIDrawable {
 	}
 	
 	public void render() {
-		//renderTex.beginOrthoRendering(640,480);
-		/*for(GUIDrawable g : drawList)
-			g.draw();*/
-		//renderTex.endOrthoRendering();
+				
+		fbo.attach(GOGL.gl);
+			GOGL.enableDepth();
+			GOGL.clearScreen(new RGBA(0,0,0,0));
+			
+			GOGL.setOrthoLayer(900);
+			
+			GOGL.setColor(RGBA.WHITE);
+			for(GUIDrawable g : drawList)
+				g.draw(0,0);
+			
+		fbo.detach(GOGL.gl);
 	}
 	
-	public void draw() {
-		draw(x(),y());
+	public float w() {return super.w()*scale;}
+	public float h() {return super.h()*scale;}
+	
+	public byte draw() {
+		return draw(x(),y());
 	}
-	public void draw(float x, float y) {
-		for(GUIDrawable g : drawList)
-			g.draw(x,y);
-		//GOGL.drawTexture(x(),y(),renderTex.getTexture());
+	public byte draw(float x, float y) {
+		GOGL.setColor(RGBA.WHITE);
+
+		GOGL.disableBlending();
+		GOGL.drawFBO(x,y, w(),h(), fbo);
+		GOGL.enableBlending();
+		
+		return -1;		
+	}
+	
+	
+	public float getScale() {
+		return scale;
+	}
+	public vec2 getRelativeMouseCoords() {
+		float x, y;
+		x = 1/scale*(Mouse.getMouseX() - getScreenX());
+		y = 1/scale*(Mouse.getMouseY() - getScreenY());
+
+		return new vec2(x,y);
+	}
+	
+	public boolean checkRectangle(float x, float y, float w, float h) {
+		vec2 mousePos = getRelativeMouseCoords();
+		return Math2D.checkRectangle(mousePos.x(),mousePos.y(), x,y, w, h);
+	}
+	
+	
+	public FBO getFBO() {
+		return fbo;
+	}
+	public int getTexture() {
+		return fbo.getTexture();
 	}
 }
