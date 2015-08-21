@@ -1,5 +1,7 @@
+/resource/
 /Resources/
 /Smithing/
+/animation/
 /brain/
 /btl/
 /com/
@@ -15,7 +17,7 @@
 /io/
 /obj/
 /object/
-/resource/
+/phone/
 /rm/
 /sts/
 /testbench/

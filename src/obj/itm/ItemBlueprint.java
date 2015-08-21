@@ -4,8 +4,6 @@ import gfx.TextureExt;
 
 import com.jogamp.opengl.util.texture.Texture;
 
-import datatypes.Inventory;
-
 public class ItemBlueprint {
 	private int value;
 	private String name, info;

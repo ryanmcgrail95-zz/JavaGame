@@ -100,7 +100,7 @@ public final class Text {
 				bY = boxY+(100);
 				tX = bX-6 + Math2D.calcLenX(4,8*GOGL.getTime());
 				tY = bY-6;
-				GOGL.fillCircle(tX,tY, 8, 3);
+				GOGL.fillPolygon(tX,tY, 8, 3);
 				
 				if(Controller.getActionPressed()) {
 					if(fullString.isEmpty()) {

@@ -116,11 +116,13 @@ public class TextureController {
         load("Resources/Images/Items/coin.gif", "texCoin", M_BGALPHA);
         
         load("Resources/Images/bg.png", "texPicross", M_NORMAL);
+        load("Resources/Images/loop.png", "loop", M_NORMAL);
         
         //Load Particles
         load("Resources/Images/Particles/dust.gif", "texDust", M_BGALPHA);
         
         load("Resources/Images/gameboy.png", "texGameboy", M_NORMAL);
+        load("Resources/Images/iphone.png", "iphone", M_NORMAL);
 
         //BattleStar Images
         load("Resources/Images/Battle/damageStar.gif", "texDamageStar", M_BGALPHA);

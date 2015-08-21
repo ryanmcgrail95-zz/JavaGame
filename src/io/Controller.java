@@ -16,15 +16,15 @@ public class Controller {
 	private static void drawAttackButton(float x, float y, float r) {
 		
 		GOGL.setColor(actionDark);
-		GOGL.fillCircle(x, y, r, 18);
+		GOGL.fillPolygon(x, y, r, 18);
 		GOGL.setColor(actionColor);
-		GOGL.fillCircle(x, y, r/28*23, 18);		
+		GOGL.fillPolygon(x, y, r/28*23, 18);		
 	}
 	private static void drawActionButton(float x, float y, float r) {
 		GOGL.setColor(actionDark);
-		GOGL.fillCircle(x, y, r, 18);
+		GOGL.fillPolygon(x, y, r, 18);
 		GOGL.setColor(actionColor);
-		GOGL.fillCircle(x, y, r/28*23, 18);
+		GOGL.fillPolygon(x, y, r/28*23, 18);
 		GOGL.setColor(RGBA.WHITE);
 		GLText.drawStringCentered(x, y, 2,2, actionText, true);
 	}

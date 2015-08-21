@@ -8,14 +8,13 @@ public class MultiTexture {
 	private float xSize, ySize;
 	
 	public MultiTexture(String fileName, int xNum, int yNum) {
-		this.tex = GOGL.loadTexture(fileName);
-		this.xNum = xNum;
-		this.yNum = yNum;
-				
-		xSize = 1f/xNum;
-		ySize = 1f/yNum;
+		set(GOGL.loadTexture(fileName), xNum, yNum);
 	}
 	public MultiTexture(Texture tex, int xNum, int yNum) {
+		set(tex, xNum,yNum);
+	}
+	
+	private void set(Texture tex, int xNum, int yNum) {
 		this.tex = tex;
 		this.xNum = xNum;
 		this.yNum = yNum;
@@ -23,6 +22,7 @@ public class MultiTexture {
 		xSize = 1f/xNum;
 		ySize = 1f/yNum;
 	}
+	
 	
 	public float[] getBounds(int frame) {
 		frame %= xNum*yNum;

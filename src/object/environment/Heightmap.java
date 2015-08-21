@@ -196,8 +196,8 @@ public class Heightmap extends Drawable implements Collideable {
 		vec3 pos;
 		float dir, dirZ;
 		
-		pos = Camera.getPosition();
-		camNorm = Camera.getNormal();
+		pos = GOGL.getCamera().getPosition();
+		camNorm = GOGL.getCamera().getNormal();
 		
 		dir = Math2D.calcPtDir(0,0, camNorm.x(),camNorm.y());
 		dirZ = Math2D.calcPtDir(0,0, Math2D.calcPtDis(0,0,camNorm.x(),camNorm.y()),camNorm.z());
@@ -209,7 +209,7 @@ public class Heightmap extends Drawable implements Collideable {
 		uv.set(2, -2.5f);
 		uv.set(2, uv.get(2)+uv.len()*.05f); //.15f
 		
-		mat3 dirMat = mat3.fromEuler(Camera.getShaderNormal());
+		mat3 dirMat = mat3.fromEuler(GOGL.getCamera().getShaderNormal());
 		vec3 dirVec = dirMat.mult((vec3) uv.norm());
 			dirVec.println();
 			float dX, dY, dZ;

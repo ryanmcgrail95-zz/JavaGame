@@ -42,8 +42,7 @@ public abstract class Physical extends Positionable {
 		physicalList.remove(this);
 	}
 	
-	public abstract boolean collide(Physical other);
-	
+	public abstract boolean collide(Physical other);	
 	protected boolean collideAll() {
 		boolean didCol = false;
 
@@ -152,19 +151,6 @@ public abstract class Physical extends Positionable {
 			}
 			
 			return didCol;
-		}
-		
-		public boolean collideCircle(float x, float y, int r) {
-			float dis, dir;
-			dis = calcPtDis(x,y);
-			
-			if(dis < r) {
-				dir = calcPtDir(x,y)+180;
-				step(r-dis,dir);
-				return true;
-			}
-			else
-				return false;
 		}
 		
 		public boolean collideRectangle(float x, float y, float w, float h) {

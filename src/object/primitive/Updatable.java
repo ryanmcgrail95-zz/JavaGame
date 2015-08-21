@@ -2,6 +2,7 @@ package object.primitive;
 
 import gfx.Camera;
 import io.IO;
+import io.Keyboard;
 import io.Mouse;
 import resource.sound.Sound;
 import time.Timer;
@@ -27,8 +28,7 @@ public abstract class Updatable {
 		
 	//Global Functions
 		public static void updateAll() {
-			IO.update();
-			Camera.update();
+			Mouse.update();
 			Sound.update();
 			Timer.tickAll(1);
 			

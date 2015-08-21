@@ -1,6 +1,7 @@
 package gfx;
 
 import io.IO;
+import io.Keyboard;
 import io.Mouse;
 
 import java.applet.Applet;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.ghost4j.document.DocumentException;
 import org.ghost4j.renderer.RendererException;
@@ -38,6 +41,7 @@ import obj.prt.Floaties;
 import object.actor.Actor;
 import object.actor.NPC;
 import object.actor.Player;
+import object.environment.Chest;
 import object.environment.Fern;
 import object.environment.Fire;
 import object.environment.Floor;
@@ -46,15 +50,18 @@ import object.environment.Heightmap;
 import object.environment.OakTree;
 import object.environment.PalmTree;
 import object.environment.PineTree;
+import object.environment.Radio;
 import object.environment.Sign;
 import object.environment.Town;
 import object.environment.Water;
 import object.environment.WindMill;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import phone.SmartPhone;
 import resource.model.Model;
 import resource.shader.Shader;
 import resource.sound.Sound;
+import resource.sound.SoundBuffer;
 import time.Delta;
 import time.Timer;
 import window.Window;
@@ -68,11 +75,13 @@ import cont.Text;
 import cont.TextureController;
 import datatypes.mat4;
 import datatypes.vec;
+import datatypes.vec2;
 import datatypes.vec3;
 import datatypes.vec4;
 import fl.FileExt;
 import functions.Math2D;
 import functions.Math3D;
+import functions.MathExt;
 
 public final class GOGL {
 	private static final float TOP_LAYER = 999;
@@ -86,16 +95,17 @@ public final class GOGL {
 	private static int shaderProgram;
 	private static float[] viewPos;
 	
-	public static FBO currentFBO = null;
-	public static FBO screenBuffer;
+	public static final byte F_NEAREST = 0, F_BILINEAR = 1, F_TRILINEAR = 2;
 	
+	private static Camera currentCamera, mainCamera;
+	
+	public static FBO currentFBO = null;	
 	private static GLAutoDrawable glad;
 	
 	
 	private static Timer time = new Timer(360,true);
 	
-    private static float[] perspectiveMatrix = new float[16];
-    
+    private static float[] perspectiveMatrix = new float[16];    
     public static int[] RESOLUTION = {640,480};
 
 
@@ -107,15 +117,12 @@ public final class GOGL {
 	
 	private static byte PR_ORTHO = 0, PR_PERSPECTIVE = 1;
 	private static byte projectionMode;
-	
-	private static TextureExt pdf;
-	
+		
 	
 	public static int 
 		BORDER_LEFT = 3, // 3 is PERFECT but doesn't work, 2 works but isn't perfect
 		BORDER_TOP = 25, // 25 is PERFECT but doesn't work, 24 works but isn't perfect
 		SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
-	//SCREEN_WIDTH = 640+BORDER_LEFT*2, SCREEN_HEIGHT = 480+BORDER_LEFT;
 		
 	private static RGBA drawingColor = new RGBA(1,1,1,1);
 	private static Player player;
@@ -143,6 +150,14 @@ public final class GOGL {
             public void reshape( GLAutoDrawable glautodrawable, int x, int y, int width, int height ) {}
             public void init( GLAutoDrawable glautodrawable ) {  	
             	
+            	gl = glautodrawable.getGL().getGL2();
+            	Sound.iniLoad();
+            	
+            	
+        		mainCamera = new Camera(640,480);
+        		currentCamera = mainCamera;
+        		
+        		
             	println("Initializing textures...");
             	TextureController.ini();                
             	
@@ -168,7 +183,6 @@ public final class GOGL {
                 viewPos = new float[4];
                 float border = 150 + Math2D.calcLenY(getTime())*20;
                 setViewPos(0,border,SCREEN_WIDTH-border,SCREEN_HEIGHT-border);
-                
                 
             
                                 
@@ -197,6 +211,8 @@ public final class GOGL {
                 player = Player.getInstance();
                 	player.setX(2400);
                 	player.setY(2400);
+                	
+                	
                                 	
                 Actor a = new NPC(player.getX(),player.getY()+500,0);
                 //a.taskChase(player);
@@ -238,10 +254,13 @@ public final class GOGL {
                 player.give("Bread",1);
 		        player.give("Empty Bowl",1);
 		        player.addCoins(1000);
+		        
+		        
+		        new Chest(2600,2400,"Bread");
              
 		        
-                gl = glautodrawable.getGL().getGL2();
-                gl.glEnable(gl.GL_DEPTH_TEST);
+               
+            	gl.glEnable(gl.GL_DEPTH_TEST);
                 //gl.glEnable(gl.GL_ALPHA_TEST);
             	gl.glEnable(GL2.GL_NORMALIZE);
             	
@@ -254,7 +273,6 @@ public final class GOGL {
             	gcap = new GLCapabilities(gp);
             	gcap.setDepthBits(16);
             	
-            	screenBuffer = new FBO(gl,RESOLUTION[0],RESOLUTION[1]);
             	println("Initializing Shaders...");
             	Shader.ini(gl);
             	
@@ -263,6 +281,9 @@ public final class GOGL {
                 	pt = m.generateRandomPointAbove(seaLevel);
                 	new Sign(pt.x(),pt.y(),32,24,2,"buttTown");
                 }*/
+            	
+            	new SmartPhone();
+            	//new Radio(2500,2500);
             	
             	checkError();
             }
@@ -273,28 +294,38 @@ public final class GOGL {
             	
             	glad = glautodrawable;
             	
+            	time.check();
+
             	Updatable.updateAll();
             	
             	gl = glautodrawable.getGL().getGL2();
             	            	
             	setProjection();
-            	draw();
-            	
-            	screenBuffer.attach(gl,false);
-            		GOGL.clearScreen(RGBA.WHITE);
-            		Drawable. draw3D();
-            	screenBuffer.detach(gl);
+        		Drawable.display();            	
+            	Camera.renderAll();
             	
             	
-            	GOGL.disableBlending();
+            	if(Keyboard.checkPressed('x'))
+            		mainCamera.getFBO().saveScreenshot();
+
+            	
+            	/*screenBuffer.attach(gl,false);
+        		GOGL.clearScreen(RGBA.WHITE);
+        		Drawable.draw3D();
+        		screenBuffer.detach(gl);*/
+            	
+            	
+            	disableBlending();
             	setViewport(0,0,640,480);
             	clearScreen();
             	setColor(RGBA.WHITE);
             	setOrtho();
-            	drawFBO(0,480,640,-480,screenBuffer);
-            	GOGL.enableBlending();
-
+            	drawFBO(0,480,640,-480,mainCamera.getFBO());
+            	enableBlending();
+            	
             	Overlay.draw();
+            	
+    			Keyboard.update();
         	}
         };
                 
@@ -353,42 +384,23 @@ public final class GOGL {
 		gl.glFogf(GL2.GL_FOG_START, start);
 		gl.glFogf(GL2.GL_FOG_END, end);
 	}
-	
 	public static void disableFog() {
 		gl.glDisable(GL2.GL_FOG);
 	}
 		
 	private static void setProjection() {
 		
-		float camSpeed = 5;
-		float camX, camY, camZ, toX, toY, toZ;
-		camX = Camera.getX();
-		camY = Camera.getY();
-		camZ = Camera.getZ();
-		toX = Camera.getToX();
-		toY = Camera.getToY();
-		toZ = Camera.getToZ();
-				
-		//Update Listener Source
-		float n, nX, nY, nZ;
-		n = Math3D.calcPtDis(camX,camY,camZ, toX,toY,toZ);
-		nX = (toX-camX)/n;
-		nY = (toY-camY)/n;
-		nZ = (toZ-camZ)/n;
-		
-		Sound.updateListener(camX,camY,camZ, 0,0,0, nX,nY,nZ, 0,0,1);
-		
+		float camSpeed = 5;		
+		Sound.updateListener(currentCamera);
 		
         // Change to projection matrix.
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-
         
         // Perspective.
         float widthHeightRatio = 640f/480; //getViewWidth()/getViewHeight();
         glu.gluPerspective(45, widthHeightRatio, 1, VIEW_FAR); //1000
-        glu.gluLookAt(camX, camY, camZ, toX, toY, toZ, 0, 0, 1);
-                        
+        currentCamera.gluLookAt(glu);
         gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, perspectiveMatrix,0);
 
         // Change back to model view matrix.
@@ -396,23 +408,9 @@ public final class GOGL {
         gl.glLoadIdentity();
 	}
 	
-	public static void repaint() {
-		canv.display();
-	}
+	public static void repaint() {canv.display();}
 	
-	public static GLCanvas getCanvas() {
-		return canv;
-	}
-
-	public static void draw() {
-		
-		time.check();
-		
-		float border = /*200*/ 0, bX, bY;
-		bX = border;	bY = bX/SCREEN_WIDTH*SCREEN_HEIGHT;		
-		
-		Drawable.display();
-	}
+	public static GLCanvas getCanvas() {return canv;}
 
 	
 	public static Texture createTexture(int width, int height) {
@@ -469,10 +467,33 @@ public final class GOGL {
 	}
 	
 	
+	public static void setTextureFiltering(Texture tex, byte type) {
+		bind(tex);
+		switch(type) {
+			case F_NEAREST:/* point sampling of nearest neighbor */
+				gl.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+				gl.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+				break;
+			case F_BILINEAR:/* bilinear interpolation */
+				gl.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+				gl.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
+				break;
+			case F_TRILINEAR:/* trilinear interpolation on pyramid */
+				gl.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+				gl.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR);
+				break;
+		}
+		unbind();
+	}
+	
 	
 	public static boolean checkOrtho() {return projectionMode == PR_ORTHO;}
 	public static boolean checkPerspective() {return projectionMode == PR_PERSPECTIVE;}
 
+	
+	public static void setOrthoLayer(float layer) {orthoLayer = layer;}
+	public static float getOrthoLayer() {return orthoLayer;}
+	
 	public static void setOrtho() {setOrtho(TOP_LAYER);}
 	public static void setOrtho(float w, float h) {setOrtho(w,h,TOP_LAYER);}
 	public static void setOrtho(float useLayer) {setOrtho(viewPos[2],viewPos[3],useLayer);}
@@ -491,9 +512,7 @@ public final class GOGL {
 			gl.glOrtho(0,w,h,0, -1000, 1000);
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 			gl.glLoadIdentity();
-		
-		gl.glDisable(gl.GL_DEPTH);		
-		gl.glDepthFunc(gl.GL_LEQUAL);
+		disableDepth();
 	}
 	
 	public static void setPerspective() {
@@ -511,11 +530,11 @@ public final class GOGL {
     	setProjection();
 	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glLoadIdentity();
-		gl.glEnable(GL2.GL_DEPTH);
+		enableDepth();
 	}
 	
 	
-	public static void setOrthoPerspective() {	
+	/*public static void setOrthoPerspective() {	
 		orthoLayer = 0;		
 		projectionMode = PR_PERSPECTIVE;
 				
@@ -551,15 +570,15 @@ public final class GOGL {
         x2 = (int) (SCREEN_WIDTH/2f);
         x1 = -x2;
         gl.glOrtho(x1,x2,y1,y2, -1000,VIEW_FAR);
-        glu.gluLookAt(camX, camY, camZ, toX, toY, toZ, 0, 0, 1);
-                        
+        glu.gluLookAt(camX, camY, camZ, toX, toY, toZ, 0, 0, 1);                        
         gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, perspectiveMatrix,0);
 
         // Change back to model view matrix.
 	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glLoadIdentity();
 		gl.glEnable(GL2.GL_DEPTH);
-	}
+	}*/
+	
 	
 	
 	// DRAWING FUNCTIONS
@@ -589,14 +608,10 @@ public final class GOGL {
 		
 		drawingColor.set(r,g,b,1);
 		
-		float[] black = {
-			0, 0, 0, 1
-		}, white = {
-			1, 1, 1, 1
-		}, color = drawingColor.getArray(), 
-		gray = {
-			.5f,.5f,.5f,1
-		};
+		float[] black = {0, 0, 0, 1}, 
+				white = {1, 1, 1, 1}, 
+				color = drawingColor.getArray(), 
+				gray = {.5f,.5f,.5f,1};
 		
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		gl.glEnable(GL2.GL_COLOR_MATERIAL);
@@ -653,22 +668,19 @@ public final class GOGL {
 	      	disableTextures();
         }
 	}
+
 	
 	public static void drawTexture(float x, float y, float w, float h, MultiTexture tex, int frame) {
-
+		drawTexture(x,y,w,h, tex.getTexture(), tex.getBounds(frame));
+	}
+	public static void drawTexture(float x, float y, float w, float h, Texture tex, float[] bounds) {
 		enableTextures();
 		enableBlending();
-		bind(tex.getTexture());
+		bind(tex);
 		
-		float[] bounds = tex.getBounds(frame);
-		gl.glBegin(GL2.GL_QUADS);
-		gl.glTexCoord2d(bounds[0],bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
-		gl.glTexCoord2d(bounds[2], bounds[1]);	gl.glVertex3f(x+w, y, orthoLayer);
-		gl.glTexCoord2d(bounds[2], bounds[3]);	gl.glVertex3f(x+w, y+h, orthoLayer);
-		gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);
-		gl.glEnd();
+		fillRectangle(x,y,w,h,bounds);
       	
-      	tex.getTexture().disable(gl);
+      	tex.disable(gl);
       	disableTextures();
 	}
 	
@@ -685,21 +697,38 @@ public final class GOGL {
 	public static void drawLine(float x1, float y1, float x2, float y2) {drawLine(x1,y1,x2,y2,1);};
 	public static void drawLine(float x1, float y1, float x2, float y2, float w) {
 		setLineWidth(w);
-		gl.glBegin(GL.GL_LINE_LOOP);
+		gl.glBegin(GL.GL_LINES);
 			gl.glVertex3f(x1,y1, orthoLayer);
 			gl.glVertex3f(x2,y2, orthoLayer);
 	    gl.glEnd();
 	    setLineWidth(1);
 	}
 	
+	public static void drawLine(List<vec2> pts) {
+		gl.glBegin(GL.GL_LINES);
+			int si = pts.size();
+			for(int i = 0; i < si; i++) {
+				vec2 pt = pts.get(i);
+				
+				gl.glVertex3f(pt.x(),pt.y(), orthoLayer);
+				if(i > 0 && i < si-1)
+					gl.glVertex3f(pt.x(),pt.y(), orthoLayer);
+			}
+	    gl.glEnd();
+	}
+	
+
 	public static void drawRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,false);}
+	public static void drawRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,false);}
 	public static void fillRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,true);}
-	public static void rectangle(float x, float y, float w, float h, boolean fill) {
+	public static void fillRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,true);}
+	public static void rectangle(float x, float y, float w, float h, boolean fill) {rectangle(x,y,w,h,new float[] {0,0,1,1},fill);}
+	public static void rectangle(float x, float y, float w, float h, float[] bounds, boolean fill) {
 		gl.glBegin((fill ? GL2.GL_QUADS : GL.GL_LINE_LOOP));
-			gl.glTexCoord2d(0.0, 0.0);	gl.glVertex3f(x, y, orthoLayer);
-			gl.glTexCoord2d(1.0, 0.0);	gl.glVertex3f(x+w, y, orthoLayer);
-			gl.glTexCoord2d(1.0, 1.0);	gl.glVertex3f(x+w, y+h, orthoLayer);
-			gl.glTexCoord2d(0.0, 1.0);	gl.glVertex3f(x,y+h, orthoLayer);
+			gl.glTexCoord2d(bounds[0],bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
+			gl.glTexCoord2d(bounds[2], bounds[1]);	gl.glVertex3f(x+w, y, orthoLayer);
+			gl.glTexCoord2d(bounds[2], bounds[3]);	gl.glVertex3f(x+w, y+h, orthoLayer);
+			gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);		
         gl.glEnd();
 	}
 
@@ -713,14 +742,17 @@ public final class GOGL {
         gl.glEnd();      	      	
 	}
 
-	public static void drawCircle(vec vec, float r, int numPts) {drawCircle(vec.get(0), vec.get(1), r, numPts);}
-	public static void drawCircle(float x, float y, float r, int numPts) {circle(x,y, r, numPts, false);}
-	public static void fillCircle(vec vec, float r, int numPts) {fillCircle(vec.get(0), vec.get(1), r, numPts);}
-	public static void fillCircle(float x, float y, float r, int numPts) {circle(x,y, r, numPts, true);}
-	public static void circle(float x, float y, float r, int numPts, boolean fill) {
+	public static void drawPolygon(vec vec, float r, int numPts) {drawPolygon(vec.get(0), vec.get(1), r, numPts);}
+	public static void drawPolygon(float x, float y, float r, int numPts) {polygon(x,y, r, numPts, false);}
+	public static void drawPolygon(float x, float y, float r, int numPts, float rotation) {polygon(x,y, r, numPts, rotation, false);}
+	public static void fillPolygon(vec vec, float r, int numPts) {fillPolygon(vec.get(0), vec.get(1), r, numPts);}
+	public static void fillPolygon(float x, float y, float r, int numPts) {polygon(x,y, r, numPts, true);}
+	public static void fillPolygon(float x, float y, float r, int numPts, float rotation) {polygon(x,y, r, numPts, rotation, true);}
+	public static void polygon(float x, float y, float r, int numPts, boolean fill) {polygon(x,y,r,numPts,0,fill);}
+	public static void polygon(float x, float y, float r, int numPts, float rotation, boolean fill) {
 		if(fill) {
 			gl.glBegin(GL2.GL_TRIANGLE_FAN);
-			gl.glTexCoord2d(0.5, .5);
+			gl.glTexCoord2d(.5, .5);
 				gl.glVertex3f(x, y, orthoLayer);
 		}
 		else
@@ -728,7 +760,7 @@ public final class GOGL {
 				
 			float dir, xN, yN;			
 			for(int i = 0; i <= numPts; i++) {
-				dir = 360.f*i/numPts;
+				dir = rotation + 360.f*i/numPts;
 				xN = Math2D.calcLenX(dir);
 				yN = Math2D.calcLenY(dir);
 				
@@ -769,9 +801,10 @@ public final class GOGL {
 	
 		// Transformation Functions
 	public static void setModelMatrix(mat4 mat) {
-		modelMatrix = mat;
+		modelMatrix = mat.copy();			
+		gl.glLoadMatrixf(mat.transpose().array(),0);
 	}
-	public static mat4 getModelMatrix() 		{return modelMatrix;}
+	public static mat4 getModelMatrix() 		{return modelMatrix.copy();}
 
 	public static void transformClear() {
 		gl.glLoadIdentity();
@@ -817,6 +850,18 @@ public final class GOGL {
 		dirZ = Math2D.calcPtDir(0,0, Math2D.calcPtDis(0,0, normal.x(),normal.y()),normal.z());
 		
 		transformRotation(dir, dirZ);
+	}
+	
+	public static void transformBeforeCamera(float len) {
+		GOGL.transformTranslation(currentCamera.getPosition());
+		GOGL.transformRotationNormal(currentCamera.getNormal());
+		GOGL.transformTranslation(len,0,0);
+	}
+	
+	public static void transformSprite() {
+		GOGL.transformRotationNormal(currentCamera.getNormal());
+		GOGL.transformRotationY(90);
+		GOGL.transformRotationZ(-90);
 	}
 		
 			
@@ -1063,9 +1108,7 @@ public final class GOGL {
     	passShaderVec4("uColor",drawingColor.getArray());
     }
     
-    public static float getTime() {
-    	return time.get();
-    }
+    public static float getTime() {return time.get();}
     
     public static void passShaderFloat(String name, float val) {
 
@@ -1075,7 +1118,6 @@ public final class GOGL {
     
     public static void passShaderMat4(String name, mat4 mat, boolean doTranspose) {passShaderMat4(name,mat.array(),doTranspose);}
     public static void passShaderMat4(String name, float[] mat, boolean doTranspose) {
-
     	if(shaderProgram != 0)
     		gl.glUniformMatrix4fv(gl.glGetUniformLocation(shaderProgram, name), 1, doTranspose, mat, 0);
     }
@@ -1083,7 +1125,6 @@ public final class GOGL {
     public static void passShaderVec4(String name, vec4 vec) {passShaderVec4(name, vec.getArray());}
     public static void passShaderVec4(String name, float a, float b, float c, float d) {passShaderVec4(name, new float[] {a,b,c,d});}
     public static void passShaderVec4(String name, float[] vec) {
-
     	if(shaderProgram != 0)
     		gl.glUniform4fv(gl.glGetUniformLocation(shaderProgram, name), 1, vec, 0);
     }
@@ -1106,11 +1147,8 @@ public final class GOGL {
     }	
 	    
 
-    // when you have finished drawing everything that you want using the shaders, 
-    // call this to stop further shader interactions.
     public static void disableShaders() {
-        gl.glUseProgram(0);
-        shaderProgram = 0;
+        gl.glUseProgram(shaderProgram = 0);
     }
     
     public static void enableCulling() 		{gl.glEnable(GL.GL_CULL_FACE);}
@@ -1118,7 +1156,6 @@ public final class GOGL {
 
     public static void enableTextures() 	{gl.glEnable(GL.GL_TEXTURE_2D);}
     public static void disableTextures() 	{gl.glDisable(GL.GL_TEXTURE_2D);}
-    
     
     public static void drawGaussian() {
     	/*
@@ -1170,7 +1207,7 @@ public final class GOGL {
     					0,0,0,1));
     }*/
     
-    public static mat4 getViewMatrix() {
+    /*public static mat4 getViewMatrix() {
 
  		float eyeX, eyeY, eyeZ, upX, upY, upZ, fX, fY, fZ, toX, toY, toZ;
  		eyeX = Camera.getX();
@@ -1224,13 +1261,18 @@ public final class GOGL {
  		// Transpose View Matrix
  		
  		return viewMat;
-    }
+    }*/
 
-	public static void drawFillBar(float x, float y, float w, float h, float frac) {
-				
+	public static void drawFillBar(float x, float y, float w, float h, float frac) {drawFillBar(x,y,w,h,RGBA.GREEN,frac,RGBA.WHITE,0);}
+	public static void drawFillBar(float x, float y, float w, float h, RGBA fillColor, float frac, RGBA possColor, float possFrac) {
+			
 		// Inside
-		setColor(0,1,0,1);
-		fillRectangle(x, y, w*frac, h);
+		setColor(possColor);
+		fillRectangle(x, y, w*MathExt.contain(0,possFrac,1), h);
+
+		// Inside
+		setColor(fillColor);
+		fillRectangle(x, y, w*MathExt.contain(0,frac,1), h);
 		
 		// Outline
 		setColor(0,0,0,1);
@@ -1406,10 +1448,6 @@ public final class GOGL {
 	public static GL2 getGL() {
 		return gl;
 	}
-
-	public static float getOrthoLayer() {
-		return orthoLayer;
-	}
 	
 	public static void blurFBO(FBO fbo) {
 		float alpha = .25f;
@@ -1443,15 +1481,8 @@ public final class GOGL {
         gl.glEnable(GL.GL_DEPTH_TEST);
 		gl.glDepthFunc(GL.GL_LEQUAL);
 	}
-
-	public static void transformBeforeCamera(float len) {
-		GOGL.transformTranslation(Camera.getPosition());
-		GOGL.transformRotationNormal(Camera.getNormal());
-		GOGL.transformTranslation(len,0,0);
-	}
-
-	public static void setOrthoLayer(float layer) {
-		orthoLayer = layer;
+	public static void disableDepth() {
+        gl.glDisable(GL.GL_DEPTH_TEST);
 	}
 
 	public static void setViewportResolution() {
@@ -1465,10 +1496,74 @@ public final class GOGL {
 			return null;
 		}
 	}
+	
 
-	public static void transformSprite() {
-		GOGL.transformRotationNormal(Camera.getNormal());
-		GOGL.transformRotationY(90);
-		GOGL.transformRotationZ(-90);
+	public static void drawWaveform(float dX, float dY, float w, float h, int startOffset, int endOffset, int jumpNum, int skipNum, SoundBuffer snd) {drawWaveform(dX,dY,w,h,startOffset,endOffset,jumpNum,skipNum,snd,false);}
+	public static void drawWaveform(float dX, float dY, float w, float h, int startOffset, int endOffset, int jumpNum, int skipNum, SoundBuffer snd, boolean shrinkSides) {
+		
+		List<vec2> pts = new ArrayList<vec2>();
+		float xSize;
+		double avg;
+		
+		
+		int len, packetNum = snd.getPacketNum(), packetSize = snd.getPacketSize(), offsetMax = packetNum*packetSize;
+		int jumpSize = jumpNum*packetSize;
+		
+		
+		startOffset = (int) MathExt.snap(startOffset, packetSize);
+
+		startOffset = (int) MathExt.contain(0, startOffset, offsetMax);
+		endOffset = (int) MathExt.contain(0, endOffset, offsetMax);
+		
+		len = endOffset-startOffset;
+		
+		
+		xSize = w / ((endOffset - startOffset)/jumpSize);
+		
+		if(startOffset > endOffset)
+			return;
+		
+		int n = 0;
+		
+		if(shrinkSides) {
+			for(int i = startOffset; i+jumpSize < endOffset; i += jumpSize) {
+				avg = 0;
+				for(int k = 0; k < jumpSize; k += (1+skipNum)*packetSize)
+					avg += snd.getAmplitudeFraction(i);
+				avg /= jumpNum/(1+skipNum);
+				
+				pts.add(new vec2(dX + n*xSize, (float) (dY + h/2*avg*(1 - 2*Math.abs( 1f*(i-startOffset)/len - .5f)) )));
+				
+				n++;
+			}
+		}
+		else
+			for(int i = startOffset; i+jumpSize < endOffset; i += jumpSize) {
+				avg = 0;
+				for(int k = 0; k < jumpSize; k += (1+skipNum)*packetSize)
+					avg += snd.getAmplitudeFraction(i);
+				avg /= jumpNum/(1+skipNum);
+				
+				pts.add(new vec2(dX + n*xSize, (float) (dY + h/2*avg)));
+				
+				n++;
+			}
+
+		
+		drawLine(pts);
+		
+		pts.clear();
 	}
+
+	public static void perspective() {
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glLoadIdentity();
+        glu = GLU.createGLU(gl);
+        glu.gluPerspective(currentCamera.getFOV(), RESOLUTION[0]/RESOLUTION[1], 1, 10000);
+        currentCamera.gluLookAt(glu);
+	}
+
+	public static void setCamera(Camera cam) {currentCamera = cam;}
+	public static Camera getCamera() {return currentCamera;}
+	public static Camera getMainCamera() {return mainCamera;}
 }

@@ -3,14 +3,22 @@ package resource.sound;
 import com.jogamp.openal.AL;
 
 import datatypes.vec3;
+import functions.Math2D;
 import functions.MathExt;
 
 public class SoundSource {
 	private SoundBuffer parentBuffer;
-	private int[] 	sourceID = new int[1],
-					bufferID = new int[1];
-	private float volumePercent = 1, fadeAmount = 1, volume;
+	private int[] sourceID = new int[1];
+	private int bufferID;
+	private float volumePercent = 1, fadeAmount = 1, volume, speed = 1;
 	private int doLoop;
+	private boolean isReversed = false;
+	
+	// EFFECTS
+	private static final byte FX_NONE = 0, FX_DIZZY = 1;
+	private byte effect = FX_NONE;
+	private float wobbleDir = 0, wobbleDirSpeedDir = 0, wobbleDirSpeedMax = 2 , wobbleSize = .15f;
+	
 	
 	private final static byte S_STOPPED = 0, S_PAUSED = 1, S_PLAYING = 2;
 	private byte playState = S_PAUSED;
@@ -50,10 +58,18 @@ public class SoundSource {
 	
 	public void setSoundBuffer(SoundBuffer blueprint) {
 		parentBuffer = blueprint;		
-        al().alSourcei (sourceID[0], AL.AL_BUFFER,   blueprint.getBuffer()[0]);
+        setBuffer(blueprint);
         al().alSourcef (sourceID[0], AL.AL_PITCH,    1.0f);
         al().alSourcef (sourceID[0], AL.AL_GAIN,     fadeAmount*volumePercent*(volume = blueprint.getVolume()));
         al().alSourcei (sourceID[0], AL.AL_LOOPING,  doLoop);
+	}
+	
+	
+	public void setBuffer(SoundBuffer blueprint) {
+		setBuffer(isReversed ? blueprint.getReverseBuffer() : blueprint.getBuffer());
+	}
+	public void setBuffer(int[] buffer) {
+		al().alSourcei(sourceID[0], AL.AL_BUFFER, bufferID = buffer[0]);
 	}
 	
 	public void swapSoundBuffer(String name) {swapSoundBuffer(Sound.get(name));}
@@ -141,16 +157,87 @@ public class SoundSource {
 		return doLoop == 1;
 	}
 	
-	public void setSpeed(float speed) {
-		al().alSourcef(sourceID[0], AL.AL_PITCH, speed);
+	public void reverse(boolean doReverse) {
+		if(isReversed != doReverse) {
+			isReversed = doReverse;
+			
+			float offset = parentBuffer.getSecLen() - getSecOffset();
+			stop();
+			if(doReverse)
+		        setBuffer(parentBuffer.getReverseBuffer());
+			else 
+		        setBuffer(parentBuffer.getBuffer());
+			setSecOffset(offset);
+			play();
+		}
 	}
 	
-	public float getLocation() {
+	public void update() {
+		if(effect == FX_DIZZY) {
+			wobbleDirSpeedDir += 1;
+			wobbleDir += Math.abs(Math2D.calcLenY(wobbleDirSpeedMax,wobbleDirSpeedDir));
+		}
+		
+		setALSpeed();
+	}
+	
+	public void setSpeed(float newSpeed) {
+		
+		float prevSpeed = speed;
+		
+		speed = newSpeed;
+		if(prevSpeed <= 0 && speed > 0)
+			reverse(false);
+		else if(prevSpeed >= 0 && speed < 0)
+			reverse(true);
+		setALSpeed();
+	}
+	private void setALSpeed() {
+		float calcSpeed;
+		calcSpeed = Math.abs(speed);
+		if(effect == FX_DIZZY)
+			calcSpeed += Math2D.calcLenY(wobbleSize,wobbleDir);
+		
+		al().alSourcef(sourceID[0], AL.AL_PITCH, calcSpeed);
+	}
+	
+	
+	
+	public void setSecOffset(float secondsOffset) {
+		al().alSourcef(sourceID[0], AL.AL_SEC_OFFSET, secondsOffset);
+	}
+	public float getSecOffset() {
 		float[] loc = new float[1];
 		al().alGetSourcef(sourceID[0], AL.AL_SEC_OFFSET, loc, 0);
 		return loc[0];
 	}
-	public void setLocation(float secondsOffset) {
-		al().alSourcef(sourceID[0], AL.AL_SEC_OFFSET, secondsOffset);
+	
+	public void setByteOffset(int byteOffset) {
+		al().alSourcei(sourceID[0], AL.AL_BYTE_OFFSET, byteOffset);
+	}
+	public int getByteOffset() {
+		int[] loc = new int[1];
+		al().alGetSourcei(sourceID[0], AL.AL_BYTE_OFFSET, loc, 0);
+		return loc[0];
+	}
+	
+	public void setOffsetFraction(float f) {
+		setSecOffset((int) (f*parentBuffer.getSecLen()));
+	}
+	public float getOffsetFraction() {
+		return 1f*getSecOffset()/parentBuffer.getSecLen();
+	}
+	
+	public int getAmplitude() {return parentBuffer.getAmplitude(getByteOffset());}
+	public float getAmplitudeFraction() {return parentBuffer.getAmplitudeFraction(getByteOffset());}
+
+	public float getFilteredAmplitudeFraction() {
+		return parentBuffer.getFilteredAmplitudeFraction(getByteOffset());
+	}
+	public boolean isReversed() {
+		return isReversed;
+	}
+	public void setLoop(boolean isLooping) {
+		al().alSourcei(sourceID[0], AL.AL_LOOPING, isLooping ? 1 : 0);
 	}
 }

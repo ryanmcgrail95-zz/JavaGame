@@ -1,8 +1,10 @@
 package window;
 
+import datatypes.lists.CleanList;
 import io.Mouse;
 
 public abstract class GUIDrawable extends GUIObject {
+	private CleanList<GUIListener> listeners = new CleanList<GUIListener>();
 	private float x, y, w, h;
 
 	public GUIDrawable(int x, int y, int w, int h) {
@@ -22,9 +24,7 @@ public abstract class GUIDrawable extends GUIObject {
 	public float w()	 	{return w;}
 	public void w(float w) 	{this.w = w;}
 	public float h()	 	{return h;}
-	public void h(float h) 	{this.h = h;}
-	
-		
+	public void h(float h) 	{this.h = h;}	
 	
 	public float getScreenX() {
 		if(getParent() == null)
@@ -37,5 +37,21 @@ public abstract class GUIDrawable extends GUIObject {
 			return y();
 		else
 			return y() + getParent().getScreenY();
+	}
+	
+
+	public void addListener(GUIListener l) {
+		listeners.add(l);
+	}
+	public abstract boolean checkMouse();
+	
+	public void updateEvents() {
+		if(checkMouse()) {
+			for(GUIListener l : listeners)
+				l.hover();
+			if(Mouse.getLeftClick())
+				for(GUIListener l : listeners)
+					l.click();
+		}
 	}
 }

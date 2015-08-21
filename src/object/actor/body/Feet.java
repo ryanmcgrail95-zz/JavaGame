@@ -100,9 +100,9 @@ public class Feet {
 					d = curAng.get(0);
 					dZ = curAng.get(1);
 					
-					aX = Math2D.calcPolarX(3,d,dZ);
-					aY = Math2D.calcPolarY(3,d,dZ);
-					aZ = Math2D.calcPolarZ(3,d,dZ);
+					aX = Math3D.calcPolarX(3,d,dZ);
+					aY = Math3D.calcPolarY(3,d,dZ);
+					aZ = Math3D.calcPolarZ(3,d,dZ);
 					
 					GOGL.vertex(x+aX, y+aY, z+aZ);
 					GOGL.vertex(x-aX, y-aY, z-aZ);

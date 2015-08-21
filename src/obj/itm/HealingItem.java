@@ -1,6 +1,5 @@
 package obj.itm;
 
-import datatypes.Inventory;
 import object.actor.Actor;
 
 public class HealingItem extends Item {

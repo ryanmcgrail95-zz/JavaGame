@@ -9,8 +9,17 @@ import time.Timer;
 
 public class Fern extends Environmental {
 
+	private float squash = 0;
+	private Timer twitchTimer;
+	
 	public Fern(float x, float y) {
 		super(x,y,false,false);
+		twitchTimer = new Timer(10,0);
+	}
+	
+	public void destroy() {
+		twitchTimer.destroy();
+		super.destroy();
 	}
 	
 	public void draw() {
@@ -20,6 +29,7 @@ public class Fern extends Environmental {
 				transformTranslation();
 				
 				GOGL.transformScale(.5f);
+				GOGL.transformScale(1+2f*squash,1+2f*squash,1-.2f*squash);
 				GOGL.setLightColori(96, 104, 70);
 		
 				Model.MOD_FERN.draw();	
@@ -30,6 +40,7 @@ public class Fern extends Environmental {
 	}
 
 	public boolean collide(Physical other) {
+		squash += ( (other.checkCircle(x(),y(), 30)) ? 1 : 0 - squash)/5f;
 		return false;
 	}
 }

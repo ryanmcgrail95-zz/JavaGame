@@ -1,22 +1,30 @@
 package resource.sound;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.jcraft.oggdecoder.OggData;
 import com.jogamp.openal.AL;
 import com.jogamp.openal.ALException;
 import com.jogamp.openal.ALFactory;
 import com.jogamp.openal.util.ALut;
 import com.jogamp.openal.util.WAVData;
 import com.jogamp.openal.util.WAVLoader;
+import com.jogamp.opengl.util.texture.Texture;
 
 import cont.GameController;
+import cont.TextureController;
 import datatypes.vec3;
 import fl.FileExt;
+import functions.Array;
 import functions.Math2D;
+import gfx.Camera;
 import gfx.GOGL;
 
 public class Sound {
@@ -28,26 +36,26 @@ public class Sound {
     private static SoundSource curMusic = null, newMusic = null;
     private static List<SoundSource> sourceList = new ArrayList<SoundSource>();
 	private static List<SoundBuffer> bufferList = new ArrayList<SoundBuffer>();
-    
+    private static Map<String, List<String>> playlistMap = new HashMap<String, List<String>>();
 	
 	public static void ini() {
-		
-		//Initialize OpenAL
 		ALut.alutInit();
+	}
+	public static void iniLoad() {
 
         //LOAD SOUNDS
-		loadSound("BlockCrumble", "Resources/Sounds/FX/sndBlockCrumble.wav");
-        loadSound("Footstep", "Resources/Sounds/FX/sndFootstep.wav",.5f);
-        loadSound("Spin", "Resources/Sounds/FX/sndSpin.wav");
-        loadSound("Jump", "Resources/Sounds/FX/sndJump.wav", 50); 
-
-        loadSound("blipMale", "Resources/Sounds/FX/sndBlipMale.wav", 80); 
+		loadSound("button", "Resources/Sounds/FX/button.ogg",80);
+		loadSound("blockCrumble", "Resources/Sounds/FX/blockCrumble.ogg");
+        loadSound("footstep", "Resources/Sounds/FX/footstep.ogg",.5f);
+        loadSound("spin", "Resources/Sounds/FX/spin.ogg");
+        loadSound("jump", "Resources/Sounds/FX/jump.ogg", 50);
+        loadSound("blipMale", "Resources/Sounds/FX/blipMale.ogg", 80);
         
-		loadSound("Overworld", "Resources/Sounds/Music/overworld.wav", .05f, true);
-		loadSound("Godot", "Resources/Sounds/Music/godot.wav", .05f, true);		
-		loadSound("courtBegins", "Resources/Sounds/Music/courtBegins.wav", .05f, true);
+		loadSound("ampTest", "Resources/Sounds/Music/ampTest.ogg", 1, true);
+		loadSound("overworld", "Resources/Sounds/Music/overworld.ogg", .05f, true);
+		loadDirectory("Resources/Sounds/Music/Ace Attorney/", .05f);
 				
-		playMusic("Overworld");
+		playMusic("overworld");
 	}
 	
 	public static SoundBuffer get(String name) {
@@ -105,42 +113,90 @@ public class Sound {
 	public static void clean() {
 		List<SoundSource> toRemove = new ArrayList<SoundSource>();
 
-		for(SoundSource src : sourceList)
+		for(SoundSource src : sourceList) {
+			src.update();
 			if(src.isStopped())
 				toRemove.add(src);
+		}
 		for(SoundSource src : toRemove) {
 			src.destroy();
 			sourceList.remove(src);
 		}
 	}
 		
-		
-	public static void loadSound(String name, String fileName) {loadSound(name,fileName,1,false);}
-	public static void loadSound(String name, String fileName, float volume) {loadSound(name,fileName,volume,false);}
-	public static void loadSound(String name, String fileName, boolean loop) {loadSound(name,fileName,1,loop);}
-	public static void loadSound(String name, String fileName, float volume, boolean loop) {
-		SoundBuffer snd = SoundLoader.load(fileName);
+	public static SoundBuffer loadSound(String name, String fileName) {return loadSound(name,fileName,1,false);}
+	public static SoundBuffer loadSound(String name, String fileName, float volume) {return loadSound(name,fileName,volume,false);}
+	public static SoundBuffer loadSound(String name, String fileName, boolean loop) {return loadSound(name,fileName,1,loop);}
+	public static SoundBuffer loadSound(String name, String fileName, float volume, boolean loop) {
+		SoundBuffer snd = SoundLoader.load(name, fileName);
 
 		snd.setVolume(volume);
 		
 		bufferMap.put(name, snd);
 		bufferList.add(snd);
+		
+		return snd;
+	}
+	
+	public static void loadDirectory(String dirName, float volume) {
+		File[] fileList = FileExt.getSubfiles(dirName);
+		
+		String albumName = FileExt.getFile(dirName).getName();
+		Texture albumImg = null;
+		
+		List<String> playlist = new ArrayList<String>();
+		SoundBuffer buff;
+		
+		String fName, fPath, name, suffix;
+		// Find Album Cover
+		for(File file : fileList) {
+			fName = file.getName();
+			fPath = file.getPath();
+			suffix = FileExt.getSuffix(fName);
+			name = fName.replace("." + suffix,"");
+
+			if(suffix.equals("jpg")|| suffix.equals("png")) {
+				albumImg = TextureController.load(fPath, fName, TextureController.M_NORMAL).getFrame(0);
+				break;
+			}
+		}
+
+		// Load Sounds
+		for(File file : fileList) {
+			fName = file.getName();
+			fPath = FileExt.fixSlashes(file.getPath());
+			suffix = FileExt.getSuffix(fName);
+			name = fName.replace("." + suffix,"");
+			
+			if(suffix.equals("ogg") || suffix.equals("wav")) {
+				playlist.add(name);
+				buff = loadSound(name, fPath, volume, true);
+					buff.setAlbumName(albumName);
+					buff.setAlbumImage(albumImg);
+			}
+		}
+		
+		playlistMap.put(albumName, playlist);
 	}
 	
 	
+	public static void updateListener(Camera camera) {
+		updateListener(camera.getPosition().getArray(), new float[] {0,0,0}, camera.getNormal().getArray(), new float[] {0,0,1});
+	}
 	public static void updateListener(double cX, double cY, double cZ, double vX, double vY, double vZ, double nDirX, double nDirY, double nDirZ, double nUpX, double nUpY, double nUpZ) {
 		// Position of the listener.
-	    float[] listenerPos = {(float) cX, (float) cY, (float) cZ};
-
-	    // Velocity of the listener.
-	    float[] listenerVel = {(float) vX, (float) vY, (float) vZ};
-
-	    // Orientation of the listener. (first 3 elements are "at", second 3 are "up")
-	    float[] listenerOri = {(float) nDirX, (float) nDirY, (float) nDirZ,  (float) nUpX, (float) nUpY, (float) nUpZ};
-		
-		al.alListenerfv(AL.AL_POSITION,	listenerPos, 0);
-	    al.alListenerfv(AL.AL_VELOCITY,    listenerVel, 0);
-	    al.alListenerfv(AL.AL_ORIENTATION, listenerOri, 0);
+	    float[] listenerPos = {(float) cX, (float) cY, (float) cZ},
+	    		listenerVel = {(float) vX, (float) vY, (float) vZ},
+	    		listenerOri = {(float) nDirX, (float) nDirY, (float) nDirZ,  (float) nUpX, (float) nUpY, (float) nUpZ};	
+	    updateListener(listenerPos,listenerVel,listenerOri);
+	}
+	public static void updateListener(float[] pos, float[] vel, float[] norm, float[] up) {
+	    updateListener(pos,vel, Array.concat(norm,up));
+	}
+	public static void updateListener(float[] pos, float[] vel, float[] norm) {
+		al.alListenerfv(AL.AL_POSITION,	pos, 0);
+	    al.alListenerfv(AL.AL_VELOCITY, vel, 0);
+	    al.alListenerfv(AL.AL_ORIENTATION, norm, 0);
 	}
 	
 	public static void unload() {
@@ -187,10 +243,10 @@ public class Sound {
 	
 	
 	private static class SoundLoader {
-		public static SoundBuffer load(String fileName) {return load(fileName,1);}
-		public static SoundBuffer load(String fileName, float volume) {
+		public static SoundBuffer load(String name, String fileName) {
 			ByteBuffer[] data = new ByteBuffer[1];
 		    int[] 	buffer = new int[1],
+		    		reverseBuffer = new int[1],
 		    		format = new int[1],
 		    		size = new int[1],
 		    		freq = new int[1],
@@ -198,24 +254,40 @@ public class Sound {
 
 	        // Load wav data into a buffer.
 	        al.alGenBuffers(1, buffer, 0);
+	        al.alGenBuffers(1, reverseBuffer, 0);
 
-	        //if(fileName.endsWith(".wav"))
-			try {
-			    WAVData wd = WAVLoader.loadFromStream(FileExt.get(fileName));
-			    format[0] = wd.format;
-			    data[0] = wd.data;
-			    size[0] = wd.size;
-			    freq[0] = wd.freq;
-			    loop[0] = wd.loop ? AL.AL_TRUE : AL.AL_FALSE;
+	        InputStream inputStream = FileExt.get(fileName);
+	        BufferedInputStream buffStream = new BufferedInputStream(inputStream);
+	        
+	        try {
+	        	if(fileName.endsWith(".wav")) {
+				    WAVData wd = WAVLoader.loadFromStream(buffStream);
+				    format[0] = wd.format;
+				    data[0] = wd.data;
+				    size[0] = wd.size;
+				    freq[0] = wd.freq;
+				    loop[0] = wd.loop ? AL.AL_TRUE : AL.AL_FALSE;
+	        	}
+	        	else {
+	        		OggData od = (new OggDecoder()).getData(buffStream);
+	        		format[0] = od.format;
+	        		data[0] = od.data;
+				    size[0] = od.data.capacity();
+				    freq[0] = od.rate;
+	        		loop[0] = AL.AL_FALSE;
+	        	}
 			} catch (Exception e) {
 			    throw new ALException(e);
 			}
 	        
 	        
 	        al.alBufferData(buffer[0], format[0], data[0], size[0], freq[0]);
+			reverseBuffer(format,data);
+			al.alBufferData(reverseBuffer[0], format[0], data[0], size[0], freq[0]);
+			reverseBuffer(format,data);
 	        	
-	        SoundBuffer buf = new SoundBuffer(buffer, format, size, freq);
-	        
+	        SoundBuffer buf = new SoundBuffer(name,fileName, buffer,reverseBuffer, format, data[0], size, freq);
+	        	        
 	        // Do another error check and return.
 	        if(al.alGetError() != AL.AL_NO_ERROR) {
 	            System.err.println("Failed to load " + fileName + ". Exiting program.");
@@ -224,5 +296,45 @@ public class Sound {
 	        
 	        return buf;
 		}
+	}
+	
+	
+	public static void reverseBuffer(int[] format, ByteBuffer[] data) {
+		int bytes = 0, channels = 0;
+		switch(format[0]) {
+			case AL.AL_FORMAT_MONO8:
+				bytes = 1;
+				channels = 1;	break;
+			case AL.AL_FORMAT_MONO16:
+				bytes = 2;
+				channels = 1;	break;
+			case AL.AL_FORMAT_STEREO8:
+				bytes = 1;
+				channels = 2;	break;
+			case AL.AL_FORMAT_STEREO16:
+				bytes = 2;
+				channels = 2;	break;
+		}
+		
+		
+		data[0].rewind();
+		int len = data[0].remaining(), revI = len-1;
+
+		ByteBuffer buff = data[0],
+			newBuffer = ByteBuffer.allocate(len);		
+				
+		if(bytes == 2)
+	        for (int i = 0; i < len; i += 2) {
+	        	newBuffer.put(revI-1,buff.get(i));
+	        	newBuffer.put(revI,buff.get(i+1));
+	        	
+	        	revI -= 2;
+	        }
+        
+        buff.clear();
+        data[0] = newBuffer;
+	}
+	public static List<String> getPlaylist(String s) {
+		return playlistMap.get(s);
 	}
 }

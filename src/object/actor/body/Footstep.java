@@ -8,9 +8,8 @@ import time.Timer;
 
 public class Footstep extends Positionable {
 
+	private Timer destroyTimer;
 	private float direction;
-
-	private Timer destroyTimer = new Timer(5);
 	private float dirZ, angle, sHor = .5f, sVer = .5f;
 	private float[] pts;
 	
@@ -19,6 +18,8 @@ public class Footstep extends Positionable {
 		this.direction = direction;
 		this.dirZ = dirZ;
 		this.angle = angle;
+		
+		destroyTimer = new Timer(5);
 		
 		
 		boolean n = true;
@@ -29,11 +30,13 @@ public class Footstep extends Positionable {
 			n = !n;
 		}
 	}
+	
+	public void destroy() {
+		destroyTimer.destroy();
+		super.destroy();
+	}
 
 	public void draw() {
-		if(destroyTimer.check())
-			destroy();
-		
 		sHor += .3f;
 		sVer += .7f;
 		
@@ -71,5 +74,8 @@ public class Footstep extends Positionable {
 		
 		GOGL.transformClear();
 	}
-	public void update() {}	
+	public void update() {
+		if(destroyTimer.check())
+			destroy();
+	}
 }

@@ -1,96 +1,43 @@
 package resource.font;
 
-import gfx.TextureExt;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import cont.GameController;
-import cont.TextureController;
+import com.jogamp.opengl.util.texture.Texture;
 
-public class Font {
-	private String fontDir;
-	private Map<Character, TextureExt> fontMap;
-	private int width, height;
+import gfx.TextureExt;
+
+public abstract class Font {
+	protected final static byte T_SPLIT = 0, T_MERGED = 1;
+	protected static Map<String, Font> map = new HashMap<String, Font>();
+	private byte type;
+	private float hangFrac;
+	
+	protected Font(byte type, float hangFrac) {
+		this.type = type;
+		this.hangFrac = hangFrac;
+	}
+	
+	public boolean isSplit() {return type == T_SPLIT;}
+	public boolean isMerged() {return type == T_MERGED;}
 	
 	
-	// CONSTRUCTOR
-		public Font(String name) {
-			fontDir = "Resources/Fonts/" + name + "/";
-			loadCharacters();
-			
-			width = getCharWidth('A');
-			height = getCharHeight('A');
-		}
+	public static Font get(String name) {
+		return map.get(name);
+	}
 	
+	public float getHangFrac() {
+		return hangFrac;
+	}
 	
-	// INITIALIZATION METHODS
-		private void loadCharacters() {
-			fontMap = new HashMap<Character, TextureExt>();
-			
-			// Load Letters
-			for(int i = 0; i < 26; i++) {
-				addChar('A'+i);
-				addChar('a'+i);
-			}
-			
-			// Load Digits
-			for(int i = 0; i < 10; i++)
-				addChar('0'+i);
-			
-			// Load Symbols
-			addChar('.');
-			addChar('!');
-			addChar('\'');
-			addChar('?');
-			addChar(';');
-			addChar(':');
-			addChar('"');
-			addChar('-');
-			addChar('+');
-			addChar('<');
-			addChar('>');
-			addChar('(');
-			addChar(')');
-			addChar(',');
-			addChar('/');			
-		}
-		
-		// Adding Characters
-			private void addChar(char c) {
-				addChar(c, fontDir+((byte) c)+".png");
-			}
-			private void addChar(int i) {
-				addChar((char) i);
-			}
-			private void addChar(char c, String fileName) {
-				TextureExt cTex;
-
-				cTex = TextureController.load(fileName, fileName, TextureController.M_BGALPHA);
-				fontMap.put(c, cTex);
-			}
-
-
-	// PUBLIC
-		public TextureExt getChar(char c) {
-			if(fontMap.get(c) == null) {
-				System.out.println("Failed to load character "+c+".");
-				System.exit(2);
-			}
-
-			return fontMap.get(c);
-		}
-		public int getCharWidth(char c) {
-			return getChar(c).getWidth();
-		}
-		public int getCharHeight(char c) {
-			return getChar(c).getHeight();
-		}
-		public int getWidth() {
-			return width;
-		}
-		public int getHeight() {
-			return height;
-		}
+	// SplitFont Methods
+	public abstract TextureExt getChar(char c);
+	public abstract int getCharWidth(char c);
+	public abstract int getCharHeight(char c);
+	public abstract int getWidth();
+	public abstract int getHeight();
+	
+	// MergedFont Methods
+	public abstract float[] getBounds(int frame);
+	public abstract Texture getTexture();
 }

@@ -1,6 +1,8 @@
 package gfx;
 
 import resource.font.Font;
+import resource.font.MergedFont;
+import resource.font.SplitFont;
 
 import com.jogamp.opengl.util.texture.Texture;
 
@@ -15,32 +17,54 @@ public class GLText {
 	private static byte fontEffect = F_NONE;
 	private static float spin;
 	
+
+	private static float curLineHeight, curWidth, curHeight, curSWidth, curSHeight, curHangFrac;
+	private static Texture curTex;
+	private static boolean isSplit;
 	
 	public static void initialize() {
-		
 		spin = 0;
-		curFont = new Font("OoT");
+		
+		new MergedFont("8bit", .1f);
+		curFont = new SplitFont("OoT", .25f);
 	}
 	
-	public static float drawChar(float x, float y, float xS, float yS, char c) {
-		TextureExt cTexExt = curFont.getChar(c);
-		
-		if(cTexExt == null) {
-			System.out.println("Failed to draw character "+c+".");
-			return 0;
+	
+	public static void setFont(String name) {
+		curFont = Font.get(name);
+		curWidth = curFont.getWidth();
+		curHeight = curFont.getHeight();
+		curTex = curFont.getTexture();
+		isSplit = curFont.isSplit();
+		curLineHeight = curFont.getHeight();
+		curHangFrac = curFont.getHangFrac();
+	}
+	public static void setScale(float xS, float yS) {
+		if(!isSplit) {
+			curSWidth = xS*curWidth;
+			curSHeight = yS*curHeight;
 		}
+	}
+
+	public static float drawChar(float x, float y, float xS, float yS, char c) {					
+		Texture cTex = null;
 		
-		Texture cTex = cTexExt.getFrame(0);
-		if(cTex == null)
-			return 0;
+		if(isSplit) {
+			cTex = curFont.getChar(c).getFrame(0);
+			curWidth = cTex.getWidth();
+			curHeight = cTex.getHeight();
+			curSWidth = xS*curWidth;
+			curSHeight = yS*curHeight;
+		}
+
 		
 		if(c != '"' && c != '\'' && c != '`') {
-			y -= cTex.getHeight()*yS;
-			y += curFont.getHeight()*yS;
+			y -= curSHeight;
+			y += curLineHeight;
 		}
 		
 		if(c == 'j' || c == 'y' || c == 'g' || c == 'p' || c == 'q')
-			y += curFont.getHeight()*yS*.25;
+			y += curLineHeight*yS*curHangFrac; //.25
 			
 		if(fontEffect == F_SHAKE) {
 			x += MathExt.rnd(-1,1);
@@ -52,14 +76,16 @@ public class GLText {
 			y += Math2D.calcLenY(l, spin);
 			spin += 60;
 		}
-		else if(fontEffect == F_GHOST) {
+		else if(fontEffect == F_GHOST)
 			GOGL.enableShaderDiffuse(2);
-		}
 		
-		GOGL.drawTextureScaled(x,y,xS,yS,cTex);
+		if(isSplit)
+			GOGL.drawTextureScaled(x,y,xS,yS,cTex);
+		else
+			GOGL.fillRectangle(x,y,curSWidth,curSHeight,curFont.getBounds(c));
+		
 		GOGL.disableShaders();
-		
-		return cTex.getWidth()*xS;
+		return curSWidth;
 	}
 	
 	public static void drawString(float x, float y, String str) {
@@ -69,6 +95,10 @@ public class GLText {
 		int len = str.length();
 		char c;
 		
+		if(!isSplit) {
+			setScale(xS,yS);
+			GOGL.bind(curTex);
+		}
 		
 		float fH = curFont.getHeight();		
 		float dX = x, dY = y;
@@ -85,6 +115,8 @@ public class GLText {
 			else
 				dX += drawChar(dX,dY,xS,yS,c);
 		}
+		
+		GOGL.bind(0);
 	}
 	public static void drawString(float x, float y, String str, boolean shadow) {
 		drawString(x,y,1,1,str,shadow);
@@ -104,9 +136,13 @@ public class GLText {
 		int len = str.length();
 		char c;
 		
+		if(!isSplit) {
+			setScale(xS,yS);
+			GOGL.bind(curTex);
+		}
+		
 		spin = GOGL.getTime()*5;
 		
-		float fW = curFont.getWidth(), fH = curFont.getHeight();
 		float dX = x, dY = y, a, aa, uX, uY;
 		int n = str.getFallNumber();
 
@@ -115,10 +151,10 @@ public class GLText {
 			c = str.charAt(i);
 
 			if(c == ' ')
-				dX += fW*xS;
+				dX += curWidth*xS;
 			else if(c == '\n') {
 				dX = x;
-				dY += (fH+lineSpace)*yS;
+				dY += (curLineHeight+lineSpace)*yS;
 			}
 			else {				
 				if(i+n >= len) {
@@ -137,6 +173,8 @@ public class GLText {
 				dX += drawChar(uX,uY,xS,yS,c);
 			}
 		}
+		
+		GOGL.bind(0);
 	}
 	
 	public static void drawStringCentered(float x, float y, float xS, float yS, String str, boolean shadow) {
@@ -155,42 +193,38 @@ public class GLText {
 		
 		int len = str.length();
 		char c;
-		
-		float fH = curFont.getHeight();
-			
+					
 		StringExt all = new StringExt(str);
 		String line = all.chompLine();
 		
 		while(line != "") {
 			drawString(x-getStringWidth(xS,yS,line)/2,y,xS,yS,line);
 		
-			y += fH*yS;
+			y += curLineHeight*yS;
 			
 			line = all.chompLine();
 		}
 	}
 
-	public static float getStringWidth(String str) {
-		return getStringWidth(1,1,str);
-	}
+	public static float getStringWidth(String str) {return getStringWidth(1,1,str);}
+	public static float getStringWidth(float scale, String str) {return getStringWidth(scale,scale,str);}
 	public static float getStringWidth(float xS, float yS, String str) {
 		int len = str.length();
 		char c;
 		
-		float fW = curFont.getWidth(), fH = curFont.getHeight();
 		float dX = 0, dY = 0, maxW = 0;
 		
 		for(int i = 0; i < len; i++) {
 			c = str.charAt(i);
 
 			if(c == ' ')
-				dX += fW*xS;
+				dX += curWidth*xS;
 			else if(c == '\n') {
 				if(maxW < dX)
 					maxW = dX;
 				
 				dX = 0;
-				dY += fH*yS;
+				dY += curLineHeight*yS;
 			}
 			else
 				dX += curFont.getCharWidth(c)*xS;
@@ -211,9 +245,7 @@ public class GLText {
 		float maxH = fH*yS;
 		
 		for(int i = 0; i < len; i++) {
-			c = str.charAt(i);
-
-			if(c == '\n')
+			if(str.charAt(i) == '\n')
 				maxH += fH*yS;
 		}
 		

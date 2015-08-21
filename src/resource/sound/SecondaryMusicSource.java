@@ -49,4 +49,14 @@ public class SecondaryMusicSource extends Positionable {
 	public void play() {
 		music.play();
 	}
+
+	public SoundSource getSource() {
+		return music.getSource();
+	}
+	
+
+	
+	public void setPosition(float x, float y, float z) {
+		music.setPosition(x,y,z);
+	}
 }

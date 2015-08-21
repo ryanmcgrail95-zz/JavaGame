@@ -14,13 +14,10 @@ import gfx.GOGL;
 public class NPC extends Actor {
 	private String text, toScript;
 	private boolean isSpeaking = false, noWait = false, canTalk = false;
-	private SecondaryMusicSource music;
 
 	
 	public NPC(float x, float y, float z) {
 		super(x,y,z);
-		
-		music = new SecondaryMusicSource(x,y,z, 100,400, "courtBegins","Godot");
 	}
 	
 	
@@ -51,9 +48,8 @@ public class NPC extends Actor {
 	}
 	
 	public void draw() {
+		
 		super.draw();
-		
-		
 		
 		if(canTalk) {
 			

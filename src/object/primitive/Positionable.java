@@ -98,13 +98,13 @@ public abstract class Positionable extends Drawable {
 		if(Mouse.getRightMouse())
 			return true;
 		else
-			return Camera.checkOnscreen(x(), y());
+			return GOGL.getCamera().checkOnscreen(x(),y());
 	}
 	public float calcDepth() {
 		if(Mouse.getRightMouse())
 			return 0;
 		else
-			return Camera.calcParaDistance(x(),y());
+			return GOGL.getCamera().calcParaDistance(x(),y());
 	}
 
 	public float calcDis(Positionable other) {return calcPtDis(other.x(), other.y());}
@@ -125,7 +125,7 @@ public abstract class Positionable extends Drawable {
 		if(spd == 0)
 			return;
 		
-		f = (float) (MathExt.contain(0, spd, maxSpeed)/spd);
+		f = (float) (MathExt.contain(-maxSpeed, spd, maxSpeed)/spd);
 		velocity.setXYLen(spd*f);
 	}
 	public void containSpeed(float maxSpeed) {
@@ -153,5 +153,24 @@ public abstract class Positionable extends Drawable {
 	public float getDirection() {
 		if(getXYSpeed() == 0)	return direction;
 		else					return velocity.getDirection();
+	}
+	
+	
+	// CHECKING
+	public boolean collideCircle(float x, float y, int r) {return checkCircle(x,y,r,true);}
+	public boolean checkCircle(float x, float y, float r) {return checkCircle(x,y,r,false);}
+	public boolean checkCircle(float x, float y, float r, boolean eject) {
+		float dis, dir;
+		dis = calcPtDis(x,y);
+		
+		if(!eject)
+			return dis < r;
+		else if(dis < r) {
+			dir = calcPtDir(x,y)+180;
+			step(r-dis,dir);
+			return true;
+		}
+		else
+			return false;
 	}
 }

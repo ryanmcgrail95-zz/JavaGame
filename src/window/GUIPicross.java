@@ -22,7 +22,6 @@ import gfx.RGBA;
 public class GUIPicross extends GUIDrawable {
 
 	private final static RGBA GRAY_L = new RGBA(168,168,168),  GRAY_D = new RGBA(96,96,96);
-
 	private Picross board;
 	public final static byte CELL_EMPTY = Picross.CELL_EMPTY, CELL_FILLED = Picross.CELL_FILLED, CELL_MARKED = Picross.CELL_MARKED;
 	private static int xNum = 15, yNum = 15, blinkTime = 30, holdTime = 20, size = 6;
@@ -210,5 +209,10 @@ public class GUIPicross extends GUIDrawable {
 	public void destroy() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean checkMouse() {
+		return getParent().checkMouse();
 	}
 }

@@ -12,7 +12,6 @@ import gfx.TextureExt;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.Messages;
-import datatypes.Inventory;
 import datatypes.vec3;
 import datatypes.lists.CleanList;
 import object.actor.Actor;
@@ -24,7 +23,7 @@ import resource.model.Model;
 
 public abstract class Item extends Physical implements Useable {
 	private ItemBlueprint blueprint;
-	private Inventory parent;
+	private ItemContainer parent;
 	private int stackNum;
 	
 	
@@ -58,7 +57,7 @@ public abstract class Item extends Physical implements Useable {
 		i.makeReal(x,y,z);
 		return i;
 	}
-	public static Item create(String name, int amount, Inventory owner) {
+	public static Item create(String name, int amount, ItemContainer owner) {
 		Item i = create(name,amount);
 		i.giveTo(owner);
 		return i;
@@ -209,7 +208,7 @@ public abstract class Item extends Physical implements Useable {
 
 		
 		public void giveTo(Actor a) {giveTo(a.getInventory());}
-		public void giveTo(Inventory inv) {			
+		public void giveTo(ItemContainer inv) {			
 			CleanList<Item> list = inv.getItemList();
 			int size = list.size();
 			Item it;
@@ -241,7 +240,10 @@ public abstract class Item extends Physical implements Useable {
 			}
 			
 			// Otherwise, Can't be Owned!!
-			makeReal(inv.getOwner().getPos());
+			if(inv instanceof Inventory)
+				makeReal(((Inventory) inv).getOwner().getPos());
+			else
+				destroy();
 		}
 		public void makeReal(vec3 pt) {makeReal(pt.x(),pt.y(),pt.z());}
 		public void makeReal(float x, float y, float z) {
@@ -252,7 +254,9 @@ public abstract class Item extends Physical implements Useable {
 			setPos(x,y,z);
 		}
 
-	public Actor getOwner() {return parent.getOwner();}
+	/*public Actor getOwner() {
+		return parent.getOwner();
+	}*/
 	
 	
 	public static class Comparators {

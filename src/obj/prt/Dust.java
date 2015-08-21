@@ -14,14 +14,12 @@ public class Dust extends Particle {
 	private boolean doFloat;
 	private int imageNumber;
 	private float x, y, z, direction, rotation;
-	private static MultiTexture dustTex;
+	private static MultiTexture dustTex = new MultiTexture("Resources/Images/smokecloud.png",4,4);
 	
 	
 	public Dust(float x, float y, float z, float direction, boolean doFloat) {
 		super(x, y, z);
-		
-		dustTex = new MultiTexture("Resources/Images/smokecloud.png",4,4);
-		
+				
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -96,8 +94,5 @@ public class Dust extends Particle {
 	}
 
 	@Override
-	public void update() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void update() {}
 }

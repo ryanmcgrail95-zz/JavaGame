@@ -2,6 +2,7 @@ package object.actor.body;
 
 import datatypes.mat4;
 import datatypes.vec3;
+import obj.itm.Sword;
 import obj.prt.Dust;
 import resource.sound.Sound;
 import io.IO;
@@ -18,6 +19,7 @@ public class Body {
 	public final static byte C_STAND = 0, C_WALK = 1, C_RUN = 2;
 	private boolean isMoving;
 	private float sideRotAngle;
+	private Sword sword;
 	
 	public Body() {
 		index = 0;
@@ -26,6 +28,8 @@ public class Body {
 		runCycle = new RunCycle();
 		walkCycle = new WalkCycle();
 		standCycle = new StandCycle();
+		
+		sword = new Sword("Whatever");
 		
 		stand();
 	}
@@ -71,12 +75,6 @@ public class Body {
 		return true;
 	}
 	
-	public void step() {
-		frac += (toFrac - frac)/5;
-		if(frac < .05)
-			frac = 0;
-	}
-
 
 	public void stand() {
 		
@@ -117,11 +115,14 @@ public class Body {
 	public vec3 getLowerLeg(float index) {
 		return (vec3) cycle2.getLowerLeg(index).mult(frac).add(cycle1.getLowerLeg(index).mult(1-frac));
 	}
-
 	
-	private void step(float x, float y, float z, float dir) {
+	public void step(float x, float y, float z, float dir) {
 		float prevIndex = index;
 
+		frac += (toFrac - frac)/5;
+		if(frac < .05)
+			frac = 0;
+		
 		float frameNum = 12, speed;
 		speed = frac*runCycle.speed + (1-frac)*walkCycle.speed;
 
@@ -130,7 +131,7 @@ public class Body {
 		// Footstep
 		if(isMoving)
 			if(MathExt.between(prevIndex, 6, index) || MathExt.between(prevIndex, 12, index)) {
-				Sound.play("Footstep");
+				Sound.play("footstep");
 				
 				float fX,fY,fZ, backLen = -2;
 				fX = x+Math2D.calcLenX(backLen,dir+180);
@@ -141,15 +142,15 @@ public class Body {
 				fX += Math2D.calcLenX(sideAmt, dir+90);
 				fY += Math2D.calcLenY(sideAmt, dir+90);
 				
-	            new Dust(fX,fY,fZ-8, 0, true);
-	            new Footstep(fX,fY,fZ-16, dir+180, 20, 40);	            
+	            new Dust(fX,fY,fZ+8, 0, true);
+	            new Footstep(fX,fY,fZ, dir+180, 20, 40);	            
 			}
 
 		if(index >= frameNum)
 			index -= frameNum;
 	}
 
-	public void draw(float x, float y, float z, float dir) {
+	public void draw(float x, float y, float z, float waistH, float dir) {
 		float f, iF;
 		f = frac;
 		iF = 1-f;
@@ -182,8 +183,9 @@ public class Body {
 		h = 4;
 		uLen = w - h/2;
 		
-		float frameNum = 12, sideRot;
-		sideRot = sideRotAngle - sideAmt/side*2;
+		float frameNum = 12, sideRot, waistRot;
+		waistRot = 1f*sideRotAngle;
+		sideRot = .5f*sideRotAngle - sideAmt/side*2;
 		
 		/*float dis = MathExt.min(Math.abs(index-0), Math.abs(index-6), Math.abs(index-12)), disF;
 		disF = dis/3;
@@ -195,47 +197,41 @@ public class Body {
 		float mX,mY,mZ;
 		mX = x;
 		mY = y; 
-		mZ = z+w;
+		mZ = z;
+		
+		waistH += w;
 		
 		
-		step(x,y,z,dir);
-
 		
 		useIndex = index;
 		
 		
-		//GOGL.enableShader("Main");
-		//GOGL.passViewMatrix();
-		//GOGL.passProjectionMatrix();
 		
 		// Draw Body
+		GOGL.transformClear();
 		GOGL.transformTranslation(mX,mY,mZ);
-		
 		GOGL.transformRotationZ(dir);
 		GOGL.transformRotationX(sideRot);
+		GOGL.transformTranslation(0,0,waistH);
 		
+		mat = GOGL.getModelMatrix();
+
+		GOGL.transformRotationX(waistRot);
 		
 		GOGL.transformRotationY(getBody(useIndex).y());
-				
-		//GOGL.passModelMatrix();
 		GOGL.draw3DBlock(-h/2,-h/2,0, h, h, bLen);
-		
-		GOGL.transformClear();
-		
+				
 		// Draw Arms
 		for(int i = -1; i <= 1; i += 2) {
 			if(useIndex >= frameNum)
 				useIndex -= frameNum;
 						
-			GOGL.transformTranslation(mX,mY,mZ);
-	
-			GOGL.transformRotationZ(dir);
+			GOGL.setModelMatrix(mat);
 			GOGL.transformTranslation(0,i*h,0);
-			GOGL.transformRotationX(sideRot);
+			GOGL.transformRotationX(waistRot);
 
 			GOGL.transformRotationY(getBody(useIndex).y());
 			GOGL.transformTranslation(0,0,bLen);
-			//GOGL.transformRotationY(-getBody(useIndex));
 			
 			GOGL.transformRotationY(getUpperArm(useIndex).y());
 			GOGL.draw3DBlock(0,-h/2,-h/2, w, h, h);
@@ -244,8 +240,10 @@ public class Body {
 			GOGL.transformRotationY(-getUpperArm(useIndex).y() + getLowerArm(useIndex).y());
 			GOGL.draw3DBlock(0,-h/2,-h/2, w, h, h);
 			
-			GOGL.transformClear();
-			
+			GOGL.transformTranslation(uLen,0, 0);			
+			if(i == 1)
+				sword.drawSword();
+						
 			useIndex += frameNum/2;
 		}
 
@@ -255,23 +253,19 @@ public class Body {
 			if(useIndex >= frameNum)
 				useIndex -= frameNum;
 						
-			GOGL.transformTranslation(mX,mY,mZ);
-	
-			GOGL.transformRotationZ(dir);
+			GOGL.setModelMatrix(mat);
 			GOGL.transformTranslation(0,i*h,0);
-			GOGL.transformRotationX(sideRot);
-			
+
 			GOGL.transformRotationY(getUpperLeg(useIndex).y());
 			GOGL.draw3DBlock(0,-h/2,-h/2, w, h, h);
 			
 			GOGL.transformTranslation(uLen,0, 0);
 			GOGL.transformRotationY(-getUpperLeg(useIndex).y() + getLowerLeg(useIndex).y());
 			GOGL.draw3DBlock(0,-h/2,-h/2, w, h, h);
-			
-			GOGL.transformClear();
-			
+						
 			useIndex += frameNum/2;
 		}
+		GOGL.transformClear();
 		
 		GOGL.disableShaders();
 

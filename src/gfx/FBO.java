@@ -1,8 +1,10 @@
 package gfx;
 
+import fl.FileExt;
 import functions.Math2D;
 import functions.Math3D;
 
+import java.io.IOException;
 import java.nio.IntBuffer;
 
 import resource.sound.Sound;
@@ -12,15 +14,17 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
 public class FBO {
 	
 	private int fbo, tex, texDepth, rb;
-	private int w, h;
+	private int width, height;
 	
-	public FBO(GL gl, int w, int h) {
-		this.w = w;
-		this.h = h;
+	public FBO(GL gl, int width, int height) {
+		this.width = width;
+		this.height = height;
 		ini(gl);
 	}
 	
@@ -34,7 +38,7 @@ public class FBO {
 	    tex = genTexture(gl);
 	    gl.glBindTexture(GL.GL_TEXTURE_2D, tex);
 	    //gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL2.GL_RGBA, w,h, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, null);
-	    gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL2.GL_RGBA, w,h, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, null);
+	    gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL2.GL_RGBA, width,height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, null);
 	    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
 	    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
 	    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE);
@@ -58,7 +62,7 @@ public class FBO {
 	    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL2.GL_DEPTH_TEXTURE_MODE, GL2.GL_INTENSITY);
 	    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL2.GL_TEXTURE_COMPARE_MODE, GL2.GL_COMPARE_R_TO_TEXTURE);
 	    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL2.GL_TEXTURE_COMPARE_FUNC, GL.GL_LEQUAL);
-	    gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL2.GL_DEPTH_COMPONENT24, w,h, 0, GL2.GL_DEPTH_COMPONENT, GL.GL_UNSIGNED_BYTE, null);
+	    gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL2.GL_DEPTH_COMPONENT24, width,height, 0, GL2.GL_DEPTH_COMPONENT, GL.GL_UNSIGNED_BYTE, null);
 	    gl.glFramebufferTexture2D(GL2.GL_FRAMEBUFFER, GL2.GL_DEPTH_ATTACHMENT, GL.GL_TEXTURE_2D, texDepth, 0);
 	    gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 	    	    
@@ -89,8 +93,8 @@ public class FBO {
 		GL2 gl2 = gl.getGL2();
 		gl2.glMatrixMode(GL2.GL_PROJECTION);
 		gl2.glLoadIdentity();
-		gl2.glOrtho(0,w,0,h, -1000,1000);
-        gl.glViewport(0,0,w,h);
+		gl2.glOrtho(0,width,0,height, -1000,1000);
+        gl.glViewport(0,0,width,height);
 		gl2.glMatrixMode (GL2.GL_MODELVIEW);
 		gl2.glLoadIdentity();
 	}
@@ -100,18 +104,20 @@ public class FBO {
 		gl2.glMatrixMode(GL2.GL_PROJECTION);
 		gl2.glLoadIdentity();
 		float camX, camY, camZ, toX, toY, toZ;
-		camX = Camera.getX();
-		camY = Camera.getY();
-		camZ = Camera.getZ();
-		toX = Camera.getToX();
-		toY = Camera.getToY();
-		toZ = Camera.getToZ();
+		Camera camera = GOGL.getCamera();
+		camX = camera.getX();
+		camY = camera.getY();
+		camZ = camera.getZ();
+		toX = camera.getToX();
+		toY = camera.getToY();
+		toZ = camera.getToZ();
         // Perspective.
         float widthHeightRatio = 640f/480; //getViewWidth()/getViewHeight();
         glu = GLU.createGLU(gl);
         glu.gluPerspective(45, widthHeightRatio, 1, 10000);
-        glu.gluLookAt(camX,camY,camZ,toX,toY,toZ,0,0,1);
-        gl.glViewport(0,0,w,h);
+        GOGL.getCamera().gluLookAt(glu); 
+        
+        gl.glViewport(0,0,width,height);
 		gl2.glMatrixMode (GL2.GL_MODELVIEW);
 		gl2.glLoadIdentity();
 	}
@@ -140,9 +146,7 @@ public class FBO {
 	
 	
 	
-	public int getTexture() {
-		return tex;
-	}
+	public int getTexture() {return tex;}
 	
 	
 	private int genRB(GL gl) {
@@ -163,10 +167,18 @@ public class FBO {
 	    return tmp[0];
 	}
 	
-	public int getWidth() {
-		return w;
+	public int getWidth() {return width;}
+	public int getHeight() {return height;}
+	
+	public void save(String fileName) {
+		try {
+			Texture t = new Texture(tex, GL.GL_TEXTURE_2D, width, height, width, height, false);
+			AWTTextureIO.write(t, FileExt.getFile(fileName));
+		} catch(IOException e) {
+		}
 	}
-	public int getHeight() {
-		return h;
+
+	public void saveScreenshot() {
+		save("Resources/Screenshots/" + System.currentTimeMillis() + ".png");
 	}
 }

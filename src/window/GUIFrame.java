@@ -4,7 +4,6 @@ import functions.Math2D;
 import gfx.FBO;
 import gfx.GOGL;
 import gfx.RGBA;
-import gfx.TextureRenderer;
 import io.Mouse;
 
 import java.util.ArrayList;
@@ -69,17 +68,14 @@ public class GUIFrame extends GUIDrawable {
 	public float w() {return super.w()*scale;}
 	public float h() {return super.h()*scale;}
 	
-	public byte draw() {
-		return draw(x(),y());
-	}
-	public byte draw(float x, float y) {
-		GOGL.setColor(RGBA.WHITE);
-
+	public byte draw() {return draw(x(),y(),w(),h());}
+	public byte draw(float x, float y) {return draw(x,y,w(),h());}
+	public byte draw(float x, float y, float w, float h) {
 		GOGL.disableBlending();
-		GOGL.drawFBO(x,y, w(),h(), fbo);
+		GOGL.drawFBO(x,y, w,h, fbo);
 		GOGL.enableBlending();
 		
-		return -1;		
+		return -1;	
 	}
 	
 	
@@ -105,5 +101,10 @@ public class GUIFrame extends GUIDrawable {
 	}
 	public int getTexture() {
 		return fbo.getTexture();
+	}
+
+	
+	public boolean checkMouse() {
+		return checkRectangle(0,0,w(),h());
 	}
 }

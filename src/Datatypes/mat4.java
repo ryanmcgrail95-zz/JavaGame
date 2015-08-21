@@ -269,7 +269,7 @@ public class mat4 {
 	}
 	public static mat4 rotationX(float amt) {
 		float rad, co,si;
-		rad = -amt/180*3.14159f;
+		rad = amt/180*3.14159f;
 		co = (float) Math.cos(rad);
 		si = (float) Math.sin(rad);
 		
@@ -281,7 +281,7 @@ public class mat4 {
 	}
 	public static mat4 rotationY(float amt) {
 		float rad, co,si;
-		rad = -amt/180*3.14159f;
+		rad = amt/180*3.14159f;
 		co = (float) Math.cos(rad);
 		si = (float) Math.sin(rad);
 		
@@ -293,7 +293,7 @@ public class mat4 {
 	}
 	public static mat4 rotationZ(float amt) {
 		float rad, co,si;
-		rad = -amt/180*3.14159f;
+		rad = amt/180*3.14159f;
 		co = (float) Math.cos(rad);
 		si = (float) Math.sin(rad);
 		

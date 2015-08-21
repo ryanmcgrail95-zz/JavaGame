@@ -19,8 +19,6 @@ import gfx.GOGL;
 import gfx.RGBA;
 
 public class Picross {
-
-	private final static RGBA GRAY_L = new RGBA(168,168,168),  GRAY_D = new RGBA(96,96,96);
 	
 	protected static int xNum = 15, yNum = 15;	
 	public final static byte CELL_EMPTY = 0, CELL_FILLED = 1, CELL_MARKED = 2;

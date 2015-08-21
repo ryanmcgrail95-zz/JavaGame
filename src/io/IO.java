@@ -30,12 +30,6 @@ public final class IO {
         Keyboard.ini();
 	}
 	
-	public static void update() {
-		Mouse.update();
-		Keyboard.update();
-	}
-	
-	
 
 	
 	//Access and Mutation Functions

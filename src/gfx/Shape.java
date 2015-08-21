@@ -458,7 +458,7 @@ public class Shape { //extends BranchGroup {
 		
 		int k = 0;
 		for(Shape s : list) {
-			disList[k] = Camera.calcParaDistance(s.sx, s.sy);
+			disList[k] = GOGL.getCamera().calcParaDistance(s.sx, s.sy);
 			//System.out.println(s.name + ", " + disList[k]);
 			k++;
 		}

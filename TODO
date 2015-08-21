@@ -21,3 +21,9 @@ IMAGES
 		- set alpha of each pixel to the red component
 	- Hand-drawn Sketch Shader
 		- https://www.shadertoy.com/view/MsSGD1 
+		
+		
+		
+OPTIMIZATIONS?
+	- multiple getStringWidth/Heights in certain methods
+	- multiple presorts for main camera

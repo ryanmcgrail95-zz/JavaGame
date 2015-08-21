@@ -1,7 +1,7 @@
 package window;
 
-import datatypes.Inventory;
 import io.Mouse;
+import obj.itm.Inventory;
 import obj.itm.Item;
 import obj.itm.ItemBlueprint;
 import obj.itm.ItemController;
@@ -42,7 +42,7 @@ public class ItemButton extends RectButton {
 		GOGL.drawTexture(iX,iY,itemType.getSprite().getFrame(0));
 		// Draw Text
 		GOGL.setColor(new RGBA(255,255,0));
-		GOGL.fillCircle(dX+8,dY+h()*7/8, h()*1/8, 8);
+		GOGL.fillPolygon(dX+8,dY+h()*7/8, h()*1/8, 8);
 		GLText.drawString(iX,iY,s,s,""+numAvailable,true);
 		GLText.drawString(dX+w()-4-GLText.getStringWidth(s,s,cost),dY+h()*3/4+2, s,s, cost,true);
 		// Draw Outline
@@ -57,6 +57,7 @@ public class ItemButton extends RectButton {
 			if(Mouse.getLeftClick())
 				buyOne();
 		}
+		else
 			glowTo(0);
 			
 		GOGL.setColor(new RGBA(1,1,1,getGlow()*.5f));

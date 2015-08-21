@@ -21,6 +21,7 @@ import datatypes.lists.CleanList;
 import obj.prt.Floaties;
 import object.actor.Player;
 import object.environment.Tree;
+import phone.SmartPhone;
 import time.Timer;
 import window.Window;
 
@@ -35,7 +36,7 @@ public abstract class Drawable extends Updatable {
 	
 	// Mouse-Selection Variables
 	protected boolean isSelected = false;
-	private static Timer selectTimer = new Timer(10), sortTimer = new Timer(60);
+	private static Timer selectTimer;
 
 
 	protected int R, G, B;
@@ -102,12 +103,12 @@ public abstract class Drawable extends Updatable {
 			else
 				addHover = 0;
 		}
-		
+				
 		// Sort by Depth
 		int dSi = drawList.size(), i, k;
 		for(Drawable d : drawList)
 			if(d.visible)
-				if(d.calcDepth() < Camera.getViewDistance())
+				if(d.calcDepth() < GOGL.getCamera().getViewDistance())
 					if(d.checkOnscreen()) {
 						onscreenList.add(d);
 						
@@ -118,35 +119,35 @@ public abstract class Drawable extends Updatable {
 						else if(addHover == 1)
 							d.isSelected = false;
 					}
-			
+					
 		//onscreenList.sort(Drawable.Comparators.DEPTH);
 	}
 	
 		public static void display() {
-						
-			presort();
+			if(selectTimer == null)
+				selectTimer = new Timer(10);
 			
-			int hSi = onscreenHoverList.size(), dSi = onscreenList.size();
+			//presort(GOGL.getMainCamera());
+			
+			//onscreenHoverList
+			int hSi = hoverList.size(), dSi = onscreenList.size();
 			
 			Mouse.resetCursor();
 			        	
-			
-			//GOGL.setViewport(0,0,640,480);
-
 			GOGL.setOrtho();
 			for(Drawable d : renderList)
 				d.render();
 			Window.renderAll();
 			
 			
+        	GOGL.setViewport(0,0,640,480);
 			GOGL.setPerspective();
-			//GOGL.enableDepth();
 
-			if(onscreenHoverList.size() > 0) {
+			if(canSelectHoverable() && hoverList.size() > 0) {
 				GOGL.allowLighting(false);
 				GOGL.clearScreen();
 				
-				for(Drawable d : onscreenHoverList) {
+				for(Drawable d : hoverList) {
 					d.isSelected = false;
 					
 					GOGL.forceColor(new RGBA(d.R/255f,d.G/255f,d.B/255f));
@@ -184,13 +185,19 @@ public abstract class Drawable extends Updatable {
 	}
 
 	public static int getNumber() {return drawList.size();}
-		
+	public static int getOnscreenNumber() {return onscreenList.size();}
+
 	public static class Comparators {
 		public final static Comparator<Drawable> DEPTH = new Comparator<Drawable>() {
             public int compare(Drawable o1, Drawable o2) {
                 return (int) (o1.calcDepth() - o2.calcDepth());
             }
         };
+	}
+	
+	
+	private static boolean canSelectHoverable() {
+		return !SmartPhone.isActive();
 	}
 
 	public static void draw3D() {
@@ -206,10 +213,10 @@ public abstract class Drawable extends Updatable {
 		GOGL.fillRectangle(0,bY,640,480-bY);
 		
 					
-		if(Camera.checkMapView())
+		/*if(Camera.checkMapView())
 			GOGL.setOrthoPerspective();
-		else
-			GOGL.setPerspective();
+		else*/
+		GOGL.setPerspective();
 		
 		
 		for(Drawable d : onscreenList) {
@@ -218,7 +225,6 @@ public abstract class Drawable extends Updatable {
 			if(d.isSelected)
 				d.hover();
 		}
-		
 		
 		Floaties.draw();
 		Shape.drawAll();

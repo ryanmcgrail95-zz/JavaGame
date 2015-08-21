@@ -2,7 +2,11 @@ package gfx;
 
 
 import object.actor.Player;
+import object.primitive.Drawable;
+import object.primitive.Updatable;
+import phone.SmartPhone;
 import sts.Stat;
+import time.Timer;
 import window.Window;
 import cont.Messages;
 import cont.Text;
@@ -17,13 +21,21 @@ public class Overlay {
 				Text.draw();
 			else if(Window.isWindowOpen())
 				Window.drawAll();
-			else {
+			else if(!SmartPhone.isActive()){
 				Controller.draw();
 				Messages.draw();
 				Player.getInstance().getInventory().draw();
 				Player.getInstance().getStat().draw();
 				
 				Stat.drawOverheads();
+				
+				
+				float dX,dY;
+				dX = 200;
+				dY = 0;
+				GLText.drawString(dX,dY, "Drawable: " + Drawable.getOnscreenNumber() + "/" + Drawable.getNumber()); dY += 20;
+				GLText.drawString(dX,dY, "Updatable: " + Updatable.getNumber()); dY += 20;
+				GLText.drawString(dX,dY, "Timers: " + Timer.getNumber()); dY += 20;
 			}
 	}
 

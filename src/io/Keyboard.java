@@ -38,6 +38,8 @@ public final class Keyboard implements KeyEventDispatcher {
 		for(int i = 0; i < 36; i++)
 			if(keys[i] == K_RELEASED)
 				keys[i] = K_UP;
+			else if(keys[i] == K_PRESSED)
+				keys[i] = K_DOWN;
 	}
 	
 
@@ -63,10 +65,9 @@ public final class Keyboard implements KeyEventDispatcher {
 		
 		
 		
-		if(event == E_PRESSED)
+		if(event == E_DOWN) {
 			set(c,K_PRESSED);
-		else if(event == E_DOWN)
-			set(c,K_DOWN);
+		}
 		else if(event == E_RELEASED)
 			set(c,K_RELEASED);
 			

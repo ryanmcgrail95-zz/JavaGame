@@ -2,9 +2,13 @@ package object.actor;
 
 import obj.itm.ItemBlueprint;
 import object.environment.Heightmap;
+import object.environment.Waypoint;
+import phone.SmartPhone;
 import io.Controller;
 import io.IO;
+import io.Keyboard;
 import io.Mouse;
+import functions.Math2D;
 import gfx.Camera;
 import gfx.GOGL;
 import gfx.Overlay;
@@ -16,10 +20,14 @@ public class Player extends Actor {
 		
 	private Player(float x, float y, float z) {
 		super(x, y, z);
-
 		type = T_PLAYER;
 	}
 
+	
+	public boolean isLookCameraActive() {
+		return SmartPhone.isActive();
+	}
+	
 	//PARENT FUNCTIONS
 		public void update() {
 			super.update();
@@ -29,14 +37,21 @@ public class Player extends Actor {
 				Overlay.disable();
 			}
 			else {
-				centerCamera(180, camDirection, -15);
+				if(isLookCameraActive())
+					lookCamera();
+				else
+					centerCamera(180, camDirection, -15);
 				Overlay.enable();
 			}
+			
+			if(Keyboard.checkPressed('1'))
+				new Waypoint(x(),y(),z()+20);
 		}
 		
 	public void draw() {
 		
-		super.draw();
+		if(!isLookCameraActive())
+			super.draw();
 	}
 	
 	//Static Functions
@@ -59,7 +74,7 @@ public class Player extends Actor {
 		
 	private void controlMove() {
 				
-		float cDir = Camera.getDirection();
+		//float cDir = Camera.getDirection();
 		
 		//MOVING
 			float moveDir = Controller.getDPadDir();
@@ -67,12 +82,38 @@ public class Player extends Actor {
 			if(moveDir != -1)
 				stopMovingToPoint();
 			
-			move(Mouse.getRightMouse(), moveDir);
+			boolean fps = isLookCameraActive();
+			if(!fps)
+				move(Mouse.getRightMouse(), moveDir, true);
+			else {
+				float hori, vert;
+				hori = Math2D.calcLenX(moveDir);
+					if(Math.abs(hori) < .2)
+						hori = 0;
+				vert = Math2D.calcLenY(moveDir);
+
+				System.out.println(getDirection());
+				if(moveDir != -1) {
+					if(hori != 0)
+						this.setDirection(getDirection() - Math.signum(hori)*4);
+					if(vert != 0)
+						move(vert*maxSpeed);
+				}
+				else
+					move(false,-1,false,true);
+			}
 			
 		//JUMPING
 		if(IO.getZButtonPressed())
 			roll();
-		
+		else if(Keyboard.checkPressed('E')) {
+			if(!SmartPhone.isActive())
+				setDirection(camDirection);
+			else
+				camDirection = getDirection();
+			GOGL.getCamera().smoothOnce(10);
+			SmartPhone.setActive(!SmartPhone.isActive());
+		}		
 		//Mouse Control
 		/*if(Mouse.getLeftClick()) {
 			moveToPoint(Heightmap.getInstance().raycastMouse());
@@ -86,12 +127,9 @@ public class Player extends Actor {
 		    	jump();
 		}
 		else {
-		    if(IO.getAButtonReleased()) {
-		        if(jumpHold == 1) {
+		    if(IO.getAButtonReleased())
+		        if(jumpHold == 1)
 		            jumpHold = 2;
-		            //buttonPrevious[0] = 2;   
-		        }
-		    }
 		    if(jumpHold == 2) {
 		        jumpHold = 3;
 		        if(getZVelocity() > 0)

@@ -3,13 +3,14 @@ package time;
 import java.util.ArrayList;
 import java.util.List;
 
+import datatypes.lists.CleanList;
 import functions.Math2D;
 import functions.MathExt;
 
 public class Timer {
 	private float time, maxTime;
-	private static List<Timer> timerList = new ArrayList<>();
-	private boolean isActive, isAutomatic;
+	private static CleanList<Timer> timerList = new CleanList<>();
+	private boolean isActive, isAutomatic, shouldDestroy;
 	
 	
 	
@@ -38,8 +39,12 @@ public class Timer {
 		
 	// STATIC
 		public static void tickAll(float deltaTime) {
-			for(Timer t : timerList)
-				t.tick(deltaTime);
+			for(Timer t : timerList) {
+				if(t.shouldDestroy)
+					timerList.remove();
+				else
+					t.tick(deltaTime);
+			}
 		}
 		public static void enableAll(float deltaTime) {
 			for(Timer t : timerList)
@@ -50,7 +55,9 @@ public class Timer {
 				t.disable();
 		}
 
-		
+		public static int getNumber() {
+			return timerList.size();
+		}
 		
 	// NON-STATIC
 		// Ticking
@@ -116,5 +123,9 @@ public class Timer {
 		}
 		public float getMax() {
 			return maxTime;
+		}
+		
+		public void destroy() {
+			shouldDestroy = true;
 		}
 }

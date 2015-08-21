@@ -2,11 +2,12 @@ package datatypes;
 
 import java.util.List;
 
+import animation.Interpolatable;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
 
-public final class vec3 extends vec {
+public final class vec3 extends vec implements Interpolatable {
 	
 	
 	public vec3() {
@@ -91,5 +92,13 @@ public final class vec3 extends vec {
 		float dir = getDirection();
 		x(Math2D.calcLenX(newSpd, dir));
 		y(Math2D.calcLenY(newSpd, dir));
+	}
+
+
+	public void updateValues(Interpolatable other) {
+		set((vec3) other);
+	}
+	public Interpolatable tween(Interpolatable toValue, float frac) {
+		return interpolate((vec3) toValue, frac);
 	}
 }

@@ -9,7 +9,6 @@ public abstract class Button extends GUIDrawable {
 	
 	public abstract boolean checkMouse();
 	
-	
 	public float getGlow() {return glow;}
 	public void glowTo(float num) {
 		glow += (num - glow)/5;

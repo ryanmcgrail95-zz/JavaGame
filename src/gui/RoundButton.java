@@ -14,7 +14,7 @@ public class RoundButton {
 	
 	public boolean draw(float x, float y, float r, boolean isSelected) {
 		
-		GOGL.fillCircle(x, y, r, 18);
+		GOGL.fillPolygon(x, y, r, 18);
 		
 		if(isSelected) {
 			float dH = r;

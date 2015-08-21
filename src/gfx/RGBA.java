@@ -11,14 +11,18 @@ import functions.MathExt;
 
 public class RGBA{
 	public static final RGBA
-		WHITE = new RGBA(1,1,1,1), 
 		RED = new RGBA(1,0,0,1),
 		GREEN = new RGBA(0,1,0,1),
 		BLUE = new RGBA(0,0,1,1),
 		MAGENTA = new RGBA(1,0,1,1),
 		YELLOW = new RGBA(1,1,0,1),
 		CYAN = new RGBA(0,1,1,1),
-		BLACK = new RGBA(0,0,0,1);
+		WHITE = new RGBA(1,1,1,1),
+		BLACK = new RGBA(0,0,0,1),
+		GRAY_LIGHT = new RGBA(.25f,.25f,.25f,1),
+		GRAY = new RGBA(.5f,.5f,.5f,1),
+		GRAY_DARK = new RGBA(.75f,.75f,.75f,1);
+
 	private float R,G,B,A;
 	
 	public RGBA(float R, float G, float B, float A) {set(R,G,B,A);}

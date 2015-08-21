@@ -33,30 +33,19 @@ public class Sword extends WeaponItem {
 	}
 	
 	public void draw() {
-						
-		Player p = Player.getInstance();
-		
-		GOGL.enableLighting();
-		
-		GOGL.transformClear();
-			GOGL.transformTranslation(p.getX(),p.getY(),p.getZ()+100);
-			
-			
-				drawHandle();
 
-			GOGL.transformTranslation(0,0,handleLen);
-
-				drawBladeBody();
-			
-			GOGL.transformTranslation(0,0,bladeLen);
-			
-				drawBladeTip();
-		
 		GOGL.transformClear();
 		
-		GOGL.disableLighting();
+		GOGL.transformClear();		
 	}
 
+	public void drawSword() {
+			drawHandle();
+		GOGL.transformTranslation(0,0,handleLen);
+			drawBladeBody();
+		GOGL.transformTranslation(0,0,bladeLen);
+			drawBladeTip();
+	}
 	
 	public void drawHandle() {
 		GOGL.begin(GOGL.P_TRIANGLE_STRIP);

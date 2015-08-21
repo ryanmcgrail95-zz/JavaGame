@@ -1,6 +1,5 @@
 package obj.itm;
 
-import datatypes.Inventory;
 import object.actor.Actor;
 import object.environment.Fire;
 import sts.Stat;

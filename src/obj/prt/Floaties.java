@@ -25,7 +25,7 @@ public class Floaties {
 			Actor pl = Player.getInstance();
 			float cD = 32, cDir, aX, aY, r = 64, rTZ = 32, rBZ = 8;
 			
-			cDir = Camera.getDirection();
+			cDir = GOGL.getCamera().getDirection();
 			aX = Math2D.calcLenX(cD,cDir);
 			aY = Math2D.calcLenY(cD,cDir);
 			
@@ -84,12 +84,11 @@ public class Floaties {
 			blinkAlpha = MathExt.contain(0, bA, 1);
 			
 			GOGL.transformTranslation(x,y,z);
-			GOGL.transformRotationZ(Camera.getDirection()+90);
-			GOGL.transformRotationX(90);
+			GOGL.transformSprite();
 			
 			GOGL.setColor(1,1,1, blinkAlpha);
 			//GOGL.draw3DSphere(2);
-			GOGL.fillCircle(0,0,1.5f, 10);
+			GOGL.fillPolygon(0,0,1.5f, 10);
 			GOGL.setColor(RGBA.WHITE);
 			GOGL.transformClear();
 		}
