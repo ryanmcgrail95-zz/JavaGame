@@ -23,14 +23,14 @@ public class PineTree extends Tree {
 
 		GOGL.transformScale(.5f);
 		GOGL.transformScale(1,1,zScale);
-		GOGL.setLightColori(56, 40, 30);
+		GOGL.setLightColor(COL_TRUNK); //56, 40, 30
 
 		Model.MOD_PINESTUMP.draw();
 		
 		if(!isEmpty()) {
 			Model.MOD_PINETREE.draw();
 
-			GOGL.setLightColori(96, 104, 70);
+			GOGL.setLightColor(COL_LEAVES); //44,103,116
 			GOGL.transformScale(1.5f);
 			GOGL.transformTranslation(0,0,-10*zScale);
 			Model.MOD_PINEBRANCHES.draw();

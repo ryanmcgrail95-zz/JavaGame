@@ -111,7 +111,7 @@ public class GameController extends JFrame implements WindowListener {
 	    } 	
 
 	public void windowClosing(WindowEvent arg0) {
-		end("");
+		end();
 	}
 
 	public void windowActivated(WindowEvent arg0) {}
@@ -121,13 +121,9 @@ public class GameController extends JFrame implements WindowListener {
 	public void windowIconified(WindowEvent arg0) {}
 	public void windowOpened(WindowEvent arg0) {}
 
-	public static void end(String string) {
-		if(string != "")
-			System.out.println(string);
-		
+	public static void end() {
         Sound.unload();
-		
-		System.exit(0);
+		System.exit(5);
 	}
 
 	/*public static BufferedImage getScreenshot() {

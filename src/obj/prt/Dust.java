@@ -1,5 +1,6 @@
 package obj.prt;
 
+import object.actor.Player;
 import cont.TextureController;
 import functions.Math2D;
 import functions.MathExt;
@@ -13,16 +14,13 @@ public class Dust extends Particle {
 	private float spd, imageIndex;
 	private boolean doFloat;
 	private int imageNumber;
-	private float x, y, z, direction, rotation;
+	private float direction, rotation;
 	private static MultiTexture dustTex = new MultiTexture("Resources/Images/smokecloud.png",4,4);
 	
 	
 	public Dust(float x, float y, float z, float direction, boolean doFloat) {
 		super(x, y, z);
 				
-		this.x = x;
-		this.y = y;
-		this.z = z;
 		this.direction = direction;
 		rotation = MathExt.rnd(360);
 		this.doFloat = doFloat;		
@@ -41,10 +39,11 @@ public class Dust extends Particle {
 		
 		if(imageIndex >= imageNumber)
 		    destroy();
-		
-				
+			
+		GOGL.setPerspective();
 		GOGL.transformClear();
-		GOGL.transformTranslation(x,y,z+imageIndex/2f);
+		transformTranslation();
+		GOGL.transformTranslation(0,0,0+imageIndex/2f);
 		GOGL.transformSprite();
 		
 		GOGL.transformRotationZ(rotation);

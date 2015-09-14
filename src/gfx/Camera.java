@@ -18,39 +18,44 @@ import object.primitive.Updatable;
 
 public class Camera extends Updatable {
 	//CAMERA FOCUS
-	private static final int CF_STATIC = 0, CF_OBJECT = 1;
+	public static final byte PR_PERSPECTIVE = 0, PR_ORTHOGRAPHIC = 1, PR_ORTHOPERSPECTIVE = 2;
+	private static final byte CF_STATIC = 0, CF_OBJECT = 1;
 	private static CleanList<Camera> camList = new CleanList<Camera>();
-	private int camFocusType;
+	private byte camFocusType, projType;
 	private List<Actor> camFocusList = new ArrayList<Actor>();
 	private float camX, camY, camZ, toX, toY, toZ, camDir;
 	private float dis, dir, dirZ, smoothing;
-	private boolean isLocked;
+	private boolean isLocked, isEnabled = true;
 	private FBO fbo;
 
 	
 	private float smoothOnceFrac;
 	
 	private vec3 pos = new vec3(), toPos = new vec3();
-	private float fieldOfView = 45, viewDistance = 3000;
+	private float fieldOfView = 45, viewFar = 3000, viewNear = 1, whRatio;
 	private float focusAddX, focusAddY, focusAddZ;
 	
 	
-	public Camera(FBO fbo) {
+	public Camera(byte projType, FBO fbo) {
 		super();
 		
+		whRatio = 1f*fbo.getWidth()/fbo.getHeight();
+		
+		this.projType = projType;
 		setFBO(fbo);
 		camList.add(this);
 	}
-	public Camera(int resWidth, int resHeight) {
+	public Camera(byte projType, int resWidth, int resHeight) {
 		super();
 		
+		whRatio = 1f*resWidth/resHeight;
+
+		this.projType = projType;
 		setFBO(new FBO(GOGL.gl, resWidth, resHeight));
 		camList.add(this);
 	}
 	
-	public void destroy() {
-		super.destroy();
-	}
+	public void destroy() {super.destroy();}
 	
 	public void setProjection(float cX, float cY, float cZ, float tX, float tY, float tZ) {
 		if(isLocked)
@@ -193,13 +198,24 @@ public class Camera extends Updatable {
 
 	public boolean checkOnscreen(float x, float y) {return checkOnscreen(x,y,fieldOfView);}
 	public boolean checkOnscreen(float x, float y, float fov) {
-		return Math.abs(Math2D.calcAngDiff(Math2D.calcPtDir(getX(),getY(), x,y),camDir)) < fov;
+		switch(projType) {
+			case PR_PERSPECTIVE:		return Math.abs(Math2D.calcAngDiff(Math2D.calcPtDir(getX(),getY(), x,y),camDir)) < fov;
+			case PR_ORTHOGRAPHIC:		return true;
+			case PR_ORTHOPERSPECTIVE:
+				float w, h, leeway = 100;
+				w = fbo.getWidth() + 2*leeway;
+				h = fbo.getHeight() + 2*leeway;
+				return Math2D.checkRectangle(x, y, getX()-w/2,getY()-h/2, w,h);
+			default:	return true;
+		}
 	}
 
 
-	public float getViewDistance() {
-		return viewDistance;
-	}
+	public float getFOV() {return fieldOfView;}
+	public float getWidthHeightRatio() {return whRatio;}
+	public float getViewNear() {return viewNear;}
+	public float getViewFar() {return viewFar;}
+	
 
 	public void setFocusTranslation(float x, float y, float z) {
 		focusAddX = x;
@@ -208,31 +224,45 @@ public class Camera extends Updatable {
 	}
 
 	public void gluLookAt(GLU glu) {
-		float[] pA = pos.getArray(),
-				tPA = toPos.getArray();
-		glu.gluLookAt(pA[0],pA[1],pA[2],
-				tPA[0],tPA[1],tPA[2],
+		glu.gluLookAt(pos.x(),pos.y(),pos.z(),
+				toPos.x(),toPos.y(),toPos.z(),
 				0,0,1);
 	}
 	
 	
 	public vec3 getPosition() {return pos;}
 
-	public float getFOV() {return fieldOfView;}
-
 	public void setFBO(FBO fbo) {this.fbo = fbo;}
 	public FBO getFBO() {return fbo;}
 
+	public void setEnabled(boolean isEnabled) {
+		this.isEnabled = isEnabled;
+	}
+
 	public static void renderAll() {
-		for(Camera c : camList) {
-			GOGL.setCamera(c);
-        	c.fbo.attach(GOGL.gl,false);
-    		
-        	GOGL.clearScreen(RGBA.WHITE);
-        	Drawable.presort();
-    		Drawable.draw3D();
-    		
-    		c.fbo.detach(GOGL.gl);
+		Camera c;
+		for(int i = camList.size()-1; i >= 0; i--) {
+			c = camList.get(i);
+			
+			if(c.isEnabled) {
+				GOGL.setCamera(c);
+	        	c.fbo.attach(GOGL.gl,false);
+	        	
+	        	c.project();
+	    		
+	        	GOGL.clear(RGBA.WHITE);
+	        	Drawable.presort();
+	    		Drawable.draw3D();
+	    		
+	    		c.fbo.detach(GOGL.gl);
+			}
+		}
+	}
+	public void project() {
+		switch(projType) {
+			case PR_PERSPECTIVE:		fbo.setPerspective(GOGL.gl);		break;
+			case PR_ORTHOGRAPHIC:		fbo.setOrtho(GOGL.gl);				break;
+			case PR_ORTHOPERSPECTIVE:	fbo.setOrthoPerspective(GOGL.gl);	break;
 		}
 	}
 }

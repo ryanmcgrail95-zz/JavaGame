@@ -13,6 +13,7 @@ import gfx.Camera;
 import gfx.GOGL;
 import gfx.Overlay;
 import gfx.SpriteMap;
+import gfx.WorldMap;
 
 public class Player extends Actor {	
 	private static Player instance;
@@ -25,7 +26,7 @@ public class Player extends Actor {
 
 	
 	public boolean isLookCameraActive() {
-		return SmartPhone.isActive();
+		return SmartPhone.isActive() || WorldMap.isActive();
 	}
 	
 	//PARENT FUNCTIONS
@@ -92,12 +93,14 @@ public class Player extends Actor {
 						hori = 0;
 				vert = Math2D.calcLenY(moveDir);
 
-				System.out.println(getDirection());
 				if(moveDir != -1) {
 					if(hori != 0)
-						this.setDirection(getDirection() - Math.signum(hori)*4);
+						this.setDirection(faceDirection = faceDirection - Math.signum(hori)*4);
 					if(vert != 0)
-						move(vert*maxSpeed);
+						if(vert > 0)
+							move(vert*maxSpeed,faceDirection,false,true);
+						else
+							move(vert*maxSpeed,faceDirection+180,false,true);
 				}
 				else
 					move(false,-1,false,true);
@@ -106,14 +109,22 @@ public class Player extends Actor {
 		//JUMPING
 		if(IO.getZButtonPressed())
 			roll();
-		else if(Keyboard.checkPressed('E')) {
+		else if(Keyboard.checkPressed('e') && !WorldMap.isActive()) {
 			if(!SmartPhone.isActive())
-				setDirection(camDirection);
+				setDirection(faceDirection = camDirection);
 			else
-				camDirection = getDirection();
+				camDirection = faceDirection;
 			GOGL.getCamera().smoothOnce(10);
 			SmartPhone.setActive(!SmartPhone.isActive());
-		}		
+		}	
+		else if(Keyboard.checkPressed('f') && !SmartPhone.isActive()) {
+			if(!WorldMap.isActive())
+				setDirection(faceDirection = camDirection);
+			else
+				camDirection = faceDirection;
+			GOGL.getCamera().smoothOnce(10);
+			WorldMap.setActive(!WorldMap.isActive());
+		}	
 		//Mouse Control
 		/*if(Mouse.getLeftClick()) {
 			moveToPoint(Heightmap.getInstance().raycastMouse());

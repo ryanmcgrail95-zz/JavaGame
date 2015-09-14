@@ -275,4 +275,9 @@ public class Body {
 	public void setSideRotation(float sideRotAngle) {
 		this.sideRotAngle = sideRotAngle;
 	}
+
+
+	public float getFrame() {
+		return index;
+	}
 }

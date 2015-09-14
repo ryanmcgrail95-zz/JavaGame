@@ -1,10 +1,13 @@
 package phone;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
+import datatypes.vec2;
 import io.Mouse;
 import fl.FileExt;
 import functions.Math2D;
@@ -25,31 +28,35 @@ public final class MusicApp extends PhoneApp {
 	private FBO waveform;
 	private SoundBuffer prevParent;
 	private SoundSource source;
-	private boolean isLooping = false, isScrubbing = false;
+	private boolean isLooping = false, isScrubbing = false, hasSnapped;
 	private int padding = 12;
-	
 	float 	textHeight = 10,
 			textScale = textHeight/8;
-	float 	infoBGX = padding,							// Infobox Background Location
+	float 	infoPadding = 4,
+			infoBGX = SmartPhone.WIDTH/2+padding,		// Infobox Background Location
 			infoBGY = padding,
-			infoBGW = SmartPhone.WIDTH/2-infoBGX,
-			infoBGH = 12+2*textHeight+12;
-	float 	infoX = infoBGX + 12+64+padding,			// Info Location
-			infoY = infoBGY + 12;
-	float 	wfX = infoBGX+infoBGW+padding,				// Waveform Location
-			wfY = infoBGY+infoBGH/2,
-			wfW = SmartPhone.WIDTH - wfX - padding,
-			wfH = infoBGH;
-	float 	albS = 48,
-			albX = padding+12,
-			albY = infoBGY+infoBGH/2 - 64/2;
-	int 	barX = padding,
-			barY = SmartPhone.HEIGHT/2 - padding,
-			barW = SmartPhone.WIDTH-2*padding,
-			barH = 16,
+			infoBGW = SmartPhone.WIDTH/2-2*padding,
+			infoBGH = 12+textHeight+2*infoPadding;
+	float 	albS = 32,
+			albX = infoBGX+12,
+			albY = infoBGY+infoBGH/2 - albS/2;
+	float 	infoX = albX+albS+padding,			// Info Location
+			infoY = infoBGY + infoPadding;
+	int 	barX = SmartPhone.WIDTH/2+padding,
+			barW = SmartPhone.WIDTH/2-2*padding,
+			barH = 16,			
+			barY = SmartPhone.HEIGHT/2 - barH - padding,
 			buttonY = barY - 24;
+	float 	wfX = SmartPhone.WIDTH/2 + padding, //infoBGX+infoBGW+padding,				// Waveform Location
+			wfW = SmartPhone.WIDTH - wfX - padding,
+			wfH = 24,
+			wfY = infoBGY+infoBGH+wfH/2;
 	
-	private PlaylistDrawer plDrawer;
+	private ListDrawer holdDrawer;
+	private int holdIndex = -1;
+
+	
+	private ListDrawer plDrawer, mlDrawer;
 	
 	public MusicApp(SmartPhone owner) {
 		super(owner);
@@ -57,22 +64,24 @@ public final class MusicApp extends PhoneApp {
 		playlist.play();
 		source = playlist.getSource();
 		
-		plDrawer = new PlaylistDrawer(SmartPhone.WIDTH/2, SmartPhone.HEIGHT/2,playlist.getList());
+		plDrawer = new PlaylistDrawer(SmartPhone.WIDTH/2, SmartPhone.HEIGHT/2);
+		mlDrawer = new MusicListDrawer(0,0);
+
 		
 		waveform = new FBO(GOGL.gl,barW,barH);
 		
-		buttonList.add(new PlayButton(SmartPhone.WIDTH/2,buttonY,16));
-		buttonList.add(new FastForwardButton(SmartPhone.WIDTH/2+64,buttonY,16));
-		buttonList.add(new RewindButton(SmartPhone.WIDTH/2-64,buttonY,16));
-		buttonList.add(new NextButton(SmartPhone.WIDTH/2+128,buttonY,16));
-		buttonList.add(new PreviousButton(SmartPhone.WIDTH/2-128,buttonY,16));
-		buttonList.add(new LoopButton(SmartPhone.WIDTH/2+3*64,buttonY,16));
+		buttonList.add(new PlayButton(SmartPhone.WIDTH*3/4,buttonY,16));
+		buttonList.add(new FastForwardButton(SmartPhone.WIDTH*3/4+32,buttonY,16));
+		buttonList.add(new RewindButton(SmartPhone.WIDTH*3/4-32,buttonY,16));
+		buttonList.add(new NextButton(SmartPhone.WIDTH*3/4+64,buttonY,16));
+		buttonList.add(new PreviousButton(SmartPhone.WIDTH*3/4-64,buttonY,16));
+		buttonList.add(new LoopButton(SmartPhone.WIDTH*3/4+3*32,buttonY,16));
 	}
 	
 	
 	public void render() {
 		waveform.attach(GOGL.gl);
-		GOGL.clearScreen(new RGBA(0,0,0,0));
+		GOGL.clear(new RGBA(0,0,0,0));
 		
 		GOGL.setColor(RGBA.BLACK);
 		GOGL.drawWaveform(0,barH/2, barW,barH,   1,playlist.getSource().getParentBuffer().getByteLen(),   50,10, playlist.getSource().getParentBuffer());
@@ -82,6 +91,8 @@ public final class MusicApp extends PhoneApp {
 	}
 	public void draw() {
 		GLText.setFont("8bit");
+		
+		hasSnapped = false;
 		
 		speed += (toSpeed - speed)/5;
 		if(Math.abs(speed-toSpeed) < .1)
@@ -100,10 +111,10 @@ public final class MusicApp extends PhoneApp {
 		}
 		
 		parent.beginRendering();
-		GOGL.clearScreen(RGBA.WHITE);
+		GOGL.clear(RGBA.WHITE);
 		
 		//drawBG();
-		GOGL.fillVGradientRectangle(0,0,SmartPhone.WIDTH,SmartPhone.HEIGHT, RGBA.CYAN, RGBA.WHITE, 10);
+		GOGL.fillVGradientRectangle(SmartPhone.WIDTH/2,0,SmartPhone.WIDTH/2,SmartPhone.HEIGHT/2, RGBA.CYAN, RGBA.WHITE, 10);
 
 		float waveH = 64;				
 		float shX,shY,shAmt;
@@ -146,6 +157,8 @@ public final class MusicApp extends PhoneApp {
 		
 		GOGL.setColor(RGBA.BLACK);		
 		checkButtons();
+		
+			
 		playlist.setLoop(isLooping);
 		playlist.setVolume(parent.volumeFrac);
 
@@ -153,14 +166,22 @@ public final class MusicApp extends PhoneApp {
 		// DRAW INFO OVERLAY
 			// Infobox Background
 			GOGL.fillVGradientRectangle(infoBGX,infoBGY, infoBGW,infoBGH, RGBA.GRAY_DARK, RGBA.BLACK, 5);
-	
 			
 			float albFY = Math2D.calcLenY(5,GOGL.getTime());
 			
-			// Album Shadow
+			
+			// DRAW WAVEFORM AT CURRENT OFFSET
+			int s = 10000, start, end;
+			start = source.getByteOffset()-s;
+			end = source.getByteOffset()+s;
 			GOGL.setColor(RGBA.BLACK);
+			GOGL.drawWaveform(wfX, wfY, wfW, wfH,   start, end,  10,0, source.getParentBuffer(), true);
+			
+			
+			// Album Shadow
+			/*GOGL.setColor(RGBA.BLACK);
 			GOGL.setAlpha(.5f);
-			GOGL.fillRectangle(albX+10,albY+albFY+5, albS,albS);
+			GOGL.fillRectangle(albX+10,albY+albFY+5, albS,albS);*/
 			
 			// Album
 			GOGL.setColor(RGBA.WHITE);
@@ -172,17 +193,30 @@ public final class MusicApp extends PhoneApp {
 			GLText.drawString(infoX, infoY, textScale,textScale, source.getParentBuffer().getName());
 			GLText.drawString(infoX, infoY+textHeight, textScale,textScale, source.getParentBuffer().getAlbumName());
 
-		
-		// DRAW WAVEFORM AT CURRENT OFFSET
-		int s = 10000, start, end;
-		start = source.getByteOffset()-s;
-		end = source.getByteOffset()+s;
-		GOGL.setColor(RGBA.BLACK);
-		GOGL.drawWaveform(wfX, wfY, wfW, wfH,   start, end,  10,0, source.getParentBuffer(), true);
 
 
 		GOGL.resetColor();
+		mlDrawer.draw();
 		plDrawer.draw();
+		
+		if(!Mouse.getLeftMouse()) {
+			if(holdIndex != -1 && !hasSnapped) {
+				holdDrawer.list.remove(holdIndex);
+				if(holdIndex == playlist.getIndex())
+					playlist.play(holdIndex);
+				holdIndex = -1;
+			}
+		}
+		else if(holdIndex != -1 && !hasSnapped) {
+			vec2 mousePos = getMouseCoords();
+			float mX,mY;
+			mX = mousePos.x();
+			mY = mousePos.y();
+			holdDrawer.draw(mX,mY, holdIndex, false);
+			GOGL.setColor(A_BLACK);
+			GOGL.fillRectangle(mX,mY,SmartPhone.WIDTH/2,20);
+		}
+		GOGL.resetColor();
 		
 		parent.endRendering();		
 		
@@ -337,38 +371,119 @@ public final class MusicApp extends PhoneApp {
 	}
 	
 	protected abstract class ListDrawer<T> {
-		private float x, y;
+		protected float x, y, w, h;
 		protected List<T> list;
 		
-		public ListDrawer(float x, float y, List<T> list) {
+		public ListDrawer(float x, float y, float w, float h, List<T> list) {
 			this.x = x;
 			this.y = y;
+			this.w = w;
+			this.h = h;
 			this.list = list;
 		}
 		
 		public void draw() {
 			float dX = x, dY = y;
 			for(int i = 0; i < list.size(); i++)
-				dY += draw(dX,dY,i);
+				dY += draw(dX,dY,i,true);
 		}
-		protected abstract float draw(float x, float y, int index);
+		
+		public boolean hover() {
+			return hoverRectangle(x,y,w-1,h);
+		}
+		protected abstract float draw(float x, float y, int index, boolean inList);
 	}
-	private class PlaylistDrawer extends ListDrawer<String> {
+
+	protected final static RGBA A_WHITE = new RGBA(1,1,1,.2f),
+			A_BLACK = new RGBA(0,0,0,.5f),
+			A_YELLOW = new RGBA(1,1,0,.5f),
+			A_CYAN = new RGBA(0,1,1,.5f),
+			CUR_RGBA = new RGBA(1,0,0,.2f);
+	private abstract class MusicDrawer extends ListDrawer<String> {
+		private RGBA bg, fg;
+		private int checkIndex = 0;
 		
-		public PlaylistDrawer(float x, float y, List<String> list) {
-			super(x, y, list);
+		public MusicDrawer(float x, float y, float w, float h, RGBA bg, RGBA fg, List<String> list) {
+			super(x, y, w, h, list);
+			this.bg = bg;
+			this.fg = fg;
 		}
 		
-		public float draw(float x, float y, int index) {
+		public void draw() {
+			checkIndex = 0;
+			GOGL.setColor(bg);
+			GOGL.fillRectangle(x, y, w, h);
+			super.draw();
+		}
+			
+		public float draw(float dX, float dY, int index, boolean inList) {
 			SoundBuffer bf = Sound.get(list.get(index));
-			float dP = 2, dS = 20;
+			float dP = 2, dS = 20, aY = 0;
 
-			bf = playlist.getSoundBuffer(index);
+						
+			GOGL.fillVGradientRectangle(dX,dY, w,dS, fg, bg, 2);
+
+			GOGL.setColor(RGBA.WHITE);
+			GOGL.drawTexture(dX+dP,dY,  dS,dS, bf.getAlbumImage());
+			GLText.drawString(dX+dP+dS+dP,dY, bf.getName());
+			
+			checkIndex++;			
+			
+			return dS+aY;
+		}
+	}
+		
+	private class MusicListDrawer extends MusicDrawer {
+		public MusicListDrawer(float x, float y) {
+			super(x, y, SmartPhone.WIDTH/2, SmartPhone.HEIGHT, RGBA.GRAY, RGBA.GRAY_LIGHT, Sound.getMusicList());
+		}
+			
+		public float draw(float dX, float dY, int index, boolean inList) {
+			float dH = super.draw(dX,dY,index,inList);
+			
+			if(!inList || holdIndex != -1)
+				return dH;
+			if(hoverRectangle(dX,dY,w,dH-1)) {
+				GOGL.setColor(A_WHITE);
+				Mouse.setFingerCursor();
+				GOGL.fillRectangle(dX,dY,w,dH);
 				
-			GOGL.drawTexture(x+dP,y,  dS,dS, bf.getAlbumImage());
-			GLText.drawString(x+dP+dS+dP,y, bf.getName());
-	
-			return dS;
+				if(index != playlist.getIndex())
+					if(Mouse.getLeftClick())
+						playlist.add(list.get(index));
+			}
+			
+			return dH;
+		}		
+	}
+
+	private class PlaylistDrawer extends MusicDrawer {
+		
+		public PlaylistDrawer(float x, float y) {
+			super(x, y, SmartPhone.WIDTH/2, SmartPhone.HEIGHT/2, RGBA.GRAY_DARK, RGBA.GRAY, playlist.getList());
+		}
+			
+		public float draw(float dX, float dY, int index,boolean inList) {
+			float dH = super.draw(dX,dY,index,inList);
+			
+			if(!inList || holdIndex != -1)
+				return dH;
+			if(playlist.getIndex() == index) {
+				GOGL.setColor(A_CYAN);
+				GOGL.fillRectangle(dX,dY,w,dH);
+			}
+			
+			if(hoverRectangle(dX,dY,w,dH-1)) {
+				GOGL.setColor(A_WHITE);
+				Mouse.setFingerCursor();
+				GOGL.fillRectangle(dX,dY,w,dH);
+				
+				/*if(index != playlist.getIndex())
+					if(Mouse.getLeftReleased())
+						playlist.play(index);*/
+			}
+			
+			return dH;
 		}
 	}
 	

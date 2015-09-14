@@ -115,7 +115,7 @@ public final class GOGL {
 		P_LINE_LOOP = GL2.GL_LINE_LOOP,
 		P_LINES = GL2.GL_LINES;
 	
-	private static byte PR_ORTHO = 0, PR_PERSPECTIVE = 1;
+	private static byte PR_ORTHO = 0, PR_PERSPECTIVE = 1, PR_ORTHOPERSP = 2;
 	private static byte projectionMode;
 		
 	
@@ -154,9 +154,10 @@ public final class GOGL {
             	Sound.iniLoad();
             	
             	
-        		mainCamera = new Camera(640,480);
+        		mainCamera = new Camera(Camera.PR_PERSPECTIVE,640,480);
         		currentCamera = mainCamera;
         		
+        		new WorldMap();
         		
             	println("Initializing textures...");
             	TextureController.ini();                
@@ -292,6 +293,13 @@ public final class GOGL {
             
             public void display( GLAutoDrawable glautodrawable ) { 
             	
+            	/*checkError();
+            	
+            	if(ErrorPopup.isOpen()) {
+            		clear();
+            		return;
+            	}*/
+            	
             	glad = glautodrawable;
             	
             	time.check();
@@ -317,7 +325,7 @@ public final class GOGL {
             	
             	disableBlending();
             	setViewport(0,0,640,480);
-            	clearScreen();
+            	clear();
             	setColor(RGBA.WHITE);
             	setOrtho();
             	drawFBO(0,480,640,-480,mainCamera.getFBO());
@@ -534,28 +542,16 @@ public final class GOGL {
 	}
 	
 	
-	/*public static void setOrthoPerspective() {	
+	public static void setOrthoPerspective() {	
 		orthoLayer = 0;		
-		projectionMode = PR_PERSPECTIVE;
+		projectionMode = PR_ORTHOPERSP;
 				
-		float camSpeed = 5;
-		float camX, camY, camZ, toX, toY, toZ;
-		camX = Camera.getX();
-		camY = Camera.getY();
-		camZ = Camera.getZ();
-		toX = Camera.getToX();
-		toY = Camera.getToY();
-		toZ = Camera.getToZ();
-				
-		//Update Listener Source
-		float n, nX, nY, nZ;
-		n = Math3D.calcPtDis(camX,camY,camZ, toX,toY,toZ);
-		nX = (toX-camX)/n;
-		nY = (toY-camY)/n;
-		nZ = (toZ-camZ)/n;
+		Sound.updateListener(currentCamera);
 		
-		Sound.updateListener(camX,camY,camZ, 0,0,0, nX,nY,nZ, 0,0,1);
-		
+		if(currentFBO != null) {
+			currentFBO.setOrthoPerspective(gl);
+			return;
+		}
 		
         // Change to projection matrix.
         gl.glMatrixMode(GL2.GL_PROJECTION);
@@ -570,14 +566,14 @@ public final class GOGL {
         x2 = (int) (SCREEN_WIDTH/2f);
         x1 = -x2;
         gl.glOrtho(x1,x2,y1,y2, -1000,VIEW_FAR);
-        glu.gluLookAt(camX, camY, camZ, toX, toY, toZ, 0, 0, 1);                        
+        currentCamera.gluLookAt(glu);
         gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, perspectiveMatrix,0);
 
         // Change back to model view matrix.
 	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glLoadIdentity();
 		gl.glEnable(GL2.GL_DEPTH);
-	}*/
+	}
 	
 	
 	
@@ -601,6 +597,9 @@ public final class GOGL {
 	}
 	
 	public static void setLightColori(int r, int g, int b) {setLightColor(r/255f, g/255f, b/255f);}
+	public static void setLightColor(RGBA col) {
+		setLightColor(col.R(),col.G(),col.B());
+	}
 	public static void setLightColor(float r, float g, float b) {
 		
 		if(!canLight)
@@ -651,39 +650,31 @@ public final class GOGL {
 	public static void drawTexture(float x, float y, Texture tex) {drawTexture(x,y,tex.getWidth(),tex.getHeight(),tex);}
 	public static void drawTextureScaled(float x, float y, float xS, float yS, Texture tex) {drawTexture(x,y,tex.getWidth()*xS,tex.getHeight()*yS,tex);}
 	public static void drawTexture(float x, float y, float w, float h, Texture tex) {
-
-		if(tex != null) {
-			enableTextures();
-			enableBlending();
-			bind(tex);
-		}
+		drawTexture(x,y,w,h,tex,new float[] {0,0,1,1});
+	}
+	public static void drawTexture(float x, float y, float w, float h, Texture tex, float[] bounds) {
+		if(tex == null)
+			return;
+		
+		enableTextures();
+		enableBlending();
+		bind(tex);
 		
 		if(tex.getMustFlipVertically())
-			fillRectangle(x,y+h,w,-h);
+			fillRectangle(x,y+h,w,-h, bounds);
 		else
-			fillRectangle(x,y,w,h);
+			fillRectangle(x,y,w,h, bounds);
       	
-        if(tex != null) {
-	      	tex.disable(gl);
-	      	disableTextures();
-        }
+      	bind(0);
+      	disableTextures();
 	}
 
 	
 	public static void drawTexture(float x, float y, float w, float h, MultiTexture tex, int frame) {
 		drawTexture(x,y,w,h, tex.getTexture(), tex.getBounds(frame));
 	}
-	public static void drawTexture(float x, float y, float w, float h, Texture tex, float[] bounds) {
-		enableTextures();
-		enableBlending();
-		bind(tex);
-		
-		fillRectangle(x,y,w,h,bounds);
-      	
-      	tex.disable(gl);
-      	disableTextures();
-	}
 	
+
 	public static void drawPixel(float x, float y) {
 		gl.glBegin(GL.GL_POINTS);
 			gl.glVertex3f(x,y, orthoLayer);
@@ -804,7 +795,9 @@ public final class GOGL {
 		modelMatrix = mat.copy();			
 		gl.glLoadMatrixf(mat.transpose().array(),0);
 	}
-	public static mat4 getModelMatrix() 		{return modelMatrix.copy();}
+	public static mat4 getModelMatrix() {
+		return modelMatrix.copy();
+	}
 
 	public static void transformClear() {
 		gl.glLoadIdentity();
@@ -814,12 +807,12 @@ public final class GOGL {
 	public static void transformTranslation(vec3 pos) {transformTranslation(pos.x(),pos.y(),pos.z());}
 	public static void transformTranslation(float x, float y, float z) {
 		gl.glTranslatef(x,y,z);
-		modelMatrix.multe(mat4.translation(x,y,z));
+		modelMatrix.multe(mat4.createTranslationMatrix(x,y,z));
 	}
 	public static void transformScale(float s) {transformScale(s,s,s);}
 	public static void transformScale(float xS, float yS, float zS) {
 		gl.glScalef(xS, yS, zS);
-		modelMatrix.multe(mat4.scale(xS,yS,zS));
+		modelMatrix.multe(mat4.createScaleMatrix(xS,yS,zS));
 	}
 	
 	public static void transformRotation(float dir, float dirZ) {
@@ -828,15 +821,15 @@ public final class GOGL {
 	}
 	public static void transformRotationX(float ang) {
 		gl.glRotatef(ang, 1,0,0);
-		modelMatrix.multe(mat4.rotationX(ang));
+		modelMatrix.multe(mat4.createRotationMatrixX(ang));
 	}
 	public static void transformRotationY(float ang) {
 		gl.glRotatef(ang, 0,1,0);
-		modelMatrix.multe(mat4.rotationY(ang));
+		modelMatrix.multe(mat4.createRotationMatrixY(ang));
 	}
 	public static void transformRotationZ(float ang) {
 		gl.glRotatef(ang, 0,0,1);
-		modelMatrix.multe(mat4.rotationZ(ang));
+		modelMatrix.multe(mat4.createRotationMatrixZ(ang));
 	}
 	public static void transformRotation(vec3 rot) {
 		transformRotationZ(rot.z());
@@ -934,29 +927,14 @@ public final class GOGL {
 			public static void draw3DFrustem(float radBot, float radTop, float h) {draw3DFrustem(radBot,radTop, h, null);}
 			public static void draw3DFrustem(float radBot, float radTop, float h, Texture tex) {draw3DFrustem(0,0,0,radBot,radTop, h, tex);}
 			public static void draw3DFrustem(float radBot, float radTop, float h, int numPts) {draw3DFrustem(0,0,0,radBot,radTop, h, null, numPts);}
-			public static void draw3DFrustem(float radBot, float radTop, float h, int numPts, boolean ends) {
-				draw3DFrustem(0,0,0,radBot,radTop, h, null, numPts,ends);
-			}
-			public static void draw3DFrustem(float radBot, float radTop, float h, Texture tex, int numPts) {
-				draw3DFrustem(0,0,0,radBot,radTop, h, tex, numPts);
-			}
-			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h) {
-				draw3DFrustem(x,y,z,radBot,radTop, h, null);
-			}
-			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, Texture tex) {
-				draw3DFrustem(x,y,z,radBot,radTop, h, tex, 10);
-			}
-			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, int numPts) {
-				draw3DFrustem(x,y,z,radBot,radTop, h, null, numPts);
-			}
-			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, int numPts, boolean ends) {
-				draw3DFrustem(x,y,z,radBot,radTop, h, null, numPts, ends);
-			}
-			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, Texture tex, int numPts) {
-				draw3DFrustem(x,y,z,radBot,radTop,h,tex,numPts,true);
-			}
-			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, Texture tex, int numPts, boolean ends) {
-				
+			public static void draw3DFrustem(float radBot, float radTop, float h, int numPts, boolean ends) {draw3DFrustem(0,0,0,radBot,radTop, h, null, numPts,ends);}
+			public static void draw3DFrustem(float radBot, float radTop, float h, Texture tex, int numPts) {draw3DFrustem(0,0,0,radBot,radTop, h, tex, numPts);}
+			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h) {draw3DFrustem(x,y,z,radBot,radTop, h, null);}
+			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, Texture tex) {draw3DFrustem(x,y,z,radBot,radTop, h, tex, 10);}
+			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, int numPts) {draw3DFrustem(x,y,z,radBot,radTop, h, null, numPts);}
+			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, int numPts, boolean ends) {draw3DFrustem(x,y,z,radBot,radTop, h, null, numPts, ends);}
+			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, Texture tex, int numPts) {draw3DFrustem(x,y,z,radBot,radTop,h,tex,numPts,true);}
+			public static void draw3DFrustem(float x, float y, float z, float radBot, float radTop, float h, Texture tex, int numPts, boolean ends) {				
 				if(numPts < 3)
 					return;
 				
@@ -1298,8 +1276,8 @@ public final class GOGL {
 	}
 
 
-	public static void clearScreen() {clearScreen(RGBA.BLACK);}
-	public static void clearScreen(RGBA color) {
+	public static void clear() {clear(RGBA.BLACK);}
+	public static void clear(RGBA color) {
 		gl.glClearColor(color.getR(),color.getG(),color.getB(),color.getA());
     	gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 	}
@@ -1335,29 +1313,14 @@ public final class GOGL {
 	public static void enableLight(int num, float nX, float nY, float nZ) {enableLight(num, new float[] {nX,nY,nZ, 0});}
 	public static void enableLight(int num, float[] array) {
 
-		int light;
-		switch(num) {
-			case 0:	light = GL2.GL_LIGHT0;	break;
-			case 1:	light = GL2.GL_LIGHT1;	break;
-			case 2:	light = GL2.GL_LIGHT2;	break;
-			case 3: light = GL2.GL_LIGHT3;	break;
-			case 4: light = GL2.GL_LIGHT4;	break;
-			case 5: light = GL2.GL_LIGHT5;	break;
-			case 6: light = GL2.GL_LIGHT6;	break;
-			case 7: light = GL2.GL_LIGHT7;	break;
-			default: light = GL2.GL_LIGHT0;	break;
-		}
+		int light = GL2.GL_LIGHT0 + MathExt.contain(0, num, 7);
 				
 		gl.glLightfv(light, GL2.GL_POSITION, array, 0);
 		
-		float[] black = {
-			0, 0, 0, 1
-		}, white = {
-			1, 1, 1, 1
-		}, color = drawingColor.getArray(), 
-		gray = {
-			.1f,.1f,.1f,1
-		};
+		float[] black = {0, 0, 0, 1}, 
+				white = {1, 1, 1, 1}, 
+				color = drawingColor.getArray(), 
+				gray = {.1f,.1f,.1f,1};
 				
 		gl.glLightfv(light, GL2.GL_AMBIENT, RGBA.BLACK.getArray(), 0);
 		gl.glLightfv(light, GL2.GL_DIFFUSE, RGBA.WHITE.getArray(), 0);  //white
@@ -1366,8 +1329,7 @@ public final class GOGL {
 		gl.glEnable(light);
 	}
 	
-	public static void enableLighting() {
-		
+	public static void enableLighting() {	
 		if(!canLight)
 			return;
 		
@@ -1393,12 +1355,10 @@ public final class GOGL {
 	}
 	
 	
-	public static void begin(int type) {
-		gl.glBegin(type);
-	}
-	public static void end() {
-		gl.glEnd();
-	}
+	public static void begin(int type) 	{gl.glBegin(type);}
+	public static void end() 			{gl.glEnd();}
+	
+	
 	public static void vertex(float x, float y, float z, float tX, float tY, float nX, float nY, float nZ) {
 		gl.glNormal3f(nX,nY,nZ);
 		gl.glTexCoord2f(tX,tY);
@@ -1436,10 +1396,8 @@ public final class GOGL {
 
 	public static void checkError() {
 		int error = gl.glGetError();
-		if(error != 0) {
-			System.err.println("ERROR # " + error);
-			System.exit(error);
-		}
+		if(error != 0)
+			ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);
 	}
 	
 	public static void forceColor(RGBA color) 	{enableFog(-1000,-1000,color);}
@@ -1559,7 +1517,6 @@ public final class GOGL {
 		gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
         glu = GLU.createGLU(gl);
-        glu.gluPerspective(currentCamera.getFOV(), RESOLUTION[0]/RESOLUTION[1], 1, 10000);
         currentCamera.gluLookAt(glu);
 	}
 

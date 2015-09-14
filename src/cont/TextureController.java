@@ -1,6 +1,7 @@
 package cont;
 
 import fl.FileExt;
+import gfx.ErrorPopup;
 import gfx.GOGL;
 import gfx.TextureExt;
 import image.filter.BGEraserFilter;
@@ -50,7 +51,7 @@ public class TextureController {
 	        	
 	        return texExt;
 	    } catch(IOException e) {
-	    	GameController.end("Failed to load texture: " + name + ".");
+	    	ErrorPopup.open("Failed to load texture: " + name + ".", true);
 	    }
 	    
 	    return null;

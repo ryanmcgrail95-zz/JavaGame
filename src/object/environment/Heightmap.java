@@ -121,7 +121,7 @@ public class Heightmap extends Drawable implements Collideable {
 		vec3 norm;
 				
 		GOGL.enableLighting();
-		GOGL.setLightColori(128, 135, 35);
+		GOGL.setLightColori(134,199,98); //GOGL.setLightColori(73,214,127);
 		
 		float r, pX, pY;
 		r = 3000;
@@ -137,7 +137,6 @@ public class Heightmap extends Drawable implements Collideable {
 			GOGL.begin(GOGL.P_TRIANGLE_STRIP);
 			
 			for(int x = leftX; x < rightX; x++) {
-				
 				for(int i = 1; i >= 0; i--) {
 					norm = getNormal(x,y+i);
 				    GOGL.vertex(x*gridSize,(y+i)*gridSize,get(x,y+i),0,0,norm.get(0), norm.get(1), norm.get(2));
@@ -190,7 +189,8 @@ public class Heightmap extends Drawable implements Collideable {
 		
 		return pt;
 	}
-	
+
+	public vec3 raycastMouse() {return raycastPoint(Mouse.getMouseX(), Mouse.getMouseY());}
 	public vec3 raycastPoint(float mouseX, float mouseY) {
 		vec3 camNorm;
 		vec3 pos;
@@ -202,7 +202,6 @@ public class Heightmap extends Drawable implements Collideable {
 		dir = Math2D.calcPtDir(0,0, camNorm.x(),camNorm.y());
 		dirZ = Math2D.calcPtDir(0,0, Math2D.calcPtDis(0,0,camNorm.x(),camNorm.y()),camNorm.z());
 		
-		//dir += (320-mouseX)/320*40;
 		
 		vec3 uv = new vec3((mouseX-320)/320,-(mouseY-240)/240,0);
 		uv.set(0, uv.get(0)*(640f/480));
@@ -211,7 +210,6 @@ public class Heightmap extends Drawable implements Collideable {
 		
 		mat3 dirMat = mat3.fromEuler(GOGL.getCamera().getShaderNormal());
 		vec3 dirVec = dirMat.mult((vec3) uv.norm());
-			dirVec.println();
 			float dX, dY, dZ;
 			dX = dirVec.get(0);
 			dY = dirVec.get(1);
@@ -231,7 +229,6 @@ public class Heightmap extends Drawable implements Collideable {
 		return pos;
 	}
 
-	public vec3 raycastMouse() {return raycastPoint(Mouse.getMouseX(), Mouse.getMouseY());}
 
 	public void halveResolution() {
 		
@@ -252,6 +249,4 @@ public class Heightmap extends Drawable implements Collideable {
 	}
 
 	public void update() {}
-	public boolean checkOnscreen() {return true;}
-	public float calcDepth() {return 0;}
 }

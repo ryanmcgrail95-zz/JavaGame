@@ -1,5 +1,7 @@
 package object.primitive;
 
+import gfx.RGBA;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +10,7 @@ import object.environment.Heightmap;
 
 public abstract class Environmental extends Positionable {
 	private static CleanList<Environmental> envList = new CleanList<Environmental>();
+	protected static RGBA COL_TRUNK = new RGBA(72,75,49), COL_LEAVES = new RGBA(44,103,116);
 	
 	public Environmental(float x, float y, boolean hoverable, boolean renderable) {
 		super(x,y,Heightmap.getInstance().getZ(x,y),hoverable, renderable);

@@ -99,7 +99,7 @@ public class FBO {
 		gl2.glLoadIdentity();
 	}
 	public void setPerspective(GL gl) {
-		GLU glu;
+		GLU glu = GLU.createGLU(gl);
 		GL2 gl2 = gl.getGL2();
 		gl2.glMatrixMode(GL2.GL_PROJECTION);
 		gl2.glLoadIdentity();
@@ -113,13 +113,34 @@ public class FBO {
 		toZ = camera.getToZ();
         // Perspective.
         float widthHeightRatio = 640f/480; //getViewWidth()/getViewHeight();
-        glu = GLU.createGLU(gl);
         glu.gluPerspective(45, widthHeightRatio, 1, 10000);
         GOGL.getCamera().gluLookAt(glu); 
         
         gl.glViewport(0,0,width,height);
 		gl2.glMatrixMode (GL2.GL_MODELVIEW);
 		gl2.glLoadIdentity();
+	}
+	
+	public void setOrthoPerspective(GL gl) {
+		GLU glu;
+		GL2 gl2 = gl.getGL2();
+        gl2.glMatrixMode(GL2.GL_PROJECTION);
+        gl2.glLoadIdentity();
+        
+        // Perspective.
+        /*int x1,y1,x2,y2;
+        y2 = (int) (480/2f);
+        y1 = -y2;
+        x2 = (int) (640/2f);
+        x1 = -x2;
+        gl2.glOrtho(x1,x2,y1,y2, -1000,10000);*/
+		gl2.glOrtho(-width/2,width/2,-height/2,height/2, -1000,10000);
+
+        glu = GLU.createGLU(gl);
+        GOGL.getCamera().gluLookAt(glu);
+        gl.glViewport(0,0,width,height);
+	    gl2.glMatrixMode(GL2.GL_MODELVIEW);
+	    gl2.glLoadIdentity();
 	}
 
 	public void detach(GL gl) {
@@ -180,5 +201,12 @@ public class FBO {
 
 	public void saveScreenshot() {
 		save("Resources/Screenshots/" + System.currentTimeMillis() + ".png");
+	}
+
+	
+	public void clear(GL gl, RGBA color) {
+		attach(gl);
+		GOGL.clear(color);
+		detach(gl);
 	}
 }

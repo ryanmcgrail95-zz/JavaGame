@@ -6,8 +6,10 @@ import java.util.List;
 
 import com.jogamp.opengl.GL2;
 
+import datatypes.mat4;
 import datatypes.vec2;
 import datatypes.vec3;
+import datatypes.vec4;
 import fl.FileExt;
 import gfx.GOGL;
 
@@ -76,13 +78,37 @@ public class Model {
 		materials.disable();
 	}
 
-	public void scale(float scaleFactor) {		
+	
+	public void transform(mat4 transformMatrix) {
 		for(float[] v : pointList) {
-			v[0] *= scaleFactor;
-			v[1] *= scaleFactor;
-			v[2] *= scaleFactor;
+			vec4 curVertex = new vec4(v[0],v[1],v[2],1);
+			curVertex.multe(transformMatrix);
+			
+			v[0] = curVertex.x();
+			v[1] = curVertex.y();
+			v[2] = curVertex.z();
 		}
 	}
+
+	public void translate(float tX, float tY, float tZ) {
+		transform(mat4.createTranslationMatrix(tX,tY,tZ));
+	}
+	
+	public void rotateX(float rot) {
+		transform(mat4.createRotationMatrixX(rot));
+	}
+	public void rotateY(float rot) {
+		transform(mat4.createRotationMatrixY(rot));
+	}
+	public void rotateZ(float rot) {
+		transform(mat4.createRotationMatrixZ(rot));
+	}
+	
+	public void scale(float scaleFactor) {scale(scaleFactor,scaleFactor,scaleFactor);}
+	public void scale(float sX, float sY, float sZ) {
+		transform(mat4.createScaleMatrix(sX,sY,sZ));
+	}
+	
 	public void flipNormals() {
 		for(float[] v : normalList) {
 			v[0] *= -1;

@@ -40,6 +40,9 @@ public abstract class Actor extends Physical {
 	private float prevSpeed;
 
 	private float sideRotAngle = 0;
+	private boolean isFPS = false;
+	
+	private float headBobDir = 0;
 
 	private static float SP_FRAC = 2f / 3;
 	private static float SP_WALK = 9;
@@ -61,7 +64,9 @@ public abstract class Actor extends Physical {
 	private Inventory inv;
 	private Stat stat;
 
-	private float faceDirection, faceToDirection;
+	protected float faceDirection;
+
+	private float faceToDirection;
 	protected float camDirection;
 
 	// Air Variables
@@ -318,8 +323,8 @@ public abstract class Actor extends Physical {
 	protected void updateAdvancedMotion() {
 
 		// Lower values for third makes it like ice physics!!
-		faceDirection += Math2D.calcSmoothTurn(faceDirection, faceToDirection,
-				15);
+		if(!isFPS)
+			faceDirection += Math2D.calcSmoothTurn(faceDirection, faceToDirection,15);
 
 		// ROLLING
 		float rollSpeed;
@@ -407,9 +412,11 @@ public abstract class Actor extends Physical {
 	protected void move(float spd, float moveDir, boolean useCamera) {move(spd,moveDir,useCamera,false);}
 	protected void move(float spd, float moveDir, boolean useCamera, boolean fps) {
 		float toAng = 0, toSpd = 1;
-
+		
 		if (!canMove())
 			return;
+		
+		isFPS = fps;
 
 		float cDir = GOGL.getMainCamera().getDirection();
 		if (!isPlayer() || !useCamera)
@@ -424,7 +431,22 @@ public abstract class Actor extends Physical {
 				toAng = Math2D.calcAngDiff(getDirection(), cDir - 90 + moveDir) * .7f;
 				toSpd = 10;
 
-				setDirection(cDir - 90 + moveDir);
+				//setDirection(cDir - 90 + moveDir);
+
+				if(!fps)
+					setDirection(cDir - 90 + moveDir);
+				else {
+					if(spd >= 0) {
+						setDirection(moveDir);
+						faceDirection = getDirection();
+					}
+					else {
+						setDirection(moveDir);
+						spd = Math.abs(spd);
+					}
+					
+					headBobDir = myBody.getFrame()/12*360;
+				}
 				addXYSpeed((spd - getXYSpeed()) / 5);
 
 				float f;
@@ -448,8 +470,7 @@ public abstract class Actor extends Physical {
 						camDirection = cDir + .2f
 								* Math2D.calcSmoothTurn(cDir, cDir - 90 + moveDir);
 					else
-						camDirection = cDir
-								- .2f
+						camDirection = cDir - .2f
 								* Math2D.calcSmoothTurn(cDir, 180 + cDir - 90
 										+ moveDir);
 				}
@@ -467,6 +488,14 @@ public abstract class Actor extends Physical {
 				addXYSpeed((0 - getXYSpeed()) / 4f); // 3
 				//if(getXYSpeed() < .01)
 				//	setXYSpeed(0);
+				float nearestHBDir;
+				if(headBobDir < 90)
+					nearestHBDir = 0;
+				else if(headBobDir < 270)
+					nearestHBDir = 180;
+				else
+					nearestHBDir = 360;
+				headBobDir += (nearestHBDir - headBobDir)/4;
 			}
 
 			myBody.stand();
@@ -474,6 +503,8 @@ public abstract class Actor extends Physical {
 			toAng = 0;
 			toSpd = 2;
 		}
+		
+		headBobDir %= 360;
 
 		sideRotAngle += (toAng - sideRotAngle) / toSpd;
 
@@ -491,11 +522,18 @@ public abstract class Actor extends Physical {
 		camX = x();
 		camY = y();
 		camZ = floorZ + height * .9f;
+		
 
 		dis = 10;
-		dir = getDirection();
+		dir = faceDirection;
 		dirZ = 0;
-
+		
+		float bobSide = Math2D.calcLenY(5,headBobDir),
+			bobUp = Math.abs(Math2D.calcLenY(5,headBobDir));
+		camX += Math2D.calcLenX(bobSide, dir+90);
+		camY += Math2D.calcLenY(bobSide, dir+90);
+		camZ += bobUp;
+		
 		cX = camX + Math3D.calcPolarX(dis, dir, dirZ);
 		cY = camY + Math3D.calcPolarY(dis, dir, dirZ);
 		cZ = camZ + Math3D.calcPolarZ(dis, dir, dirZ);
@@ -533,7 +571,7 @@ public abstract class Actor extends Physical {
 		toPoint.set(3, 0);
 	}
 
-	// INTERACTING WITH OTHER ACTORS
+	// INTERACTING WITH OTHER ACTORSx
 	public boolean face(Actor a) {
 		return setFaceDir(calcDir(a));
 	}

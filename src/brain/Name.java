@@ -29,6 +29,7 @@ public class Name {
 		first.add("Charlie");
 		first.add("Drew");
 		first.add("Jordan");
+		first.add("Mickey");
 		first.add("Morgan");
 		first.add("Pat");
 		first.add("Ryan");
@@ -72,6 +73,7 @@ public class Name {
 		last.add("McGrail");
 		last.add("Moore");
 		last.add("Nelson");
+		last.add("O'Brien");
 		last.add("Smith");
 		last.add("Stevens");
 		last.add("Stevenson");

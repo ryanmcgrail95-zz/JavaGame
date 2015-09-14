@@ -25,6 +25,7 @@ import fl.FileExt;
 import functions.Array;
 import functions.Math2D;
 import gfx.Camera;
+import gfx.ErrorPopup;
 import gfx.GOGL;
 
 public class Sound {
@@ -36,10 +37,15 @@ public class Sound {
     private static SoundSource curMusic = null, newMusic = null;
     private static List<SoundSource> sourceList = new ArrayList<SoundSource>();
 	private static List<SoundBuffer> bufferList = new ArrayList<SoundBuffer>();
+	private static List<String> musicList = new ArrayList<String>();
     private static Map<String, List<String>> playlistMap = new HashMap<String, List<String>>();
 	
 	public static void ini() {
-		ALut.alutInit();
+		try {
+			ALut.alutInit();
+		} catch(Exception e) {
+			ErrorPopup.open("Failed to initialize ALUT.", true);
+		}
 	}
 	public static void iniLoad() {
 
@@ -134,6 +140,9 @@ public class Sound {
 		
 		bufferMap.put(name, snd);
 		bufferList.add(snd);
+		
+		if(loop)
+			musicList.add(name);
 		
 		return snd;
 	}
@@ -336,5 +345,9 @@ public class Sound {
 	}
 	public static List<String> getPlaylist(String s) {
 		return playlistMap.get(s);
+	}
+	
+	public static List<String> getMusicList() {
+		return musicList;
 	}
 }

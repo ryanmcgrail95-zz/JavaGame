@@ -6,6 +6,7 @@ import object.primitive.Drawable;
 import object.primitive.Updatable;
 import phone.SmartPhone;
 import sts.Stat;
+import time.Delta;
 import time.Timer;
 import window.Window;
 import cont.Messages;
@@ -33,6 +34,7 @@ public class Overlay {
 				float dX,dY;
 				dX = 200;
 				dY = 0;
+				GLText.drawString(dX,dY, "FPS: " + (int) Delta.getFPS()); dY += 20;
 				GLText.drawString(dX,dY, "Drawable: " + Drawable.getOnscreenNumber() + "/" + Drawable.getNumber()); dY += 20;
 				GLText.drawString(dX,dY, "Updatable: " + Updatable.getNumber()); dY += 20;
 				GLText.drawString(dX,dY, "Timers: " + Timer.getNumber()); dY += 20;

@@ -21,10 +21,9 @@ import window.GUIFrame;
 import window.GUIListener;
 import window.TextButton;
 
-public class SmartPhone extends Drawable {
+public class SmartPhone extends HoldClosable {
 
 	private static SmartPhone instance;
-	private float onscreenFrac, onscreenToFrac;
 	public static final int WIDTH = 480, HEIGHT = 270;
 	private int x = 640/2 - WIDTH/2, y = 480/2 - HEIGHT/2;
 	private float scale = 1;
@@ -36,8 +35,6 @@ public class SmartPhone extends Drawable {
 	
 	public SmartPhone() {
 		super(false,true);
-		
-		onscreenFrac = onscreenToFrac = 0;
 		
 		fbo = new FBO(GOGL.gl,WIDTH,HEIGHT);
 		
@@ -63,13 +60,11 @@ public class SmartPhone extends Drawable {
 		
 		if(GOGL.getCamera() != GOGL.getMainCamera())
 			return;
-		
-		onscreenFrac += (onscreenToFrac - onscreenFrac)/5;
-		if(Math.abs(onscreenFrac-onscreenToFrac) < .001)
-			onscreenFrac = onscreenToFrac;
-		
-		if(onscreenFrac != 0) {
-			if(onscreenToFrac == 1) {
+
+		step();
+				
+		if(isOnscreen()) {
+			if(amIActive()) {
 				Sound.setMusicVolume(0);
 				volumeFrac = 1;
 			}
@@ -78,21 +73,23 @@ public class SmartPhone extends Drawable {
 				volumeFrac = 0;
 			}
 
-
+			GOGL.setPerspective();
 			GOGL.transformClear();			
-			GOGL.transformBeforeCamera(48);		
+			GOGL.transformBeforeCamera(48);	
 			GOGL.transformRotationY(90);
-			GOGL.transformRotationZ(-90);
-			GOGL.transformTranslation(0,35*(1-onscreenFrac),0);
+			GOGL.transformRotationZ(-90);			
+			GOGL.transformTranslation(0,35*(1-getOnscreenFrac()),0);
 			GOGL.transformScale(.25f/3);
-			
+
+
 			Texture tex = TextureController.getTexture("iphone");
 			float s = 2.5f,w,h,aX,aY,a;
 			w = s*tex.getWidth();
 			h = s*tex.getHeight();
 			aX = 0;
 			aY = -3;
-									
+
+			
 			GOGL.disableBlending();
 			GOGL.drawFBO(-WIDTH/2,-HEIGHT/2,scale*WIDTH,scale*HEIGHT,fbo);
 			GOGL.enableBlending();
@@ -112,11 +109,9 @@ public class SmartPhone extends Drawable {
 		}
 	}
 
-	public boolean checkOnscreen() {return true;}
-	public float calcDepth() {return 0;}
 	public void update() {}
 	
 
-	public static void setActive(boolean active) {instance.onscreenToFrac = (active ? 1:0);}
-	public static boolean isActive() {return instance.onscreenToFrac == 1;}
+	public static void setActive(boolean active) {instance.setMeActive(active);}
+	public static boolean isActive() {return instance.amIActive();}
 }

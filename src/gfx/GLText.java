@@ -31,7 +31,10 @@ public class GLText {
 	
 	
 	public static void setFont(String name) {
+		// Set Font
 		curFont = Font.get(name);
+		
+		// Set Font Variables
 		curWidth = curFont.getWidth();
 		curHeight = curFont.getHeight();
 		curTex = curFont.getTexture();
@@ -220,8 +223,7 @@ public class GLText {
 			if(c == ' ')
 				dX += curWidth*xS;
 			else if(c == '\n') {
-				if(maxW < dX)
-					maxW = dX;
+				maxW = Math.max(dX, maxW);
 				
 				dX = 0;
 				dY += curLineHeight*yS;
@@ -230,8 +232,7 @@ public class GLText {
 				dX += curFont.getCharWidth(c)*xS;
 		}
 		
-		if(maxW < dX)
-			maxW = dX;
+		maxW = Math.max(dX, maxW);
 		
 		return maxW;
 	}

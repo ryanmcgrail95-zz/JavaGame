@@ -8,6 +8,7 @@ import gfx.Gameboy;
 import gfx.Overlay;
 import gfx.RGBA;
 import gfx.Shape;
+import gfx.WorldMap;
 import io.Mouse;
 
 import java.awt.Color;
@@ -88,8 +89,12 @@ public abstract class Drawable extends Updatable {
 		
 	//PERSONAL FUNCTIONS
 	public void setVisible(boolean visible) {this.visible = visible;}
-	public abstract boolean checkOnscreen();
-	public abstract float calcDepth();	
+	public boolean checkOnscreen() {
+		return true;
+	}
+	public float calcDepth() {
+		return 0;
+	}
 	
 	//GLOBAL FUNCTIONS
 	public static void presort() {		
@@ -97,18 +102,19 @@ public abstract class Drawable extends Updatable {
 		onscreenHoverList.clear();
 		
 		byte addHover = 2;
-		if(selectTimer.check()) {
-			if(Window.checkMouseAll())
-				addHover = 1;
-			else
-				addHover = 0;
-		}
-				
+		if(GOGL.getCamera() == GOGL.getMainCamera())
+			if(selectTimer.check()) {
+				if(Window.checkMouseAll() || !canSelectHoverable())
+					addHover = 1;
+				else
+					addHover = 0;
+			}
+						
 		// Sort by Depth
 		int dSi = drawList.size(), i, k;
 		for(Drawable d : drawList)
 			if(d.visible)
-				if(d.calcDepth() < GOGL.getCamera().getViewDistance())
+				if(d.calcDepth() < GOGL.getCamera().getViewFar())
 					if(d.checkOnscreen()) {
 						onscreenList.add(d);
 						
@@ -119,13 +125,13 @@ public abstract class Drawable extends Updatable {
 						else if(addHover == 1)
 							d.isSelected = false;
 					}
-					
+		
 		//onscreenList.sort(Drawable.Comparators.DEPTH);
 	}
 	
 		public static void display() {
 			if(selectTimer == null)
-				selectTimer = new Timer(10);
+				selectTimer = new Timer(5);
 			
 			//presort(GOGL.getMainCamera());
 			
@@ -139,15 +145,16 @@ public abstract class Drawable extends Updatable {
 				d.render();
 			Window.renderAll();
 			
-			
+						
         	GOGL.setViewport(0,0,640,480);
 			GOGL.setPerspective();
+			
 
-			if(canSelectHoverable() && hoverList.size() > 0) {
+			if(canSelectHoverable() && onscreenHoverList.size() > 0) {
 				GOGL.allowLighting(false);
-				GOGL.clearScreen();
+				GOGL.clear();
 				
-				for(Drawable d : hoverList) {
+				for(Drawable d : onscreenHoverList) {
 					d.isSelected = false;
 					
 					GOGL.forceColor(new RGBA(d.R/255f,d.G/255f,d.B/255f));
@@ -197,7 +204,7 @@ public abstract class Drawable extends Updatable {
 	
 	
 	private static boolean canSelectHoverable() {
-		return !SmartPhone.isActive();
+		return !SmartPhone.isActive() && !WorldMap.isActive();
 	}
 
 	public static void draw3D() {
@@ -212,18 +219,19 @@ public abstract class Drawable extends Updatable {
 		GOGL.setColor(skyBottom);
 		GOGL.fillRectangle(0,bY,640,480-bY);
 		
-					
-		/*if(Camera.checkMapView())
-			GOGL.setOrthoPerspective();
-		else*/
-		GOGL.setPerspective();
+		
+		GOGL.getCamera().project();
 		
 		
 		for(Drawable d : onscreenList) {
-			d.draw();
-				
-			if(d.isSelected)
+			if(!d.isSelected)
+				d.draw();
+			else { 
+				GOGL.forceColor(new RGBA(1,1,1,.2f));
+				d.draw();
 				d.hover();
+				GOGL.unforceColor();
+			}
 		}
 		
 		Floaties.draw();

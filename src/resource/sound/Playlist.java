@@ -50,25 +50,40 @@ public class Playlist extends Updatable {
 	public int size() {return list.size();}
 
 	public void play() 				{source.play();}
-	public void playNextSong() 		{source.swapSoundBuffer(list.get(index = getNextIndex()));}
-	public void playPreviousSong() 	{source.swapSoundBuffer(list.get(index = getPreviousIndex()));}
+	public void play(int i) 		{source.swapSoundBuffer(list.get(index = getIndex(i)));}
+	public void playNextSong() 		{play(getNextIndex());}
+	public void playPreviousSong() 	{play(getPreviousIndex());}
 
 	public void setPosition(float x, float y, float z) 	{source.setPosition(new float[] {x,y,z});}	
 	public void setSpeed(float speed) 					{source.setSpeed(this.speed = speed);}
 	public void setLoop(boolean isLooping) 				{source.setLoop(this.isLooping = isLooping);}
 	public void setVolume(float volumeFrac) 			{source.setVolume(volumeFrac);}
 
-	public String getName(int i) 	{return list.get(i);}
+	public String getName(int i) 	{return list.get(getIndex(i));}
 	public String getName() 		{return list.get(getIndex());}
 	public String getNextName() 	{return list.get(getNextIndex());}
 	public String getPreviousName() {return list.get(getPreviousIndex());}
 
-	public int getIndex() 			{return index;}
-	public int getNextIndex() 		{return (index+1 == list.size() ? 0 : index+1);}
-	public int getPreviousIndex() 	{return (index == 0 ? list.size()-1 : index-1);}
 
-	public SoundBuffer getSoundBuffer(int i) 	{return Sound.get(list.get(i));}
+	public int getIndex(int i) 		{
+		while(i >= list.size())
+			i -= list.size();
+		while(i < 0)
+			i += list.size();
+		return i;
+	}
+	public int getIndex() 			{return index;}
+	public int getNextIndex() 		{return getIndex(index+1);}
+	public int getPreviousIndex() 	{return getIndex(index-1);}
+
+	public SoundBuffer getSoundBuffer(int i) 	{return Sound.get(list.get(getIndex(i)));}
 	public SoundBuffer getSoundBuffer() 		{return getSoundBuffer(getIndex());}
 	public SoundBuffer getNextSoundBuffer() 	{return getSoundBuffer(getNextIndex());}
 	public SoundBuffer getPreviousSoundBuffer() {return getSoundBuffer(getPreviousIndex());}
+
+	public void add(String name) {list.add(name);}
+
+	public void setIndex(int newIndex) {
+		this.index = newIndex;
+	}
 }

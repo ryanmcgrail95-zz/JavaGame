@@ -26,7 +26,7 @@ public class SoundBuffer {
     		freq = new int[1];
     private int avg, min = 10000000, max = -1000000;
 
-    private String albumName;
+    private String albumName = "";
 	private Texture albumImg;
     
 	public SoundBuffer(String name,String fileName, int[] buffer, int[] reverseBuffer, int[] format, ByteBuffer data, int[] size, int[] freq, float volume) {

@@ -22,9 +22,7 @@ public abstract class Font {
 	public boolean isMerged() {return type == T_MERGED;}
 	
 	
-	public static Font get(String name) {
-		return map.get(name);
-	}
+	public static Font get(String name) {return map.get(name);}
 	
 	public float getHangFrac() {
 		return hangFrac;

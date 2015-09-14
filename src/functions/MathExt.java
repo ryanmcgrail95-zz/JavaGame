@@ -115,6 +115,19 @@ public class MathExt {
 		return (tMi <= value && value <= tMa);
 	}
 
+	public static int contain(int mi, int value, int ma) {
+		int tMi, tMa;
+		if(mi < ma) {
+			tMi = mi;
+			tMa = ma;
+		}
+		else {
+			tMi = ma;
+			tMa = mi;
+		}
+		
+		return Math.max(tMi, Math.min(value, tMa));
+	}
 	public static float contain(float mi, float value, float ma) {
 		float tMi, tMa;
 		if(mi < ma) {
@@ -129,9 +142,8 @@ public class MathExt {
 		return Math.max(tMi, Math.min(value, tMa));
 	}
 
-	public static float snap(float val, float grid) {
-		return grid*Math.round(val/grid);
-	}	
+	public static float snap(float val, float grid) {return grid*Math.round(val/grid);}
+	
 	public static float wrap(float mi, float value, float ma) {
 		float diff = ma - mi;
 		

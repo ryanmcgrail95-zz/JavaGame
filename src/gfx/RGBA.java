@@ -19,9 +19,9 @@ public class RGBA{
 		CYAN = new RGBA(0,1,1,1),
 		WHITE = new RGBA(1,1,1,1),
 		BLACK = new RGBA(0,0,0,1),
-		GRAY_LIGHT = new RGBA(.25f,.25f,.25f,1),
+		GRAY_DARK = new RGBA(.25f,.25f,.25f,1),
 		GRAY = new RGBA(.5f,.5f,.5f,1),
-		GRAY_DARK = new RGBA(.75f,.75f,.75f,1);
+		GRAY_LIGHT = new RGBA(.75f,.75f,.75f,1);
 
 	private float R,G,B,A;
 	

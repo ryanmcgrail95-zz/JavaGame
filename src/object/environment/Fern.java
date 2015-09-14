@@ -30,7 +30,7 @@ public class Fern extends Environmental {
 				
 				GOGL.transformScale(.5f);
 				GOGL.transformScale(1+2f*squash,1+2f*squash,1-.2f*squash);
-				GOGL.setLightColori(96, 104, 70);
+				GOGL.setLightColor(COL_LEAVES);
 		
 				Model.MOD_FERN.draw();	
 			GOGL.transformClear();
