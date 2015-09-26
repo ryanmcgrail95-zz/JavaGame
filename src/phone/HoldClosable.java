@@ -1,22 +1,23 @@
 package phone;
 
+import datatypes.WeightedSmoothFloat;
+import datatypes.WeightedSmoothFloat;
 import gfx.GOGL;
 import object.primitive.Drawable;
 
 public abstract class HoldClosable extends Drawable {
 	
-	protected float onscreenFrac, onscreenToFrac;
+	protected WeightedSmoothFloat onscreenFrac;
 
 
 	public HoldClosable(boolean hoverable, boolean renderable) {
 		super(hoverable, renderable);
 		
-		onscreenFrac = onscreenToFrac = 0;
+		onscreenFrac = new WeightedSmoothFloat(1,0,-1f,.5f,20);
+		onscreenFrac.setFraction(1);
 	}
 	public void step() {
-		onscreenFrac += (onscreenToFrac - onscreenFrac)/5;
-		if(Math.abs(onscreenFrac-onscreenToFrac) < .001)
-			onscreenFrac = onscreenToFrac;
+		onscreenFrac.step();
 	}
 	
 	public void transformOnscreen(float nX, float nY, float nZ, float amt) {
@@ -28,8 +29,14 @@ public abstract class HoldClosable extends Drawable {
 	public float calcDepth() {return 0;}
 	
 	
-	protected float getOnscreenFrac() {return onscreenFrac;}
-	protected boolean isOnscreen() {return onscreenFrac != 0;}
-	protected void setMeActive(boolean active) {onscreenToFrac = (active ? 1:0);}
-	protected boolean amIActive() {return onscreenToFrac == 1;}
+	protected float getOnscreenFrac() {return onscreenFrac.get();}
+	protected boolean isOnscreen() {return !onscreenFrac.equals(0);}
+	protected void setMeActive(boolean active) {
+		float toVal = (active ? 1:0);
+		if(onscreenFrac.getTo() != toVal)
+			onscreenFrac.flip();
+	}
+	protected boolean amIActive() {
+		return onscreenFrac.getTo() == 1;
+	}
 }

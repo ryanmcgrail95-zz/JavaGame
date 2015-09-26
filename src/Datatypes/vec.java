@@ -102,6 +102,13 @@ public abstract class vec {
 		else			return multe(1/val);
 	}
 	
+	public final float dot(float[] other) {		
+		float value = 0;
+		for(int i = 0; i < SIZE; i++)
+			value += array[i]*( other[i] );
+		
+		return value;
+	}
 	public final float dot(vec other) {
 		if(other.SIZE != SIZE)
 			throw new UnsupportedOperationException();

@@ -48,24 +48,16 @@ public class Stat {
 		public void setToHP(float hp) {
 			toHP = MathExt.contain(0, hp, maxHP);
 		}
-		public float getHP() {
-			return hp;
-		}
-		public float getMaxHP() {
-			return maxHP;
-		}
+		public float getHP() 	{return hp;}
+		public float getMaxHP() {return maxHP;}
 		
-		public float getFP() {
-			return fp;
-		}
-		public float getMaxFP() {
-			return maxFP;
-		}
+		public float getFP() 	{return fp;}
+		public float getMaxFP() {return maxFP;}
 		
-		public float getBP() {
-			return bp;
-		}
+		public float getBP() 	{return bp;}
 
+		
+		public String getName() {return name;}
 
 		public void draw() {
 			
@@ -76,15 +68,16 @@ public class Stat {
 			dH = 15;
 			dX = 48;//16;
 			dY = 40;//480 - (dX+dH);
-			
+
+			// Shake Healthbar if Falling
 			if(Math.abs(toHP - hp) > .05) {
-				dX += MathExt.rnd(-2,2);
-				dY += MathExt.rnd(-2,2);
+				float amt = Math.abs(toHP-hp);
+				dX += MathExt.rnd(-amt,amt);
+				dY += MathExt.rnd(-amt,amt);
 			}
 			
 			String fracStr = (int)hp + "/" + (int)maxHP;
 			
-			//GOGL.drawString(dX,dY+5, "HP:");
 			GOGL.drawFillBar(dX,dY,dW,dH, hp/maxHP);
 			/*GOGL.setColor(0,0,0,1);
 			GOGL.drawString(dX+24+50 - GOGL.getStringWidth(fracStr)/2,dY+5,fracStr);*/

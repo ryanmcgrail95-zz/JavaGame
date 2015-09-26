@@ -7,19 +7,19 @@ public class Math2D {
 	public static float calcLen(float... values) {
 		float tot = 0;
 		for(int i = 0; i < values.length; i++)
-			tot += MathExt.sqr(values[i]);
+			tot += (values[i])*(values[i]);
 		
 		return (float) Math.sqrt(tot);
 	}
 	
 	public static float calcLenX(float dir) {return calcLenX(1,dir);}
 	public static float calcLenX(float dis, float dir) {
-		return (float) (dis*Math.cos(dir/180*Math.PI));
+		return (float) (dis*FastMath.cosd(dir));
 	}
 	
 	public static float calcLenY(float dir) {return calcLenY(1,dir);}
 	public static float calcLenY(float dis, float dir) {
-		return (float) (dis*Math.sin(dir/180*Math.PI));
+		return (float) (dis*FastMath.sind(dir));
 	}
 	
 	
@@ -27,24 +27,27 @@ public class Math2D {
 	public static float calcPtDis(float x1, float y1, vec2 pt2) {return calcPtDis(x1, y1, pt2.x(), pt2.y());}
 	public static float calcPtDis(vec2 pt1, float x2, float y2) {return calcPtDis(pt1.x(), pt1.y(), x2, y2);}
 	public static float calcPtDis(float x1, float y1, float x2, float y2) {
-		return (float) Math.sqrt(MathExt.sqr(x2-x1) + MathExt.sqr(y2-y1));
+		return (float) Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
 	}
-	
+		
 	
 	public static float calcPtDir(vec2 pt1, vec2 pt2) {return calcPtDir(pt1.x(), pt1.y(), pt2.x(), pt2.y());}
 	public static float calcPtDir(float x1, float y1, vec2 pt2) {return calcPtDir(x1, y1, pt2.x(), pt2.y());}
 	public static float calcPtDir(vec2 pt1, float x2, float y2) {return calcPtDir(pt1.x(), pt1.y(), x2, y2);}
 	public static float calcPtDir(float x1, float y1, float x2, float y2) {
-		return (float) (Math.atan2(y2-y1, x2-x1)/Math.PI*180);
+		return (float) (FastMath.atan2(y2-y1, x2-x1)/Math.PI*180);
 	}
 	
 	
 	public static float calcProjDis(float uX, float uY, float vX, float vY) {
-		float coeff;
-		coeff = (uX*vX + uY*vY)/calcPtDis(0, 0, vX, vY);
+		return (uX*vX + uY*vY);
+	}
+	
+	/*public static float calcProjDis(float uX, float uY, float vX, float vY) {
+		float coeff = (uX*vX + uY*vY)/calcPtDis(0, 0, vX, vY);
 		
 		return calcPtDis(0,0, coeff*vX, coeff*vY);
-	}
+	}*/
 
 	public static float calcSpeed(float deltaX, float accel) {
 		return (float) Math.sqrt(2*deltaX*accel);
@@ -58,12 +61,6 @@ public class Math2D {
 	}
 	public static boolean checkRectangle(float x, float y, float x1, float y1, float w, float h) {
 		return (x1 <= x && x <= x1+w && y1 <= y && y <= y1+h);
-	}
-	
-	
-	
-	public static float calcAngDiff(float angle1, float angle2) {
-		return ((((angle1 - angle2) % 360) + 540) % 360) - 180;
 	}
 	
 	public static vec2 calcLinePt(float px, float py, float x1, float y1, float x2, float y2, boolean segment) {
@@ -96,9 +93,9 @@ public class Math2D {
 		float newDir = 0;
 		
 		if(Math.abs(((((toDir - dir) % 360) + 540) % 360) - 180) >= 160)
-			    newDir += Math.sin((toDir-dir)/180*Math.PI)*16*15;
+			    newDir += FastMath.sind(toDir-dir)*16*15;
 
-		newDir += Math.sin((toDir-dir)/180*Math.PI)*spd;
+		newDir += FastMath.sind(toDir-dir)*spd;
 		return newDir;
 	}
 }

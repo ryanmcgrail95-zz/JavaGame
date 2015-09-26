@@ -36,6 +36,7 @@ public class Footstep extends Positionable {
 		super.destroy();
 	}
 
+	public void add() {}
 	public void draw() {
 		sHor += .3f;
 		sVer += .7f;

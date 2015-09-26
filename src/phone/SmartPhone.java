@@ -3,7 +3,7 @@ package phone;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
-import datatypes.SmoothFloat;
+import datatypes.WeightedSmoothFloat;
 import datatypes.vec2;
 import io.Mouse;
 import functions.Math2D;
@@ -56,8 +56,9 @@ public class SmartPhone extends HoldClosable {
 	public void render() {
 		currentApp.draw();
 	}
-	public void draw() {
-		
+
+	public void add() {}
+	public void draw() {		
 		if(GOGL.getCamera() != GOGL.getMainCamera())
 			return;
 
@@ -89,6 +90,7 @@ public class SmartPhone extends HoldClosable {
 			aX = 0;
 			aY = -3;
 
+			GOGL.resetColor(); 
 			
 			GOGL.disableBlending();
 			GOGL.drawFBO(-WIDTH/2,-HEIGHT/2,scale*WIDTH,scale*HEIGHT,fbo);
@@ -97,7 +99,6 @@ public class SmartPhone extends HoldClosable {
 			GOGL.transformTranslation(0,0,1);
 			GOGL.transformRotationZ(-90);
 
-			GOGL.resetColor(); 
 			GOGL.setTextureFiltering(tex, GOGL.F_NEAREST);
 			GOGL.drawTexture(-w/2+aX,-h/2+aY, w,h,tex);
 			
@@ -112,6 +113,8 @@ public class SmartPhone extends HoldClosable {
 	public void update() {}
 	
 
-	public static void setActive(boolean active) {instance.setMeActive(active);}
+	public static void setActive(boolean active) {
+		instance.setMeActive(active);
+	}
 	public static boolean isActive() {return instance.amIActive();}
 }

@@ -7,7 +7,6 @@ import functions.MathExt;
 import gfx.GOGL;
 import gfx.MultiTexture;
 import gfx.RGBA;
-import gfx.Shape;
 import gfx.TextureExt;
 
 public class Dust extends Particle {
@@ -15,8 +14,7 @@ public class Dust extends Particle {
 	private boolean doFloat;
 	private int imageNumber;
 	private float direction, rotation;
-	private static MultiTexture dustTex = new MultiTexture("Resources/Images/smokecloud.png",4,4);
-	
+	private static MultiTexture dustTex = new MultiTexture("Resources/Images/smokecloud.png",4,4);	
 	
 	public Dust(float x, float y, float z, float direction, boolean doFloat) {
 		super(x, y, z);
@@ -34,12 +32,14 @@ public class Dust extends Particle {
 	public void destroy() {
 		super.destroy();
 	}
-	
+
+	public void update() {}
+	public void add() {}
 	public void draw() {
 		
 		if(imageIndex >= imageNumber)
 		    destroy();
-			
+		
 		GOGL.setPerspective();
 		GOGL.transformClear();
 		transformTranslation();
@@ -92,6 +92,4 @@ public class Dust extends Particle {
 		GOGL.setAlpha(1);
 	}
 
-	@Override
-	public void update() {}
 }

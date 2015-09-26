@@ -16,7 +16,9 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.ghost4j.document.DocumentException;
 import org.ghost4j.renderer.RendererException;
@@ -41,6 +43,7 @@ import obj.prt.Floaties;
 import object.actor.Actor;
 import object.actor.NPC;
 import object.actor.Player;
+import object.environment.BlockTerrain;
 import object.environment.Chest;
 import object.environment.Fern;
 import object.environment.Fire;
@@ -94,7 +97,7 @@ public final class GOGL {
 	private static boolean canLight = true;
 	private static int shaderProgram;
 	private static float[] viewPos;
-	
+		
 	public static final byte F_NEAREST = 0, F_BILINEAR = 1, F_TRILINEAR = 2;
 	
 	private static Camera currentCamera, mainCamera;
@@ -103,7 +106,7 @@ public final class GOGL {
 	private static GLAutoDrawable glad;
 	
 	
-	private static Timer time = new Timer(360,true);
+	private static Timer time = new Timer(360);
 	
     private static float[] perspectiveMatrix = new float[16];    
     public static int[] RESOLUTION = {640,480};
@@ -111,6 +114,7 @@ public final class GOGL {
 
     public static final int VIEW_FAR = 10000;
 	public static final int 
+		P_TRIANGLES = GL2.GL_TRIANGLES,
 		P_TRIANGLE_STRIP = GL2.GL_TRIANGLE_STRIP,
 		P_LINE_LOOP = GL2.GL_LINE_LOOP,
 		P_LINES = GL2.GL_LINES;
@@ -151,18 +155,20 @@ public final class GOGL {
             public void init( GLAutoDrawable glautodrawable ) {  	
             	
             	gl = glautodrawable.getGL().getGL2();
-            	Sound.iniLoad();
             	
             	
-        		mainCamera = new Camera(Camera.PR_PERSPECTIVE,640,480);
-        		currentCamera = mainCamera;
-        		
+           		currentCamera = mainCamera = new Camera(Camera.PR_PERSPECTIVE,640,480);
+
+        	println("Creating map...");
         		new WorldMap();
-        		
-            	println("Initializing textures...");
+
+        	println("Initializing sounds...");
+            	Sound.iniLoad();
+
+        	println("Initializing textures...");
             	TextureController.ini();                
             	
-            	println("Initializing models...");
+        	println("Initializing models...");
             	Model.ini();
             	
             	Text.ini();
@@ -171,10 +177,8 @@ public final class GOGL {
             	//CubeMap.ini();
             	            	
             	// Initialize Delta Time Controller
-            	Delta.setTargetFPS(60);
-            	Delta.setSpeed(1);
 
-            	println("Initializing items...");
+        	println("Initializing items...");
             	ItemController.ini();
             	
             	Idea.ini();
@@ -193,8 +197,11 @@ public final class GOGL {
                 // Generate Environment
                 float seaLevel = 50;
                 
-            	println("Creating Heightmap...");
+        	println("Creating Heightmap...");
+            	
                 Heightmap m = new Heightmap(64, 2, "Resources/Heightmaps/hm1.jpg");
+            	//BlockTerrain b = BlockTerrain.createFromHeightmap("Resources/Heightmaps/hm1.jpg");
+            	BlockTerrain b = BlockTerrain.createFromHeightmap(m);
                 m.smooth(1);
                 m.halveResolution();
 
@@ -212,6 +219,7 @@ public final class GOGL {
                 player = Player.getInstance();
                 	player.setX(2400);
                 	player.setY(2400);
+                	player.setZ(300);
                 	
                 	
                                 	
@@ -220,7 +228,7 @@ public final class GOGL {
                 a.taskRunStore();
                 //partner = new Partner(20,20,0, "mario");
                 
-                new Water(seaLevel);
+                //new Water(seaLevel);
                 //new Sword("Whatever");
 
             	vec3 pt;
@@ -229,16 +237,16 @@ public final class GOGL {
                 	new Grass(pt.x(),pt.y(),30,24,8,4, .5f);
                 }*/
                 
-            	println("Creating foliage...");
+        	println("Creating foliage...");
                 for(int i = 0; i < 400; i++) {
                 	pt = m.generateRandomPointAbove(seaLevel);
                 	new PineTree(pt.x(),pt.y());
                 }
                 
-                for(int i = 0; i < 50; i++) {
+                /*for(int i = 0; i < 50; i++) {
                 	pt = m.generateRandomPointBetween(seaLevel, seaLevel+10);
                 	new PalmTree(pt.x(),pt.y());
-                }
+                }*/
                 
                 for(int i = 0; i < 400; i++) {
                 	pt = m.generateRandomPointAbove(seaLevel);
@@ -246,7 +254,7 @@ public final class GOGL {
                 }
             
                                 
-            	println("Creating town...");
+        	println("Creating town...");
                 new WindMill(player.getX(),player.getY());
                 new Town(player.getX() + 500, player.getY());
                 
@@ -265,7 +273,7 @@ public final class GOGL {
                 //gl.glEnable(gl.GL_ALPHA_TEST);
             	gl.glEnable(GL2.GL_NORMALIZE);
             	
-            	println("Initializing GUI...");
+        	println("Initializing GUI...");
             	Window.ini();
                 //new Gameboy();
             	
@@ -273,7 +281,7 @@ public final class GOGL {
                             	
             	gcap = new GLCapabilities(gp);
             	gcap.setDepthBits(16);
-            	
+        
             	println("Initializing Shaders...");
             	Shader.ini(gl);
             	
@@ -286,7 +294,7 @@ public final class GOGL {
             	new SmartPhone();
             	//new Radio(2500,2500);
             	
-            	checkError();
+            	//checkError();
             }
             
             public void dispose( GLAutoDrawable glautodrawable ) {}
@@ -383,6 +391,7 @@ public final class GOGL {
 
 	
 	public static void enableFog(float start, float end, RGBA col) {
+		
 		gl.glEnable(GL2.GL_FOG);
 		gl.glFogi(GL2.GL_FOG_COORD_SRC, GL2.GL_FRAGMENT_DEPTH);
 		gl.glFogi(GL2.GL_FOG_MODE, GL2.GL_LINEAR);
@@ -506,7 +515,7 @@ public final class GOGL {
 	public static void setOrtho(float w, float h) {setOrtho(w,h,TOP_LAYER);}
 	public static void setOrtho(float useLayer) {setOrtho(viewPos[2],viewPos[3],useLayer);}
 	public static void setOrtho(float w, float h, float useLayer) {
-		
+				
 		projectionMode = PR_ORTHO;		
 		orthoLayer = useLayer;
 
@@ -583,7 +592,7 @@ public final class GOGL {
 		setColor(RGBA.WHITE);
 	}
 	
-	public static RGBA getColor() {return drawingColor;}
+	public static RGBA getColor() {return new RGBA(drawingColor);}
 
 	public static void setColori(int r, int g, int b) {setColor(r/255f, g/255f, b/255f, 1);}
 	public static void setColor(float r, float g, float b) {setColor(r,g,b,1);}
@@ -635,6 +644,12 @@ public final class GOGL {
 	public static void drawFBO(float x, float y, float w, float h, FBO fbo) {
 		fbo.bind(gl);
 			GOGL.fillRectangle(x, y, w, h);
+		fbo.unbind(gl);
+	}
+	
+	public static void addFBO(float x, float y, float w, float h, FBO fbo) {
+		fbo.bind(gl);
+			addRectangle(x, y, w, h);
 		fbo.unbind(gl);
 	}
 	
@@ -708,6 +723,23 @@ public final class GOGL {
 	    gl.glEnd();
 	}
 	
+	
+	public static void addRectangle(float x, float y, float w, float h) {
+		float[] mat, v1, v2, v3, v4;
+		mat = getModelMatrix().array();
+		v1 = mult(mat, new float[] {x,y,orthoLayer,1});
+		v2 = mult(mat, new float[] {x+w,y,orthoLayer,1});
+		v3 = mult(mat, new float[] {x,y+h,orthoLayer,1});
+		v4 = mult(mat, new float[] {x+w,y+h,orthoLayer,1});
+
+		gl.glTexCoord2f(0, 0);	gl.glVertex3d(v1[0],v1[1],v1[2]);
+		gl.glTexCoord2f(1, 0);	gl.glVertex3d(v2[0],v2[1],v2[2]);
+		gl.glTexCoord2f(0, 1);	gl.glVertex3d(v3[0],v3[1],v3[2]);
+		
+		gl.glTexCoord2f(1, 0);	gl.glVertex3d(v2[0],v2[1],v2[2]);
+		gl.glTexCoord2f(1, 1);	gl.glVertex3d(v4[0],v4[1],v4[2]);
+		gl.glTexCoord2f(0, 1);	gl.glVertex3d(v3[0],v3[1],v3[2]);
+	}
 
 	public static void drawRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,false);}
 	public static void drawRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,false);}
@@ -792,7 +824,7 @@ public final class GOGL {
 	
 		// Transformation Functions
 	public static void setModelMatrix(mat4 mat) {
-		modelMatrix = mat.copy();			
+		modelMatrix = mat.copy();
 		gl.glLoadMatrixf(mat.transpose().array(),0);
 	}
 	public static mat4 getModelMatrix() {
@@ -851,6 +883,7 @@ public final class GOGL {
 		GOGL.transformTranslation(len,0,0);
 	}
 	
+	// Set Up Rotation Matrix for Rotating Sprites to Face Camera (Assumes they are Solely in XY-Space)
 	public static void transformSprite() {
 		GOGL.transformRotationNormal(currentCamera.getNormal());
 		GOGL.transformRotationY(90);
@@ -873,25 +906,31 @@ public final class GOGL {
 
 				float dir, nX, nY;
 				dir = Math2D.calcPtDir(x1,y1,x2,y2)-90;
-					nX = Math2D.calcLenX(1,dir);
-					nY = Math2D.calcLenY(1,dir);
+					nX = Math2D.calcLenX(dir);
+					nY = Math2D.calcLenY(dir);
 
-				
+				// Begin Model
 				gl.glBegin(GL2.GL_QUADS);
-				gl.glNormal3f(nX,nY,0);
-				gl.glTexCoord2f(0, 0); 	
-					gl.glVertex3d(x1, y1, z1);
-				gl.glNormal3f(nX,nY,0);
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(x2, y2, z1);
-				gl.glNormal3f(nX,nY,0);
-				gl.glTexCoord2f(1, 1);
-					gl.glVertex3d(x2, y2, z2);
-				gl.glNormal3f(nX,nY,0);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(x1, y1, z2);
+					// Add Four Corners
+					gl.glNormal3f(nX,nY,0);
+					gl.glTexCoord2f(0, 0); 	
+						gl.glVertex3d(x1, y1, z1);
+
+					gl.glNormal3f(nX,nY,0);
+					gl.glTexCoord2f(1, 0);
+						gl.glVertex3d(x2, y2, z1);
+					
+					gl.glNormal3f(nX,nY,0);
+					gl.glTexCoord2f(1, 1);
+						gl.glVertex3d(x2, y2, z2);
+					
+					gl.glNormal3f(nX,nY,0);
+					gl.glTexCoord2f(0, 1);
+						gl.glVertex3d(x1, y1, z2);
+				// End (and Draw) Model
 				gl.glEnd();
 				
+				// Unbind Texture
 				unbind();
 			}
 			
@@ -913,6 +952,97 @@ public final class GOGL {
 				
 				unbind();
 			}
+
+			public static void add3DVertWall(float x, float y1, float z1, float y2, float z2) {
+
+				float[] mat, v1, v2, v3, v4, n;
+				mat = getModelMatrix().array();
+				v1 = mult(mat, new float[] {x,y1,z1,1});
+				v2 = mult(mat, new float[] {x,y2,z1,1});
+				v3 = mult(mat, new float[] {x,y1,z2,1});
+				v4 = mult(mat, new float[] {x,y2,z2,1});
+				n = mult(mat,new float[] {0,(y1 > y2) ? 1 : -1,0,0});
+
+				gl.glTexCoord2f(0, 0); 	
+					gl.glVertex3d(v1[0],v1[1],v1[2]);
+				gl.glTexCoord2f(1, 0);
+					gl.glVertex3d(v2[0],v2[1],v2[2]);
+				gl.glTexCoord2f(0, 1);
+					gl.glVertex3d(v3[0],v3[1],v3[2]);
+
+				gl.glTexCoord2f(1, 0);
+					gl.glVertex3d(v2[0],v2[1],v2[2]);
+				gl.glTexCoord2f(1, 1);
+					gl.glVertex3d(v4[0],v4[1],v4[2]);
+				gl.glTexCoord2f(0, 1);
+					gl.glVertex3d(v3[0],v3[1],v3[2]);
+			}
+			
+			
+			public static float[] mult(float[] mat, float[] vec) {
+				float[] outVec = {0,0,0,0};
+				for(int i = 0; i < 4; i++)
+					for(int ii = 0; ii < 4; ii++)
+						outVec[i] += mat[4*i+ii]*vec[ii];
+				return outVec;
+			}
+
+			public static void add3DHoriWall(float y, float x1, float z1, float x2, float z2) {
+				
+				float[] mat, v1, v2, v3, v4, n;
+				mat = getModelMatrix().array();
+				v1 = mult(mat, new float[] {x1,y,z1,1});
+				v2 = mult(mat, new float[] {x2,y,z1,1});
+				v3 = mult(mat, new float[] {x1,y,z2,1});
+				v4 = mult(mat, new float[] {x2,y,z2,1});
+				n = mult(mat,new float[] {0,(x1 < x2) ? 1 : -1,0,0});
+				gl.glNormal3f(n[0],n[1],n[2]);
+
+				gl.glTexCoord2f(0, 0); 	
+					gl.glVertex3d(v1[0],v1[1],v1[2]);
+				gl.glTexCoord2f(1, 0);
+					gl.glVertex3d(v2[0],v2[1],v2[2]);
+				gl.glTexCoord2f(0, 1);
+					gl.glVertex3d(v3[0],v3[1],v3[2]);
+	
+				gl.glTexCoord2f(1, 0);
+					gl.glVertex3d(v2[0],v2[1],v2[2]);
+				gl.glTexCoord2f(1, 1);
+					gl.glVertex3d(v4[0],v4[1],v4[2]);
+				gl.glTexCoord2f(0, 1);
+					gl.glVertex3d(v3[0],v3[1],v3[2]);
+			}
+
+
+			public static void add3DFloor(float x1, float y1, float x2, float y2, float z) {
+
+				float[] mat, v1, v2, v3, v4, n;
+				mat = getModelMatrix().array();
+				v1 = mult(mat, new float[] {x1,y1,z,1});
+				v2 = mult(mat, new float[] {x2,y1,z,1});
+				v3 = mult(mat, new float[] {x1,y2,z,1});
+				v4 = mult(mat, new float[] {x2,y2,z,1});
+				n = mult(mat,new float[] {0,(x1 < x2) ? 1 : -1,0,0});
+				gl.glNormal3f(n[0],n[1],n[2]);
+
+
+				gl.glTexCoord2f(0, 0); 	
+					gl.glVertex3d(v1[0],v1[1],v1[2]);
+				gl.glTexCoord2f(1, 0);
+					gl.glVertex3d(v2[0],v2[1],v2[2]);
+				gl.glTexCoord2f(0, 1);
+					gl.glVertex3d(v3[0],v3[1],v3[2]);
+		
+				gl.glTexCoord2f(1, 0);
+					gl.glVertex3d(v2[0],v2[1],v2[2]);
+				gl.glTexCoord2f(1, 1);
+					gl.glVertex3d(v4[0],v4[1],v4[2]);
+				gl.glTexCoord2f(0, 1);
+					gl.glVertex3d(v3[0],v3[1],v3[2]);
+			}
+			
+			
+
 			
 		// Tetrahedron-Drawing Function
 			public static void draw3DTetrahedron(float r, float h) {draw3DFrustem(r,h,null);}
@@ -1339,7 +1469,7 @@ public final class GOGL {
 
 		gl.glEnable(GL2.GL_LIGHTING);
 	}
-	public static void disableLighting() {
+	public static void disableLightings() {
 		gl.glDisable(GL2.GL_LIGHTING);
 		gl.glDisable(GL2.GL_COLOR_MATERIAL);
 	}
@@ -1353,7 +1483,18 @@ public final class GOGL {
 		draw3DFloor(x1,y1,x2,y2,z1,tex);
 		draw3DFloor(x1,y1,x2,y2,z2,tex);
 	}
+
+	public static void add3DBlock(float x1, float y1, float z1, float x2, float y2, float z2) {
+		add3DVertWall(x1,y2,z1,y1,z2);
+		add3DVertWall(x2,y1,z1,y2,z2);
+		add3DHoriWall(y1,x1,z1,x2,z2);
+		add3DHoriWall(y2,x2,z1,x1,z2);
+		add3DFloor(x1,y1,x2,y2,z1);
+		add3DFloor(x2,y1,x1,y2,z2);
+	}
+
 	
+
 	
 	public static void begin(int type) 	{gl.glBegin(type);}
 	public static void end() 			{gl.glEnd();}
@@ -1379,25 +1520,16 @@ public final class GOGL {
 		canLight = allow;
 		
 		if(!allow)
-			disableLighting();
+			disableLightings();
 	}
 
 	
-	public static void drawStringS(float x, float y, String text) {drawStringS(x,y,text,RGBA.WHITE);}
-	public static void drawStringS(float x, float y, String text, RGBA rgba) {
-		// Draw String w/ Shadows
-		GOGL.setColor(0,0,0,rgba.getA());
-		GLText.drawString(x+1.5f,y+1.5f,text);
-		GOGL.setColor(rgba);
-		GLText.drawString(x,y,text);
-		GOGL.setColor(RGBA.WHITE);
-	}
 	
 
 	public static void checkError() {
-		int error = gl.glGetError();
+		/*int error = gl.glGetError();
 		if(error != 0)
-			ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);
+			ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);*/
 	}
 	
 	public static void forceColor(RGBA color) 	{enableFog(-1000,-1000,color);}
@@ -1512,7 +1644,41 @@ public final class GOGL {
 		
 		pts.clear();
 	}
+	
+	
 
+
+	//public static void addVertex(float x, float y, float z) {
+		/*vec4 p;
+		int pointInd = pointList.size();
+		for(int i = 0; i < pointInd; i++) {
+			p = pointList.get(i);
+			if(x == p.x())
+				if(y == p.y())
+					if(z == p.z()) {
+						pointInd = i;
+						break;
+					}
+		}
+		
+		if(pointInd == pointList.size()) {
+			vec4 vec = new vec4(x,y,z,1);
+			pointList.add(vec);
+			pointMap.put(x/,vec);
+		}
+		vertexList.add(new vec3(pointInd,-1,-1));
+		
+		modelVertex++;*/
+	//}
+	/*public static void addVertex(float x, float y, float z, float nX,float nY,float nZ, float uX,float uY) {
+		pointList.add(new vec4(x,y,z,1));
+		normalList.add(new vec4(nX,nY,nZ,0));
+		uvList.add(new vec2(uX,uY));
+		vertexList.add(new vec3(modelVertex,modelVertex,modelVertex));
+		
+		modelVertex++;
+	}*/
+	
 	public static void perspective() {
 		gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();

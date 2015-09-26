@@ -106,7 +106,16 @@ public class mat4 {
 		return newV;
 	}
 	
-	public mat4 multe(float value) {
+	public float[] mult(float[] other) {
+		float[] newA = new float[4];
+				
+		for(int r = 0; r < 4; r++)
+			newA[r] = getRow(r).dot(other);
+		
+		return newA;
+	}
+	
+	/*public mat4 multe(float value) {
 		for(int r = 0; r < 4; r++)
 			for(int c = 0; c < 4; c++)
 				set(r,c, get(r,c)*value);
@@ -124,6 +133,29 @@ public class mat4 {
 	}
 	public mat4 mult(mat4 otherMat) {
 		return copy().multe(otherMat);
+	}*/
+	
+	public mat4 multe(float value) {
+		for(int r = 0; r < 4; r++)
+			for(int c = 0; c < 4; c++)
+				set(r,c, get(r,c)*value);
+		return this;
+	}
+	public mat4 multe(mat4 other) {
+		set(mult(other));
+		return this;
+	}
+	
+	public mat4 mult(float value) {
+		return copy().multe(value);
+	}
+	public mat4 mult(mat4 otherMat) {
+		mat4 newM = copy();
+		for(int r = 0; r < 4; r++)
+			for(int c = 0; c < 4; c++)
+				newM.set(r,c,getRow(r).dot(otherMat.getCol(c)));
+
+		return newM;
 	}
 	
 	public float determinant() {
@@ -182,8 +214,7 @@ public class mat4 {
 	public void println() {
 		for(int r = 0; r < 4; r++) {
 			for(int c = 0; c < 4; c++)
-				System.out.print(get(r,c) + " ");
-			
+				System.out.print(get(r,c) + " ");		
 			System.out.print("\n");
 		}
 	}
@@ -210,23 +241,23 @@ public class mat4 {
 	
 	public static mat4 createTranslationMatrix(float x, float y, float z) {
 		return new mat4(
-				1, 0, 0, x,
-				0, 1, 0, y,
-				0, 0, 1, z,
-				0, 0, 0, 1);
+			1, 0, 0, x,
+			0, 1, 0, y,
+			0, 0, 1, z,
+			0, 0, 0, 1);
 	}
 	public static mat4 createScaleMatrix(float s) {
 		return createScaleMatrix(s,s,s);
 	}
 	public static mat4 createScaleMatrix(float xS, float yS, float zS) {
 		return new mat4(
-				xS, 0, 0, 0,
-				0, yS, 0, 0,
-				0, 0, zS, 0,
-				0, 0, 0, 1);
+			xS, 0, 0, 0,
+			0, yS, 0, 0,
+			0, 0, zS, 0,
+			0, 0, 0, 1);
 	}
 	
-	public static mat4 createRotationMatrix(float xDegrees, float yDegrees, float zDegrees) {
+	/*public static mat4 createRotationMatrix(float xDegrees, float yDegrees, float zDegrees) {
 		mat4 mX, mY, mZ;
 		
 		float xRRadians, yRRadians, zRRadians;
@@ -255,10 +286,10 @@ public class mat4 {
 					  0, 0, 1, 0,
 					  0, 0, 0, 1);
 		
-		return mX.mult(mY.mult(mZ));
-	}
+		return mX.multe(mY.multe(mZ));
+	}*/
 	
-	public static mat4 createRotationMatrixX(float degrees) {
+	/*public static mat4 createRotationMatrixX(float degrees) {
 		return createRotationMatrix(degrees,0,0);
 	}
 	public static mat4 createRotationMatrixY(float degrees) {
@@ -266,5 +297,50 @@ public class mat4 {
 	}
 	public static mat4 createRotationMatrixZ(float degrees) {
 		return createRotationMatrix(0,0,degrees);
+	}*/
+	
+	
+	public static mat4 createRotationMatrixX(float degrees) {		
+		float radians;
+		radians = degrees/180*3.14159f;
+
+		float co, si;
+		co = (float) Math.cos(radians);
+		si = (float) Math.sin(radians);
+		
+		return new mat4(
+			1, 0, 0, 0,
+			0, co, -si, 0,
+			0, si, co, 0,
+			0, 0, 0, 1);
+	}
+	public static mat4 createRotationMatrixY(float degrees) {		
+		float radians;
+		radians = degrees/180*3.14159f;
+
+		float co, si;
+		co = (float) Math.cos(radians);
+		si = (float) Math.sin(radians);
+		
+		return new mat4(
+			co, 0, si, 0,
+			0, 1, 0, 0,
+			-si, 0, co, 0,
+			0, 0, 0, 1);
+	}
+	public static mat4 createRotationMatrixZ(float degrees) {		
+				
+		float radians;
+		radians = degrees/180*3.14159f;
+
+		float co, si;
+		co = (float) Math.cos(radians);
+		si = (float) Math.sin(radians);
+		
+		return new mat4(
+			co, -si, 0, 0,
+			si, co, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1);
 	}
 }

@@ -61,7 +61,7 @@ public class Inventory extends ItemContainer {
 					if(it != null) {						
 						Mouse.setFingerCursor();
 
-						GOGL.enableLighting();
+						/*GOGL.enableLighting();
 
 						GOGL.setOrtho();
 						GOGL.transformClear();
@@ -72,7 +72,7 @@ public class Inventory extends ItemContainer {
 						GOGL.transformScale(4);
 							Item.drawModel(it.getName());
 						GOGL.transformClear();
-						GOGL.disableLighting();
+						GOGL.disableLighting();*/
 					}
 					
 					

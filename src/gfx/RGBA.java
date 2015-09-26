@@ -29,6 +29,7 @@ public class RGBA{
 	public RGBA(float R, float G, float B) 			{set(R,G,B,1);}
 	public RGBA(int rgba) 							{set(rgba);}
 	public RGBA(Color color) 						{set(color.getRGB());}
+	public RGBA(RGBA color) 						{set(color);}
 
 	public void set(int rgba) {
 		Color c = new Color(rgba);
@@ -37,6 +38,9 @@ public class RGBA{
 		this.G = c.getGreen()/255f;
 		this.B = c.getBlue()/255f;
 		this.A = c.getAlpha()/255f;
+	}
+	public void set(RGBA color) {
+		set(color.R,color.G,color.B,color.A);
 	}
 	public void set(float R, float G, float B, float A) {
 		if(R > 1 || G > 1 || B > 1) {
@@ -138,4 +142,20 @@ public class RGBA{
 	public void setA(float alpha) {
 		A = alpha;
 	}
+	
+	public static int convertRGBA2Int(int r, int g, int b, int a) {
+		return (a&0x0ff) << 24 | (r&0x0ff) << 16 | (g&0x0ff) << 8 | (b&0x0ff);
+	}
+	
+	public static int[] convertInt2RGBA(int argb) {
+		int[] outArray = new int[4];
+		convertInt2RGBA(argb,outArray);
+		return outArray;
+	}
+	public static void convertInt2RGBA(int argb, int[] array) {
+		array[0] = (argb>>16)&0xFF;
+		array[1] = (argb>>8)&0xFF;
+		array[2] = (argb)&0xFF;
+		array[3] = (argb>>24)&0xFF;
+	}	
 }

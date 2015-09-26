@@ -163,8 +163,7 @@ public class FBO {
 	public void bindDepth(GL gl) {
 	    gl.glEnable(GL.GL_TEXTURE_2D);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, texDepth);
-	}	
-	
+	}
 	
 	
 	public int getTexture() {return tex;}

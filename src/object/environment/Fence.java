@@ -41,6 +41,7 @@ public class Fence extends Environmental {
 		disableUpdates();
 	}
 
+	public void add() {}
 	public void draw() {
 		FencePost prev = null;
 		vec3 data;

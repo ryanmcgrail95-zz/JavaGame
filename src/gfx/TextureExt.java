@@ -25,7 +25,8 @@ public class TextureExt {
 	private List<Texture> frameList = new ArrayList<Texture>();
 	private int imageNumber = 0;
 	
-	private static BufferedImage sprGlow; {
+	private static BufferedImage sprGlow; 
+	static {
 		try {
 			sprGlow = ImageIO.read(FileExt.get("Resources/Images/glow.gif"));
 		} catch (IOException e) {
@@ -42,6 +43,16 @@ public class TextureExt {
 			addFrame(i);
 		imgList = imgs;
 		imageNumber = frameList.size();
+	}
+	
+	public void destroy() {
+		for(BufferedImage i : imgList)
+			i.flush();
+		for(Texture t : frameList)
+			t.destroy(GOGL.gl);
+		
+		imgList.clear();
+		frameList.clear();
 	}
 	
 	public int getImageNumber() {

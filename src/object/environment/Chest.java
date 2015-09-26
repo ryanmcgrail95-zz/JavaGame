@@ -1,5 +1,6 @@
 package object.environment;
 
+import cont.Text;
 import interfaces.Useable;
 import io.Keyboard;
 import io.Mouse;
@@ -12,6 +13,7 @@ import object.actor.Actor;
 import object.actor.Player;
 import object.primitive.Environmental;
 import object.primitive.Physical;
+import time.Delta;
 
 public class Chest extends Environmental implements Useable {
 	private ItemContainer cont;
@@ -24,6 +26,8 @@ public class Chest extends Environmental implements Useable {
 	
 	public Chest(float x, float y, String... items) {
 		super(x,y, true, false);
+		
+		shouldAdd = true;
 		
 		w = 8;
 		l = 5;
@@ -67,8 +71,8 @@ public class Chest extends Environmental implements Useable {
 	
 	public void update() {
 		if(animation == ANI_OPEN) {
-			lidSpd += gravity;
-			lidAng += lidSpd;//Math2D.calcSmoothTurn(lidAng, LID_OPEN, 5);
+			lidSpd += Delta.convert(gravity);
+			lidAng += Delta.convert(lidSpd);//Math2D.calcSmoothTurn(lidAng, LID_OPEN, 5);
 			if(lidAng >= LID_OPEN) {
 				if(Math.abs(lidSpd) < .3) {
 					lidAng = LID_OPEN;
@@ -82,8 +86,8 @@ public class Chest extends Environmental implements Useable {
 			}
 		}
 		else if(animation == ANI_CLOSE) {
-			lidSpd -= gravity;
-			lidAng += lidSpd;
+			lidSpd -= Delta.convert(gravity);
+			lidAng += Delta.convert(lidSpd);
 			if(lidAng <= LID_CLOSED) {
 				if(Math.abs(lidSpd) < .3) {
 					lidAng = LID_CLOSED;
@@ -98,21 +102,22 @@ public class Chest extends Environmental implements Useable {
 			}
 		}
 		
-		hopZSpd -= gravity;
-		hopZ += hopZSpd;
+		hopZSpd -= Delta.convert(gravity);
+		hopZ += Delta.convert(hopZSpd);
 		if(hopZ <= 0) {
 			hopZ = 0;
 			hopZSpd *= -bounceFrac;
 		}
 		
 		float prevRot = rot;
-		rotSpd -= Math.signum(rot)*gravity;
-		rot += rotSpd;		
+		rotSpd -= Delta.convert(Math.signum(rot)*gravity);
+		rot += Delta.convert(rotSpd);
 		if((prevRot < 0 && rot >= 0) || (rot <= 0 && prevRot > 0))
 			rotSpd *= .3f;
 	}
+	
 	public void draw() {
-		GOGL.enableLighting();
+		/*GOGL.enableLighting();
 		GOGL.setLightColor(COL_TRUNK);
 		
 		GOGL.transformClear();
@@ -136,12 +141,35 @@ public class Chest extends Environmental implements Useable {
 		
 		GOGL.disableLighting();
 		
-		GOGL.resetColor();
+		GOGL.resetColor();*/
+	}
+	public void add() {
+		GOGL.setLightColor(COL_TRUNK);
+		
+		GOGL.transformClear();
+		transformTranslation();
+				
+		float rotSign = Math.signum(rot);
+		GOGL.transformTranslation(0,-rotSign*l,0);
+		GOGL.transformRotationX(rot);
+		GOGL.transformTranslation(0,rotSign*l,0);
+
+		GOGL.transformTranslation(0,0, hopZ);
+		
+		GOGL.add3DBlock(-w,-l,2*h,w,l,0);
+		
+		GOGL.transformTranslation(0,-l,2*h);
+		GOGL.transformRotationX(lidAng);
+		GOGL.transformTranslation(0,l,0);
+		GOGL.add3DBlock(-w,-l,h,w,l,0);
+		
+		GOGL.transformClear();
 	}
 
 	public void use(Actor user) {
 		if(isOpen)
 			return;
+		Text.chest(cont.get(0).getName());
 		cont.giveAllTo(user);
 		open();
 	}

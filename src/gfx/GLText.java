@@ -127,8 +127,8 @@ public class GLText {
 	public static void drawString(float x, float y, float xS, float yS, String str, boolean shadow) {
 		// INEFFICIENT, MULTIPLE GETHEIGHT/GETWIDTH
 		
+		RGBA oriColor = GOGL.getColor();
 		if(shadow) {
-			RGBA oriColor = GOGL.getColor();
 			GOGL.setColor(0,0,0,oriColor.getA());
 			drawString(x+1.5f,y+1.5f,xS,yS,str);
 			GOGL.setColor(oriColor);
@@ -180,11 +180,12 @@ public class GLText {
 		GOGL.bind(0);
 	}
 	
+	public static void drawStringCentered(float x, float y, String str, boolean shadow) {drawStringCentered(x,y,1,1,str,shadow);}
 	public static void drawStringCentered(float x, float y, float xS, float yS, String str, boolean shadow) {
 		// INEFFICIENT, MULTIPLE GETHEIGHT/GETWIDTH
 		
+		RGBA oriColor = GOGL.getColor();
 		if(shadow) {
-			RGBA oriColor = GOGL.getColor();
 			GOGL.setColor(0,0,0,oriColor.getA());
 			drawStringCentered(x+1.5f,y+1.5f,xS,yS,str);
 			GOGL.setColor(oriColor);

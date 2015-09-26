@@ -14,6 +14,9 @@ public class Fern extends Environmental {
 	
 	public Fern(float x, float y) {
 		super(x,y,false,false);
+		
+		shouldAdd = true;
+		
 		twitchTimer = new Timer(10,0);
 	}
 	
@@ -22,21 +25,33 @@ public class Fern extends Environmental {
 		super.destroy();
 	}
 	
+	public void add() {
+		GOGL.transformClear();
+		transformTranslation();
+		
+		GOGL.transformScale(.5f);
+		GOGL.transformScale(1+2f*squash,1+2f*squash,1-.2f*squash);
+
+		GOGL.setLightColor(COL_LEAVES);
+		Model.MOD_FERN.add();	
+		
+		GOGL.transformClear();
+	}
 	public void draw() {
-		GOGL.enableLighting();
+		//GOGL.enableLighting();
 		
 			GOGL.transformClear();
 				transformTranslation();
 				
 				GOGL.transformScale(.5f);
 				GOGL.transformScale(1+2f*squash,1+2f*squash,1-.2f*squash);
-				GOGL.setLightColor(COL_LEAVES);
+				//GOGL.setLightColor(COL_LEAVES);
 		
 				Model.MOD_FERN.draw();	
 			GOGL.transformClear();
 			
-		GOGL.resetColor();
-		GOGL.disableLighting();
+		//GOGL.resetColor();
+		//GOGL.disableLighting();
 	}
 
 	public boolean collide(Physical other) {

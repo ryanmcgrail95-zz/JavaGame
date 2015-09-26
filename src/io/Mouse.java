@@ -133,7 +133,18 @@ public class Mouse implements MouseListener, MouseMotionListener {
 	}
 
 	
-
+	public static boolean consumeLeftClick() {
+		boolean value = leftClick;
+		leftClick = false;
+		return value;
+	}
+	public static boolean consumeRightClick() {
+		boolean value = rightClick;
+		rightClick = false;
+		return value;
+	}
+	
+	
 	// MOUSE MOVEMENT
 	
 	public void setMousePick(int x, int y) {

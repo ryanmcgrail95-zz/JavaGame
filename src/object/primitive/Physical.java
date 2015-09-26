@@ -2,6 +2,7 @@ package object.primitive;
 import datatypes.vec3;
 import datatypes.lists.CleanList;
 import object.environment.FloorBlock;
+import functions.FastMath;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.Camera;
@@ -141,7 +142,7 @@ public abstract class Physical extends Positionable {
 			didCol = (dis <= size);
 			
 			if(oneWay)
-				if(Math.abs(Math2D.calcAngDiff(calcLineDir(x1,y1,x2,y2,true),Math2D.calcPtDir(x1,y1,x2,y2)-90)) > 90)
+				if(FastMath.calcAngleDiff(calcLineDir(x1,y1,x2,y2,true),Math2D.calcPtDir(x1,y1,x2,y2)-90) > 90)
 					didCol = false;
 					
 			if(didCol) {

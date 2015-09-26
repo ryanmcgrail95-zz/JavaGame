@@ -38,7 +38,7 @@ public class Sign extends Environmental {
 	public void render() {
 		image.attach(GOGL.gl);
 		
-			GOGL.clearScreen(RGBA.WHITE);
+			GOGL.clear(RGBA.WHITE);
 			GLText.drawStringCentered(image.getWidth()/2,image.getHeight()/2,scale,scale,text);
 		
 		image.detach(GOGL.gl);

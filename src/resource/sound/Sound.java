@@ -57,11 +57,12 @@ public class Sound {
         loadSound("jump", "Resources/Sounds/FX/jump.ogg", 50);
         loadSound("blipMale", "Resources/Sounds/FX/blipMale.ogg", 80);
         
-		loadSound("ampTest", "Resources/Sounds/Music/ampTest.ogg", 1, true);
-		loadSound("overworld", "Resources/Sounds/Music/overworld.ogg", .05f, true);
+		//loadSound("ampTest", "Resources/Sounds/Music/ampTest.ogg", 1, true);
+		//loadSound("overworld", "Resources/Sounds/Music/overworld.ogg", .05f, true);
+		loadSound("ffOverworld", "Resources/Sounds/Music/ffOverworld.ogg", .05f, true);
 		loadDirectory("Resources/Sounds/Music/Ace Attorney/", .05f);
 				
-		playMusic("overworld");
+		playMusic("ffOverworld");
 	}
 	
 	public static SoundBuffer get(String name) {
@@ -102,7 +103,7 @@ public class Sound {
 			}
 		}
 		else
-			curMusic.fade(1);	
+			curMusic.fade(1);
 	}
 	
 	

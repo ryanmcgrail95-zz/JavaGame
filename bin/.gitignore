@@ -1,5 +1,5 @@
-/resource/
 /Resources/
+/Reference/
 /Smithing/
 /animation/
 /brain/
@@ -17,12 +17,11 @@
 /io/
 /obj/
 /object/
+/path/
 /phone/
+/resource/
 /rm/
 /sts/
 /testbench/
 /time/
 /window/
-/HangingString.class
-/Reference/
-/path/

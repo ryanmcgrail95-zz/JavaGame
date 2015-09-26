@@ -75,10 +75,7 @@ public abstract class Item extends Physical implements Useable {
 	
 	public void hover() {
 		Mouse.setFingerCursor();
-		
-		GOGL.setOrtho();
-		GOGL.drawStringS(0,0, "Pick up a " + getName() + ".");
-		GOGL.setPerspective();
+		Messages.setActionMessage("Pick up a " + getName() + ".");
 		
 		if(Mouse.getLeftClick()) {
 			Player pl = Player.getInstance();
@@ -87,14 +84,16 @@ public abstract class Item extends Physical implements Useable {
 		}
 	}
 	
+	
+	public void add() {}
 	public void draw() {				
 		GOGL.setColor(RGBA.WHITE);
 		
-		GOGL.enableLighting();
+		//GOGL.enableLighting();
 		transformTranslation();
 		drawModel(blueprint.getName());
 		GOGL.transformClear();
-		GOGL.disableLighting();
+		//GOGL.disableLighting();
 	}
 	
 	public static void drawModel(String name) {

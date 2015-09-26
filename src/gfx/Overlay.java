@@ -36,8 +36,8 @@ public class Overlay {
 				dY = 0;
 				GLText.drawString(dX,dY, "FPS: " + (int) Delta.getFPS()); dY += 20;
 				GLText.drawString(dX,dY, "Drawable: " + Drawable.getOnscreenNumber() + "/" + Drawable.getNumber()); dY += 20;
+				GLText.drawString(dX,dY, "Hoverable: " + Drawable.getOnscreenHoverableNumber() + "/" + Drawable.getHoverableNumber()); dY += 20;
 				GLText.drawString(dX,dY, "Updatable: " + Updatable.getNumber()); dY += 20;
-				GLText.drawString(dX,dY, "Timers: " + Timer.getNumber()); dY += 20;
 			}
 	}
 

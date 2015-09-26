@@ -26,6 +26,7 @@ public class SecondaryMusicSource extends Positionable {
 	}
 
 	@Override
+	public void add() {}
 	public void draw() {}
 
 	@Override

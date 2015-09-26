@@ -56,7 +56,7 @@ public class StringExt {
 	// CHOMPING FUNCTIONS
 	// These functions will "chomp" (remove and return) a certain amount of data. These are very helpful
 	// for iterating through files.
-	public char chompChar() {		
+	public char chompChar() {
 		if(str == null)
 			return ' ';
 		

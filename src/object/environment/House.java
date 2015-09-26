@@ -15,6 +15,9 @@ public class House extends Environmental {
 
 	public House(float x, float y) {
 		super(x, y, false,false);
+		
+		shouldAdd = true;
+		
 		z(calcZ());
 		color = RGBA.randomizeAboveValue(.5f);
 	}
@@ -23,9 +26,23 @@ public class House extends Environmental {
 		return other.collideRectangle(x(),y(),w,h);
 	}
 	
+	public void add() {
+		GOGL.transformClear();
+		transformTranslation();
+		GOGL.transformRotationZ(180);
+		GOGL.transformScale(.6f);
+		
+		GOGL.setLightColori(color.getRi(),color.getGi(),color.getBi());
+		Model.MOD_HOUSEBODY.add();
+
+		GOGL.setLightColori(255,255,255);
+		Model.MOD_HOUSEFRAME.add();
+		
+		GOGL.transformClear();
+	}
 	public void draw() {
 					
-		GOGL.enableLighting();
+		//GOGL.enableLighting();
 		
 		GOGL.transformClear();
 		transformTranslation();
@@ -41,7 +58,7 @@ public class House extends Environmental {
 		GOGL.transformClear();
 		
 		GOGL.setColor(1,1,1);
-		GOGL.disableLighting();		
+		//GOGL.disableLighting();		
 	}
 	
 	private float calcZ() {

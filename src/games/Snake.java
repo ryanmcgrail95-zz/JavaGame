@@ -84,7 +84,7 @@ public class Snake {
 	
 	public void setDirection(int newDir) {
 		if(Math.abs(Math2D.calcAngDiff(newDir,prevDir)) != 180)
-			snakeDir = newDir;
+			snakeDir = newDir; 
 	}
 	
 	public boolean checkOnBoard(int x, int y) {

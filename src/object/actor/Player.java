@@ -4,6 +4,7 @@ import obj.itm.ItemBlueprint;
 import object.environment.Heightmap;
 import object.environment.Waypoint;
 import phone.SmartPhone;
+import window.Window;
 import io.Controller;
 import io.IO;
 import io.Keyboard;
@@ -22,6 +23,11 @@ public class Player extends Actor {
 	private Player(float x, float y, float z) {
 		super(x, y, z);
 		type = T_PLAYER;
+	}
+	
+	
+	private boolean checkControllable() {
+		return canControl && !Window.isWindowOpen();
 	}
 
 	
@@ -48,9 +54,12 @@ public class Player extends Actor {
 			if(Keyboard.checkPressed('1'))
 				new Waypoint(x(),y(),z()+20);
 		}
-		
-	public void draw() {
-		
+	
+	public void add() {		
+		if(!isLookCameraActive())
+			super.add();
+	}
+	public void draw() {		
 		if(!isLookCameraActive())
 			super.draw();
 	}
@@ -107,8 +116,11 @@ public class Player extends Actor {
 			}
 			
 		//JUMPING
-		if(IO.getZButtonPressed())
-			roll();
+		if(IO.getZButtonPressed()) {
+			setZ(300);
+			setZVelocity(0);
+			//roll();
+		}
 		else if(Keyboard.checkPressed('e') && !WorldMap.isActive()) {
 			if(!SmartPhone.isActive())
 				setDirection(faceDirection = camDirection);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import brain.Name;
+import cont.Messages;
 import cont.Text;
 import datatypes.vec2;
 import datatypes.vec3;
@@ -23,8 +24,10 @@ import object.primitive.Physical;
 import object.primitive.Positionable;
 import resource.sound.Sound;
 import sts.Stat;
+import time.Delta;
 import time.Timer;
 import window.StoreGUI;
+import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
@@ -214,9 +217,11 @@ public abstract class Actor extends Physical {
 
 	public Actor(float x, float y, float z) {
 		super(x, y, z);
+		
+		shouldAdd = true;
 
 		maxSpeed = 5;
-
+   
 		faceDirection = camDirection = 0;
 		size = 10;
 
@@ -226,8 +231,6 @@ public abstract class Actor extends Physical {
 
 		rollTimer = new Timer(0, 60);
 		attackTimer = new Timer(0, 2);
-
-		name = Name.generateHumanName(Name.G_EITHER);
 	}
 
 	public void die() {
@@ -261,18 +264,15 @@ public abstract class Actor extends Physical {
 	public void draw() {
 		myBody.draw(x(), y(), z(), 16, faceDirection);
 	}
-
-	/*
-	 * public void updatePosition() { super.updatePosition();
-	 * 
-	 * setFaceDir(getDirection()); }
-	 */
+	public void add() {
+		myBody.add(x(), y(), z(), 16, faceDirection);
+	}
 
 	public boolean setFaceDir(float toDir) {
 
 		if (prevSpeed < .1)
 			faceDirection = faceToDirection = toDir;
-		else if (Math.abs(Math2D.calcAngDiff(toDir, faceDirection)) > 160)
+		else if (FastMath.calcAngleDiff(toDir, faceDirection) > 160)
 			faceDirection = faceToDirection = toDir;
 		else
 			faceToDirection = toDir;
@@ -324,7 +324,7 @@ public abstract class Actor extends Physical {
 
 		// Lower values for third makes it like ice physics!!
 		if(!isFPS)
-			faceDirection += Math2D.calcSmoothTurn(faceDirection, faceToDirection,15);
+			faceDirection += Delta.convert(Math2D.calcSmoothTurn(faceDirection, faceToDirection,15));
 
 		// ROLLING
 		float rollSpeed;
@@ -428,7 +428,7 @@ public abstract class Actor extends Physical {
 			if (!inAir) {
 				isMoving = true;
 
-				toAng = Math2D.calcAngDiff(getDirection(), cDir - 90 + moveDir) * .7f;
+				toAng = FastMath.calcAngleSubt(getDirection(), cDir - 90 + moveDir) * .7f;
 				toSpd = 10;
 
 				//setDirection(cDir - 90 + moveDir);
@@ -447,7 +447,7 @@ public abstract class Actor extends Physical {
 					
 					headBobDir = myBody.getFrame()/12*360;
 				}
-				addXYSpeed((spd - getXYSpeed()) / 5);
+				addXYSpeed( Delta.convert((spd - getXYSpeed()) / 5) );
 
 				float f;
 				f = (getXYSpeed() - maxSpeed / 2) / (maxSpeed / 2);
@@ -485,7 +485,7 @@ public abstract class Actor extends Physical {
 			isMoving = false;
 
 			if (!inAir) {
-				addXYSpeed((0 - getXYSpeed()) / 4f); // 3
+				addXYSpeed( Delta.convert((0 - getXYSpeed()) / 4f) ); // 3
 				//if(getXYSpeed() < .01)
 				//	setXYSpeed(0);
 				float nearestHBDir;
@@ -694,9 +694,13 @@ public abstract class Actor extends Physical {
 
 	public void hover() {
 		Player p = Player.getInstance();
+				
+		Mouse.setFingerCursor();
 
-		if (Mouse.getLeftClick())
-			if (isRunningStore())
-				StoreGUI.open(name);
+		if(isRunningStore()) {
+			Messages.setActionMessage("Talk to Clerk");
+			if(Mouse.getLeftClick())
+				StoreGUI.open(stat.getName());
+		}
 	}
 }

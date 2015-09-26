@@ -9,7 +9,7 @@ public final class Math3D {
 	
 	public static float calcLen(float x, float y, float z) {return calcPtDis(0,0,0,x,y,z);}
 	public static float calcPtDis(float x1, float y1, float z1, float x2, float y2, float z2) {
-		return (float) Math.sqrt(MathExt.sqr(x2-x1) + MathExt.sqr(y2-y1) + MathExt.sqr(z2-z1));
+		return (float) Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
 	}
 	
 	public static vec3 calcPtData(vec3 pt1, vec3 pt2) {

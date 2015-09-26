@@ -9,11 +9,13 @@ import com.jogamp.opengl.glu.GLU;
 
 import datatypes.vec3;
 import datatypes.lists.CleanList;
+import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
 import object.actor.Actor;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import time.Delta;
 
 
 public class Camera extends Updatable {
@@ -32,7 +34,8 @@ public class Camera extends Updatable {
 	private float smoothOnceFrac;
 	
 	private vec3 pos = new vec3(), toPos = new vec3();
-	private float fieldOfView = 45, viewFar = 3000, viewNear = 1, whRatio;
+	private float fieldOfView = 45, viewFar = 3000, //3000
+			viewNear = 1, whRatio;
 	private float focusAddX, focusAddY, focusAddZ;
 	
 	
@@ -119,7 +122,7 @@ public class Camera extends Updatable {
 		return Math.abs(Math2D.calcProjDis(x-getX(), y-getY(), Math2D.calcLenX(1,camDir+90),Math2D.calcLenY(1,camDir+90)));
 	}
 	public float calcParaDistance(float x, float y) {
-		return Math.abs(Math2D.calcProjDis(x-getX(), y-getY(), Math2D.calcLenX(1,camDir),Math2D.calcLenY(1,camDir)));
+		return Math2D.calcProjDis(x-getX(), y-getY(), FastMath.cosd(camDir),FastMath.sind(camDir));
 	}
 
 
@@ -158,8 +161,8 @@ public class Camera extends Updatable {
 			}
 		}
 		else {
-			this.toPos = (vec3) this.toPos.add((toPos.sub(this.toPos).mult(1f/smoothing)));
-			this.pos = (vec3) this.pos.add((pos.sub(this.pos).mult(1f/smoothing)));
+			this.toPos = (vec3) this.toPos.add( Delta.convert((toPos.sub(this.toPos).mult(1f/smoothing))) );
+			this.pos = (vec3) this.pos.add( Delta.convert((pos.sub(this.pos).mult(1f/smoothing))) );
 		}
 		
 		camDir = Math2D.calcPtDir(this.pos.xy(), this.toPos.xy());
@@ -189,17 +192,12 @@ public class Camera extends Updatable {
 			smoothOnceFrac = -1;
 		}
 	}
-	
-	
-	public static boolean checkMapView() {
-		return Mouse.getRightMouse();
-	}
 
 
 	public boolean checkOnscreen(float x, float y) {return checkOnscreen(x,y,fieldOfView);}
 	public boolean checkOnscreen(float x, float y, float fov) {
 		switch(projType) {
-			case PR_PERSPECTIVE:		return Math.abs(Math2D.calcAngDiff(Math2D.calcPtDir(getX(),getY(), x,y),camDir)) < fov;
+			case PR_PERSPECTIVE:		return FastMath.calcAngleDiff(Math2D.calcPtDir(getX(),getY(), x,y),camDir) < fov;
 			case PR_ORTHOGRAPHIC:		return true;
 			case PR_ORTHOPERSPECTIVE:
 				float w, h, leeway = 100;
@@ -211,7 +209,7 @@ public class Camera extends Updatable {
 	}
 
 
-	public float getFOV() {return fieldOfView;}
+	public float getFOV() {return fieldOfView + Math2D.calcLenX(20,GOGL.getTime());}
 	public float getWidthHeightRatio() {return whRatio;}
 	public float getViewNear() {return viewNear;}
 	public float getViewFar() {return viewFar;}
@@ -252,6 +250,7 @@ public class Camera extends Updatable {
 	    		
 	        	GOGL.clear(RGBA.WHITE);
 	        	Drawable.presort();
+	        	
 	    		Drawable.draw3D();
 	    		
 	    		c.fbo.detach(GOGL.gl);

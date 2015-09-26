@@ -1,5 +1,6 @@
 package object.primitive;
 
+import time.Delta;
 import io.Mouse;
 import datatypes.vec3;
 import functions.Math2D;
@@ -80,12 +81,12 @@ public abstract class Positionable extends Drawable {
 	public void updatePosition() {
 		positionPrevious.set(position);
 		
-		position.adde(velocity);
+		position.adde( Delta.convert(velocity) );
 	}
 	
 	public void step(float dis, float dir) {step(dis,dir,0);}
 	public void step(float dis, float dir, float dirZ) {
-		position.adde( Math3D.calcPolarCoords(dis,dir,dirZ) );
+		position.adde( Delta.convert(Math3D.calcPolarCoords(dis,dir,dirZ)) );
 	}
 	
 	public void stop() {
@@ -95,16 +96,10 @@ public abstract class Positionable extends Drawable {
 	
 	
 	public boolean checkOnscreen() {
-		if(Mouse.getRightMouse())
-			return true;
-		else
-			return GOGL.getCamera().checkOnscreen(x(),y());
+		return GOGL.getCamera().checkOnscreen(x(),y());
 	}
 	public float calcDepth() {
-		if(Mouse.getRightMouse())
-			return 0;
-		else
-			return GOGL.getCamera().calcParaDistance(x(),y());
+		return GOGL.getCamera().calcParaDistance(x(),y());
 	}
 
 	public float calcDis(Positionable other) {return calcPtDis(other.x(), other.y());}

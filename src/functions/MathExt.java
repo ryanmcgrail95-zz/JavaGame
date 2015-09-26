@@ -22,9 +22,28 @@ public class MathExt {
 		return n;
 	}
 	
+	public static int rndi(int cap) {
+		return (int) (cap*rnd());
+	}
+	public static int rndi(int mi, int ma) {
+		return (int) (mi + rnd(ma-mi));
+	}
+	
+	
+	
+	
 	public static float sqr(float n) {
 		return n*n;
 	}
+	public static float calcFastInvSqrt(float x) {
+		float xhalf = 0.5f*x;
+	    int i = Float.floatToIntBits(x);
+	    i = 0x5f3759df - (i>>1);
+	    x = Float.intBitsToFloat(i);
+	    x = x*(1.5f - xhalf*x*x);
+	    return x;
+	}
+
 	
 	public static float min(float... values) {
 		float mi = values[0];
@@ -114,7 +133,7 @@ public class MathExt {
 		
 		return (tMi <= value && value <= tMa);
 	}
-
+	
 	public static int contain(int mi, int value, int ma) {
 		int tMi, tMa;
 		if(mi < ma) {
@@ -157,5 +176,8 @@ public class MathExt {
 		frac = contain(0, frac, 1);
 		
 		return a*(1-frac) + b*frac;
+	}
+	public static float grid(float x, float num) {
+		return x - snap(x,num);
 	}
 }

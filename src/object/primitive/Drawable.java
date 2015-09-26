@@ -7,7 +7,6 @@ import gfx.GOGL;
 import gfx.Gameboy;
 import gfx.Overlay;
 import gfx.RGBA;
-import gfx.Shape;
 import gfx.WorldMap;
 import io.Mouse;
 
@@ -31,12 +30,13 @@ public abstract class Drawable extends Updatable {
 	private static CleanList<Drawable> drawList = new CleanList<Drawable>();
 	private static CleanList<Drawable> hoverList = new CleanList<Drawable>();	
 	private static CleanList<Drawable> onscreenList = new CleanList<Drawable>();
+	private static CleanList<Drawable> onscreenAddList = new CleanList<Drawable>();
 	private static CleanList<Drawable> onscreenHoverList = new CleanList<Drawable>();
 	
 	private static int colR = 1, colG = 0, colB = 0;
 	
 	// Mouse-Selection Variables
-	protected boolean isSelected = false;
+	protected boolean isSelected = false, shouldAdd = false;
 	private static Timer selectTimer;
 
 
@@ -73,6 +73,7 @@ public abstract class Drawable extends Updatable {
 
 	//PARENT FUNCTIONS
 	public abstract void draw();
+	public abstract void add();
 	
 	public void render() {}
 	public void hover() {}
@@ -99,6 +100,7 @@ public abstract class Drawable extends Updatable {
 	//GLOBAL FUNCTIONS
 	public static void presort() {		
 		onscreenList.clear();
+		onscreenAddList.clear();
 		onscreenHoverList.clear();
 		
 		byte addHover = 2;
@@ -112,12 +114,17 @@ public abstract class Drawable extends Updatable {
 						
 		// Sort by Depth
 		int dSi = drawList.size(), i, k;
+		float depth;
 		for(Drawable d : drawList)
-			if(d.visible)
-				if(d.calcDepth() < GOGL.getCamera().getViewFar())
-					if(d.checkOnscreen()) {
-						onscreenList.add(d);
-						
+			if(d.visible) {
+				if(d.checkOnscreen()) {
+					depth = d.calcDepth();
+					if(depth >= 0 && depth < GOGL.getCamera().getViewFar()) {
+						if(d.shouldAdd)
+							onscreenAddList.add(d);
+						else
+							onscreenList.add(d);
+							
 						if(addHover == 0) {
 							if(d.isHoverable)
 								onscreenHoverList.add(d);
@@ -125,6 +132,8 @@ public abstract class Drawable extends Updatable {
 						else if(addHover == 1)
 							d.isSelected = false;
 					}
+				}
+			}
 		
 		//onscreenList.sort(Drawable.Comparators.DEPTH);
 	}
@@ -158,7 +167,6 @@ public abstract class Drawable extends Updatable {
 					d.isSelected = false;
 					
 					GOGL.forceColor(new RGBA(d.R/255f,d.G/255f,d.B/255f));
-					
 					d.draw();
 				}
 			
@@ -192,8 +200,11 @@ public abstract class Drawable extends Updatable {
 	}
 
 	public static int getNumber() {return drawList.size();}
+	public static int getHoverableNumber() {return hoverList.size();}
 	public static int getOnscreenNumber() {return onscreenList.size();}
+	public static int getOnscreenHoverableNumber() {return onscreenHoverList.size();}
 
+	
 	public static class Comparators {
 		public final static Comparator<Drawable> DEPTH = new Comparator<Drawable>() {
             public int compare(Drawable o1, Drawable o2) {
@@ -219,22 +230,26 @@ public abstract class Drawable extends Updatable {
 		GOGL.setColor(skyBottom);
 		GOGL.fillRectangle(0,bY,640,480-bY);
 		
-		
 		GOGL.getCamera().project();
 		
-		
-		for(Drawable d : onscreenList) {
-			if(!d.isSelected)
-				d.draw();
-			else { 
-				GOGL.forceColor(new RGBA(1,1,1,.2f));
+		GOGL.allowLighting(true);
+		GOGL.enableLighting();
+		GOGL.begin(GOGL.P_TRIANGLES);
+		for(Drawable d : onscreenAddList) {
+			//d.isSelected)
+				d.add();//d.draw();
+			/*else { 
+				//GOGL.forceColor(new RGBA(1,1,1,.2f));
 				d.draw();
 				d.hover();
-				GOGL.unforceColor();
-			}
+				//GOGL.unforceColor();
+			}*/
 		}
-		
+		GOGL.end();
+		GOGL.disableLightings();
+		for(Drawable d : onscreenList)
+			d.draw();
+
 		Floaties.draw();
-		Shape.drawAll();
 	}
 }

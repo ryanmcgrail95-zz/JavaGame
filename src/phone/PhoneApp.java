@@ -52,7 +52,7 @@ public abstract class PhoneApp {
 			return state;
 		}
 		public boolean click() {
-			if(Mouse.getLeftClick()) {
+			if(Mouse.consumeLeftClick()) {
 				clickTimer.reset();
 				Sound.play("button");
 				return true;

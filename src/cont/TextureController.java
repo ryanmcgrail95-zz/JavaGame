@@ -36,25 +36,30 @@ public class TextureController {
 		return time;
 	}
 	
-		
-	public static TextureExt load(String fileName, String name, byte method) {
+	public static TextureExt loadExt(String fileName, byte method) {
 	    TextureExt texExt;
-	    
-	    	    
+	    	    	    
 	    try {
 		    if(fileName.endsWith(".gif"))
 		    	texExt = loadMulti(fileName, method);
 		    else
 		    	texExt = loadSingle(fileName); 
-	        //Add Texture to Map
-	        	texMap.put(name, texExt);
 	        	
 	        return texExt;
 	    } catch(IOException e) {
-	    	ErrorPopup.open("Failed to load texture: " + name + ".", true);
+	    	ErrorPopup.open("Failed to load texture: " + fileName + ".", true);
 	    }
 	    
 	    return null;
+	}
+	
+	
+	public static TextureExt load(String fileName, String name, byte method) {
+	    TextureExt texExt = loadExt(fileName, method);
+
+	    texMap.put(name, texExt);
+	    
+	    return texExt;
 	}
 	
 	
@@ -128,5 +133,11 @@ public class TextureController {
         //BattleStar Images
         load("Resources/Images/Battle/damageStar.gif", "texDamageStar", M_BGALPHA);
         load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
+	}
+
+
+	public static void load(String imgName, byte mNormal) {
+		// TODO Auto-generated method stub
+		
 	}
 }

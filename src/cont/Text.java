@@ -106,7 +106,7 @@ public final class Text {
 					if(fullString.isEmpty()) {
 						close();
 						if(isTalking)
-							Camera.unlock();
+							GOGL.getMainCamera().unlock();
 					}
 					else
 						getNextSection();
@@ -128,6 +128,8 @@ public final class Text {
 	}
 
 	public static void talk(Actor a1, Actor a2, String string) {
+		
+		Camera cam = GOGL.getMainCamera();
 		
 		isTalking = true;
 
@@ -153,14 +155,29 @@ public final class Text {
 		boolean above = true;
 		isBoxAbove = above;
 		if(above) {
-			Camera.focus(96,talkDir,10, a1,a2);
+			cam.focus(96,talkDir,10, a1,a2);
 		}
 		else {
-			Camera.focus(96,talkDir,-10, a1,a2);
-			Camera.setFocusTranslation(0,0,-15);
+			cam.focus(96,talkDir,-10, a1,a2);
+			cam.setFocusTranslation(0,0,-15);
 		}
-		Camera.smooth(10);
-		Camera.lock();		
+		cam.smooth(10);
+		cam.lock();		
+	}
+	
+	public static void chest(String itemName) {
+		
+		Camera cam = GOGL.getMainCamera();
+		Actor a = Player.getInstance();
+		isTalking = true;
+		
+		Text.set("You got a " + itemName + "!");
+		
+		isBoxAbove = false;
+		cam.focus(96,a.getDirection(),-10, a);
+		cam.setFocusTranslation(0,0,-15);
+		cam.smooth(10);
+		cam.lock();		
 	}
 	
 	

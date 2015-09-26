@@ -23,6 +23,8 @@ public class WorldMap extends HoldClosable {
 		map = new FBO(GOGL.gl,1024,1024);
 		map.clear(GOGL.gl,RGBA.WHITE);
 		instance = this;
+		
+		topCam.setEnabled(false);
 	}
 	
 	public void update() {
@@ -46,13 +48,14 @@ public class WorldMap extends HoldClosable {
 		map.detach(GOGL.gl);
 	}
 	
+	public void add() {}
 	public void draw() {
 		if(GOGL.getCamera() != GOGL.getMainCamera())
 			return;
 
 		step();
 		
-		openFrac += (onscreenToFrac - openFrac)/20f;
+		openFrac += (onscreenFrac.getTo() - openFrac)/20f;
 		
 		if(isOnscreen()) {
 			GOGL.setPerspective();

@@ -3,73 +3,46 @@ package time;
 import java.util.ArrayList;
 import java.util.List;
 
+import object.primitive.Updatable;
 import datatypes.lists.CleanList;
 import functions.Math2D;
 import functions.MathExt;
 
-public class Timer {
+public class Timer extends Updatable {
 	private float time, maxTime;
-	private static CleanList<Timer> timerList = new CleanList<>();
-	private boolean isActive, isAutomatic, shouldDestroy;
+	private boolean isAutomatic;
 	
 	
 	
 	// CONSTRUCTORS
-		public Timer(float time, boolean isActive) {
-			this.time = this.maxTime = time;
-			this.isActive = isActive;
-			
-			timerList.add(this);
-		}
 		public Timer(float time, float timeMax) {
+			super();
+			
 			this.time = time;
 			this.maxTime = timeMax;
-			isActive = true;
-			
-			timerList.add(this);
 		}
 		public Timer(float timeMax) {
-			this.time = this.maxTime = timeMax;
-			isActive = true;
+			super();
 			
-			timerList.add(this);
+			this.time = this.maxTime = timeMax;
 		}
 
 		
 		
-	// STATIC
-		public static void tickAll(float deltaTime) {
-			for(Timer t : timerList) {
-				if(t.shouldDestroy)
-					timerList.remove();
-				else
-					t.tick(deltaTime);
-			}
-		}
-		public static void enableAll(float deltaTime) {
-			for(Timer t : timerList)
-				t.enable();
-		}
-		public static void disableAll(float deltaTime) {
-			for(Timer t : timerList)
-				t.disable();
-		}
-
-		public static int getNumber() {
-			return timerList.size();
-		}
 		
 	// NON-STATIC
 		// Ticking
-		public void tick() {
-			tick(1);
+		public void update() {
+			time = MathExt.contain(0, time-Delta.calcDeltaTime(), time);
+			if(isAutomatic)
+				check();
 		}
-		public void tick(float deltaTime) {
-			if(isActive) {
-				time = MathExt.contain(0, time-deltaTime, time);
-				if(isAutomatic)
-					check();
-			}
+		
+		public void enable() {
+			setDoUpdates(true);
+		}
+		public void disable() {
+			setDoUpdates(false);
 		}
 		
 		
@@ -82,18 +55,6 @@ public class Timer {
 		}
 		public void reset() {
 			set(maxTime);
-		}
-			
-		
-		// Enabling/Disabling Automatic Ticking
-		public void setActive(boolean state) {
-			isActive = state;
-		}
-		public void enable() {
-			setActive(true);
-		}
-		public void disable() {
-			setActive(false);
 		}
 		
 		
@@ -115,17 +76,10 @@ public class Timer {
 		public float getFraction() {
 			return time/maxTime;
 		}
-		public boolean getActive() {
-			return isActive;
-		}
 		public void setMax(float mT) {
 			maxTime = mT;
 		}
 		public float getMax() {
 			return maxTime;
-		}
-		
-		public void destroy() {
-			shouldDestroy = true;
 		}
 }

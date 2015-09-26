@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
+import datatypes.SmoothFloat;
 import rm.RoomController;
 
 public class TransitionController {
@@ -14,8 +15,7 @@ public class TransitionController {
 	private static String trRoom = "";
 	private static Color trColor = Color.BLACK;
 	private static BufferedImage trImg = null;
-	private static double trTimer, trSpeed = 0;
-	private static boolean trDone = true;
+	private static SmoothFloat trFrac = new SmoothFloat(0);
 	
 	
 	

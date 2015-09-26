@@ -2,6 +2,10 @@ package time;
 
 import java.util.concurrent.Callable;
 
+import datatypes.vec;
+import functions.Math2D;
+import gfx.GOGL;
+
 public final class Delta {
 
 	private static float fps, targetFPS, speedFrac;
@@ -34,14 +38,17 @@ public final class Delta {
 	// NONSTATIC
 		
 		// Delta Time Methods
-		private static float calcDeltaTime() {
+		public static float calcDeltaTime() {
 			if(fps <= 0 || targetFPS <= 0)
 				return 1;
 			else
-				return speedFrac*targetFPS/fps;
+				return speedFrac*60/fps;
 		}
-		private static float convert(float timeVal) {
-			return timeVal; //calcDeltaTime()*timeVal;
+		public static float convert(float timeVal) {
+			return timeVal; //*calcDeltaTime();
+		}
+		public static vec convert(vec vector) {
+			return vector; //.multe(calcDeltaTime());
 		}
 	
 	
@@ -60,6 +67,10 @@ public final class Delta {
 				return;
 						
 			fps = targetFPS/delta;
+		}
+
+		public static float getTargetFPS() {
+			return targetFPS; // + Math2D.calcLenX(20,GOGL.getTime()*5);
 		}
 	
 	

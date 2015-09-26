@@ -64,8 +64,8 @@ public class GameController extends JFrame implements WindowListener {
     //ANIMATING SCRIPTS
 	    public void gameLoop() {
 	       long lastLoopTime = System.nanoTime();
-	       final int TARGET_FPS = 60;
-	       final long OPTIMAL_TIME = 1000000000 / TARGET_FPS;
+	       Delta.setTargetFPS(60);
+	       Delta.setSpeed(1);
 	       
 	       // keep looping round til the game ends
 	       while(isRunning) {
@@ -75,7 +75,7 @@ public class GameController extends JFrame implements WindowListener {
 	          long now = System.nanoTime();
 	          long updateLength = now - lastLoopTime;
 	          lastLoopTime = now;
-	          double delta = updateLength / ((double)OPTIMAL_TIME);
+	          double delta = updateLength / ((1000000000 / Delta.getTargetFPS()));
 	          
 	          
 	          // update the frame counter
@@ -102,7 +102,7 @@ public class GameController extends JFrame implements WindowListener {
 	          // remember this is in ms, whereas our lastLoopTime etc. vars are in ns.
 	          try {
 	        	  long sleepTime;
-	        	  sleepTime = (lastLoopTime-System.nanoTime() + OPTIMAL_TIME)/1000000;
+	        	  sleepTime = (lastLoopTime-System.nanoTime() + (long)(1000000000 / Delta.getTargetFPS()))/1000000;
 	        	  
 	        	  if(sleepTime >= 0)
 	        		  Thread.sleep(sleepTime);
@@ -120,9 +120,15 @@ public class GameController extends JFrame implements WindowListener {
 	public void windowDeiconified(WindowEvent arg0) {}
 	public void windowIconified(WindowEvent arg0) {}
 	public void windowOpened(WindowEvent arg0) {}
+	
+	private static void unload() {
+		Updatable.unload();
+		
+        Sound.unload();
+	}
 
 	public static void end() {
-        Sound.unload();
+		unload();
 		System.exit(5);
 	}
 

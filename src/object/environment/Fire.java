@@ -58,7 +58,8 @@ public class Fire extends Environmental implements Useable {
 			p.taskUse(this);
 		}
 	}
-		
+
+	public void add() {}
 	public void draw() {
 
 		if(flickerTimer.check()) {

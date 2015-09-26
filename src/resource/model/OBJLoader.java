@@ -71,10 +71,10 @@ public final class OBJLoader {
 	
 	private static Model loadModel(String fileName) {
 
-		List<vec3> pointList = new ArrayList<vec3>();
-		List<vec3> normalList = new ArrayList<vec3>();
-		List<vec2> uvList = new ArrayList<vec2>();
-		List<vec3> vertexList = new ArrayList<vec3>();
+		List<float[]> pointList = new ArrayList<float[]>();
+		List<float[]> normalList = new ArrayList<float[]>();
+		List<float[]> uvList = new ArrayList<float[]>();
+		List<int[]> vertexList = new ArrayList<int[]>();
 		
 		try {
 			String line, type;
@@ -87,34 +87,32 @@ public final class OBJLoader {
 				type = lineExt.chompWord(); 
 
 				if(type.equals("v"))
-					pointList.add(new vec3(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber()));
+					pointList.add( new float[] {lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1} );
 				else if(type.equals("vt"))
-					uvList.add(new vec2(lineExt.chompNumber(),lineExt.chompNumber()));
+					uvList.add( new float[] {lineExt.chompNumber(),lineExt.chompNumber()} );
 				else if(type.equals("vn"))
-					normalList.add(new vec3(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber()));
+					normalList.add( new float[] {lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),0} );
 				else if(type.equals("f")) {
 					StringExt curSection;
 					String[] indices;
-					vec3 face;
+					int[] face;
 					
 					for(int i = 0; i < 3; i++) {
 						curSection = new StringExt(lineExt.chompWord());
 												
 						indices = curSection.split('/');
-						face = new vec3();
+						face = new int[] {0,0,0,-1};
 						
 						for(int k = 0; k < 3; k++)
-							face.set(k, Integer.parseInt(indices[k])-1);
+							face[k] = Integer.parseInt(indices[k])-1;
 						
 						vertexList.add(face);
 					}
 				}
 			}
 			
-			return new Model(pointList, normalList, uvList, vertexList);
+			return new Model(Model.TRIANGLES, pointList, normalList, uvList, vertexList);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
 		return null;

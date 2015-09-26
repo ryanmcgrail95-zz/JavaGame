@@ -123,7 +123,7 @@ public final class MusicApp extends PhoneApp {
 		if(hoverRectangle(0,0,SmartPhone.WIDTH,SmartPhone.HEIGHT)) {
 			if(hoverRectangle(barX,barY,barW,barH)) {
 				possFrac = (getMouseCoords().x() - barX)/barW;
-				if(Mouse.getLeftClick()) {
+				if(Mouse.consumeLeftClick()) {
 					isScrubbing = true;
 					prevSpeed = toSpeed;
 					speed = toSpeed = 0;
@@ -234,6 +234,7 @@ public final class MusicApp extends PhoneApp {
 			boolean state = super.click();
 			if(state)
 				toSpeed = (toSpeed == 0) ? 1 : 0;
+			System.out.println(toSpeed);
 			return state;
 		}
 

@@ -14,10 +14,13 @@ public class Water extends Drawable {
 		super(true,false);
 		this.seaLevel = seaLevel;
 		
+		shouldAdd = true;
+		
 		name = "water";
 	}
 	
-	public void draw() {
+	public void draw() {}
+	public void add() {
 		Player pl = Player.getInstance();
 
 		float x, y;
@@ -28,8 +31,9 @@ public class Water extends Drawable {
 			// Pass Sea Level to Shader
 			//GOGL.passShaderFloat("seaLevel", seaLevel);
 		
+		GOGL.setLightColor(32,128,255);
 		GOGL.transformTranslation(x, y, seaLevel);
-		GOGL.draw3DFloor(-GOGL.VIEW_FAR,-GOGL.VIEW_FAR,GOGL.VIEW_FAR,GOGL.VIEW_FAR,0);
+		GOGL.add3DFloor(-GOGL.VIEW_FAR,-GOGL.VIEW_FAR,GOGL.VIEW_FAR,GOGL.VIEW_FAR,0);
 		GOGL.transformClear();
 		
 		//GOGL.disableShaders();

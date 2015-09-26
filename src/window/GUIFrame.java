@@ -54,7 +54,7 @@ public class GUIFrame extends GUIDrawable {
 				
 		fbo.attach(GOGL.gl);
 			GOGL.enableDepth();
-			GOGL.clearScreen(new RGBA(0,0,0,0));
+			GOGL.clear(new RGBA(0,0,0,0));
 			
 			GOGL.setOrthoLayer(900);
 			
@@ -71,9 +71,8 @@ public class GUIFrame extends GUIDrawable {
 	public byte draw() {return draw(x(),y(),w(),h());}
 	public byte draw(float x, float y) {return draw(x,y,w(),h());}
 	public byte draw(float x, float y, float w, float h) {
-		GOGL.disableBlending();
+		GOGL.setColor(RGBA.WHITE);
 		GOGL.drawFBO(x,y, w,h, fbo);
-		GOGL.enableBlending();
 		
 		return -1;	
 	}

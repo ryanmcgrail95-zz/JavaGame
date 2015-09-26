@@ -1,5 +1,7 @@
 package datatypes;
 
+import java.util.List;
+
 import functions.Math2D;
 
 public class vec4 extends vec {
@@ -88,5 +90,16 @@ public class vec4 extends vec {
 		newV.set(2, array[0]*other.array[1] - array[1]*other.array[0]);
 		
 		return newV;
+	}
+	
+	
+	public static float[][] convert(List<vec4> list) {
+		int si = list.size();
+		float[][] outArray = new float[si][4];
+		
+		for(int i = 0; i < si; i++)
+			outArray[i] = list.get(i).array;
+		
+		return outArray;
 	}
 }

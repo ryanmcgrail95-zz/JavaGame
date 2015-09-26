@@ -51,7 +51,7 @@ public class NPC extends Actor {
 		
 		super.draw();
 		
-		if(canTalk) {
+		/*if(canTalk) {
 			
 			GOGL.enableLighting();
 			
@@ -66,7 +66,7 @@ public class NPC extends Actor {
 			GOGL.transformClear();
 			
 			GOGL.disableLighting();
-		}
+		}*/
 	}
 	
 	protected void control() {

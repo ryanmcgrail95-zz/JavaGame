@@ -105,7 +105,8 @@ public class Messages {
 		    	curTime = curMessage.getTime();
 		    	
 	    	    //Draw Message
-		    	GOGL.drawStringS(0,dY, curMessage.getText(), new RGBA(1f,1f,1f,(curTime < 20) ? curTime/20 : 1));
+		    	GOGL.setColor(new RGBA(1f,1f,1f,(curTime < 20) ? curTime/20 : 1));
+		    	GLText.drawStringCentered(0,dY, curMessage.getText(), true);
 	    	    
 	    	    //Move Next Message Down
 	    	    dY += 12;

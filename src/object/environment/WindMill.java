@@ -12,6 +12,8 @@ public class WindMill extends Environmental {
 	public WindMill(float x, float y) {
 		super(x, y, false,false);
 		
+		shouldAdd = true;
+		
 		float dir,fR=100,fX,fY;
 		Fence f = new Fence();
 		for(int i = 0; i < 9; i++) {
@@ -26,17 +28,34 @@ public class WindMill extends Environmental {
 		return false;
 	}
 	
-	public void draw() {
-		GOGL.enableLighting();
-		
+	public void add() {
 		GOGL.transformClear();
 		GOGL.transformTranslation(x(),y(),z());
 		GOGL.transformScale(.6f);
 		
 		GOGL.setLightColori(128,0,0);
-		Model.MOD_WMBODY.draw();
+		Model.MOD_WMBODY.add();
 
 		GOGL.setLightColori(255,255,255);
+		Model.MOD_WMFRAME.add();
+
+		GOGL.transformTranslation(-100,0,370);
+		GOGL.transformRotationX(GOGL.getTime());
+		Model.MOD_WMBLADES.add();
+		
+		GOGL.transformClear();
+	}
+	public void draw() {
+		//GOGL.enableLighting();
+		
+		GOGL.transformClear();
+		GOGL.transformTranslation(x(),y(),z());
+		GOGL.transformScale(.6f);
+		
+		//GOGL.setLightColori(128,0,0);
+		Model.MOD_WMBODY.draw();
+
+		//GOGL.setLightColori(255,255,255);
 		Model.MOD_WMFRAME.draw();
 
 		GOGL.transformTranslation(-100,0,370);
@@ -45,7 +64,7 @@ public class WindMill extends Environmental {
 		
 		GOGL.transformClear();
 		
-		GOGL.setColor(1,1,1);
-		GOGL.disableLighting();
+		//GOGL.setColor(1,1,1);
+		//GOGL.disableLighting();
 	}
 }

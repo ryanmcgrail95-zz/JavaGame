@@ -23,7 +23,7 @@ public class Floaties {
 		
 		public Floatlet() {
 			Actor pl = Player.getInstance();
-			float cD = 32, cDir, aX, aY, r = 64, rTZ = 32, rBZ = 8;
+			float cD = 128, cDir, aX, aY, r = 64, rTZ = 32, rBZ = 8;
 			
 			cDir = GOGL.getCamera().getDirection();
 			aX = Math2D.calcLenX(cD,cDir);
@@ -83,6 +83,7 @@ public class Floaties {
 			z = centerZ + Math2D.calcLenY(upAmplitude, upDir);
 			blinkAlpha = MathExt.contain(0, bA, 1);
 			
+			GOGL.transformClear();
 			GOGL.transformTranslation(x,y,z);
 			GOGL.transformSprite();
 			
@@ -101,7 +102,6 @@ public class Floaties {
 	}
 	
 	public static void draw() {
-		
 		if(particles.size() < 15)
 			particles.add(instance.new Floatlet());
 		
