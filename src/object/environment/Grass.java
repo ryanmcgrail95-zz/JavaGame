@@ -79,7 +79,7 @@ public class Grass extends Physical {
 				
 				sX = x + Math2D.calcLenX(dis,dir) + MathExt.rnd(-1,1)*disM/disN;
 				sY = y + Math2D.calcLenY(dis,dir) + MathExt.rnd(-1,1)*disM/disN;
-				sZ = Heightmap.getInstance().getZ(sX,sY);
+				sZ = Heightmap2.getInstance().getZ(sX,sY);
 				
 				sL = shrF*(disM + disM/disN - dis)/disM + (1-shrF);
 				sL *= lenM*(.8f+MathExt.rnd(.4f));

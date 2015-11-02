@@ -25,7 +25,7 @@ public class Flower extends Physical {
 	
 	public Flower(float x, float y, float scale) {
 		super(x,y,0);
-		z = Heightmap.getInstance().getZ(x,y);
+		z = Heightmap2.getInstance().getZ(x,y);
 		zScale = Math2D.rnd(.9f,2f);
 		
 		doUpdates = false;

@@ -18,6 +18,7 @@ public abstract class Updatable {
 
 	public Updatable() {
 		doUpdates = true;
+		
 		instanceList.add(this);
 		updateList.add(this);
 	}
@@ -45,7 +46,7 @@ public abstract class Updatable {
 
 		public static int getNumber() {
 			return updateList.size();
-		}	
+		}
 		
 		protected void disableUpdates() {
 			updateList.remove(this);

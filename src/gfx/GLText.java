@@ -26,7 +26,9 @@ public class GLText {
 		spin = 0;
 		
 		new MergedFont("8bit", .1f);
-		curFont = new SplitFont("OoT", .25f);
+		new SplitFont("OoT", .25f);
+		
+		setFont("OoT");
 	}
 	
 	
@@ -252,5 +254,10 @@ public class GLText {
 		}
 		
 		return maxH;
+	}
+
+
+	public static String getCurrentFontName() {
+		return curFont.getName();
 	}
 }

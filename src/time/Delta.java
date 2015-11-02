@@ -8,7 +8,7 @@ import gfx.GOGL;
 
 public final class Delta {
 
-	private static float fps, targetFPS, speedFrac;
+	private static float fps, targetFPS, speedFrac, delta = 1;
 	
 	
 	private Delta() {
@@ -45,7 +45,7 @@ public final class Delta {
 				return speedFrac*60/fps;
 		}
 		public static float convert(float timeVal) {
-			return timeVal; //*calcDeltaTime();
+			return timeVal*calcDeltaTime();
 		}
 		public static vec convert(vec vector) {
 			return vector; //.multe(calcDeltaTime());

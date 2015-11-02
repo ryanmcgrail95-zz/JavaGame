@@ -12,6 +12,7 @@ public abstract class HoldClosable extends Drawable {
 
 	public HoldClosable(boolean hoverable, boolean renderable) {
 		super(hoverable, renderable);
+		name = "HoldClosable";
 		
 		onscreenFrac = new WeightedSmoothFloat(1,0,-1f,.5f,20);
 		onscreenFrac.setFraction(1);

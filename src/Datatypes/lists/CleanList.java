@@ -36,6 +36,11 @@ public class CleanList<T> extends ArrayList<T> implements Iterable<T> {
 			return super.remove(position);
 	}
 	
+	public void broke() {
+		if(iteratorList.size() > 0)
+			iteratorList.get(iteratorList.size()-1).end();
+	}
+	
 	public int size() {
 		return super.size()-removeNum;
 	}
@@ -80,6 +85,7 @@ public class CleanList<T> extends ArrayList<T> implements Iterable<T> {
 			isIterating++;
 			iteratorList.add(this);
 		}
+		
 		
 		public void end() {
 			isIterating--;

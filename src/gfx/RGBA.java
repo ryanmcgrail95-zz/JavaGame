@@ -67,6 +67,7 @@ public class RGBA{
 	public int getRi() {return (int) Math.round(R*255);}	
 	public int getGi() {return (int) Math.round(G*255);}
 	public int getBi() {return (int) Math.round(B*255);}
+	public int getAi() {return (int) Math.round(A*255);}	
 	
 	public float getValue() {return (float) (R*.27 + G*.71 + B*.07);}
 	public void invert() {
@@ -153,9 +154,9 @@ public class RGBA{
 		return outArray;
 	}
 	public static void convertInt2RGBA(int argb, int[] array) {
-		array[0] = (argb>>16)&0xFF;
-		array[1] = (argb>>8)&0xFF;
-		array[2] = (argb)&0xFF;
-		array[3] = (argb>>24)&0xFF;
-	}	
+		array[0] = (argb>>16) & 0xFF;
+		array[1] = (argb>>8) & 0xFF;
+		array[2] = (argb) & 0xFF;
+		array[3] = (argb>>24) & 0xFF;
+	}
 }

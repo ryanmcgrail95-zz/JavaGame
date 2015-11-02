@@ -1,13 +1,15 @@
 package btl;
 
 import functions.Math2D;
+import functions.MathExt;
 import gfx.GOGL;
-import gfx.Shape;
+import gfx.MultiTexture;
 
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
 import object.primitive.Drawable;
+import time.Delta;
 
 public class DamageStar extends Drawable {
 	float x, y, z;
@@ -15,16 +17,25 @@ public class DamageStar extends Drawable {
 	float numPos, numSc, numA;
 	boolean starArrive, numArrive;
 	int dir = 1;
+	int num;
 	
-	Shape shNum, shStar, shOpStar;
-	Texture numTex, starTex;
+	float eStarSc, eStarScTimer = 0;
 	
-	public DamageStar(float x, float y, float z, int num) {
-		super();
+	private float timer = 100;
+	
+	boolean isPlayer;
+	
+	private static final MultiTexture numTex = new MultiTexture("Resources/Images/Battle/num.png",3,1);
+	private static final Texture starTex = TextureController.getTexture("texDamageStar");
+	
+	public DamageStar(float x, float y, float z, int num, boolean isPlayer) {
+		super(false,false);
 		
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		
+		this.isPlayer = isPlayer;
 
 		starPos = 0;
 		starSc = 0;
@@ -39,36 +50,25 @@ public class DamageStar extends Drawable {
 		numA = 1;
 		numArrive = false;
 
-		starTimer = 80;
+		starTimer = 40; //80
 		starC = 1;
 		starToC = 0;
-
-		numTex = TextureController.getTexture("texDamageStar" + num);
-		starTex = TextureController.getTexture("texDamageStar");
+		
+		this.num = num-1;
 		
 		float s, r;
 		r = 14;
-		s = 15;
-		
-		
-		shOpStar = Shape.createWall("", 0,-s,s, 0,s,-s, starTex);
-		//shOpStar.addWall(-16,0,16,16,0,-16, starTex);
-		shStar = Shape.createWall("", 0,-s,s, 0,s,-s, starTex);
-		shNum = Shape.createWall("", 0,-s,s, 0,s,-s, numTex);
+		s = 15;		
 	}
-	
-	public void destroy() {
-		super.destroy();
 		
-		shOpStar.destroy();
-		shStar.destroy();
-		shNum.destroy();
-	}
+	public void update() {}
 	
-	public void update(float deltaT) {
-		super.update(deltaT);
+	public void draw() {		
+		timer -= Delta.convert(3.8f);
+		if(timer < 0)
+			timer = 0;
 		
-		starC += (starToC - starC)/15;
+		starC = MathExt.to(starC, starToC, 15);
 		if(Math.abs(starToC - starC) < .05) {
 		    starC = starToC;
 		    starToC = Math.abs(starToC - 1);
@@ -78,9 +78,10 @@ public class DamageStar extends Drawable {
 		if(starTimer > -1) {
 		    if(starTimes < 2) {
 		        if(starToSc != 1)
-		            starSc += (starToSc - starSc)/6.5;
+		            starSc = MathExt.to(starSc, starToSc, 6.5f);
 		        else {
-		            starSc += Math.min(-.01,-(starToSc + (starToSc - starSc)))/7;
+		            starSc += Delta.convert((float) (Math.min(-.01,-(starToSc + (starToSc - starSc)))/7f));
+		        	//starSc += (float) (Math.min(-.01,Delta.convert(-(starToSc + (starToSc - starSc)))/7f));
 		            
 		            if(starSc < starToSc)
 		                starSc = starToSc;
@@ -94,8 +95,8 @@ public class DamageStar extends Drawable {
 		}
 
 		if(!starArrive) {
-		    starPos += (1 - starPos)/5;
-		    numPos += (1 - numPos)/1.5;
+		    starPos = MathExt.to(starPos, 1, 4);
+		    numPos = MathExt.to(numPos, 1, 2);
 
 		    if(starPos > .95) {
 		        starPos = 1;
@@ -108,14 +109,16 @@ public class DamageStar extends Drawable {
 		}
 		else {
 		    if(starTimer > -1) {
-		        starTimer -= 1;
+		        starTimer -= Delta.convert(1);
 		        
 		        if(starTimer < 15)
-		            starSc += (1.2 - starSc)/12;
+		            starSc = MathExt.to(starSc, 1.2f, 8);
 		    }
-		    else {
-		        starSc += (0 - starSc)/5;
-		        numA += (0 - numA)/8;
+		    
+		    //Shrinking
+		    else { 	
+		        starSc = MathExt.to(starSc, 0, 4);
+		        numA = MathExt.to(numA, 0, 6);
 		        
 		        if(numA < .05)
 		            destroy();
@@ -123,42 +126,93 @@ public class DamageStar extends Drawable {
 		}
 
 		float r, s, sX, sY, sZ, nX, nY, nZ, cDir, cX, cY;
-		cDir = GOGL.getCamDir();
+		cDir = GOGL.getMainCamera().getDirection();
 		cX = Math2D.calcLenY(1, cDir);
 		cY = Math2D.calcLenX(1, cDir);
 		
-		r = 14;
+		r = 20; // 14
 		s = 15;
 		
-		sY = 0;//-7f;
-		//sX = dir*starPos*r;
-		sX = -3f;
+		float mF = 1.3f;
+		
+		sY = (isPlayer ? 1 : -1) * starPos*r* mF;
+		sX = 0;//-7f;
+		//sX = -3f;
 		sZ = starPos*r;
 
-		nY = 0;//-7.3f;
-		//nX = dir*numPos*r
-		nX = -8f;
+		nY = (isPlayer ? 1 : -1) * numPos*r * mF;
+		nX = -2;//-7.3f;
+		//nX = -8f;
 		nZ = numPos*r;
+		
 
+		float dStarSc = starSc, dNumSc = numSc;
+		if(timer > 0) {
+			float f = timer/100;
+			float a = Math2D.calcLenY(f*360*3), aM;
+			
+			a = (.5f + .5f*a);
+			aM = Math2D.calcLenY(f*180);
+			a *= 2*aM;
+			
+			dStarSc = f*a
+					+ (1-f)*starSc;
+		}
 		
-		shOpStar.setRotation(0,0,cDir);
-		shStar.setRotation(0,0,cDir);
-		shNum.setRotation(0,0,cDir);
+		/*if(eStarScTimer-- <= 0) {
+			eStarScTimer = 2;
+			eStarSc = MathExt.rndSign()*MathExt.rnd(.025f);
+		}
 		
+		dStarSc *= 1 + eStarSc;*/
 		
-		shOpStar.setScale(starSc);
-		shStar.setScale(starSc);
-		shNum.setScale(numSc,-numSc,numSc);
+		float nFM = 60, nFME = 100-nFM, nF = (timer-nFME)/nFM;
+		nF = (float) Math.pow(MathExt.contain(0,nF,1), 2);
+		dNumSc *= 1 + .6f*Math2D.calcLenY(180 * nF);
+
+		// Draw Op Star
+		GOGL.transformClear();
+		GOGL.transformTranslation(x,y,z + sZ + 16);
+		GOGL.transformRotationZ(cDir);
+		GOGL.transformTranslation(sX,sY,0);
+		GOGL.transformScale(dStarSc);
 		
-		shOpStar.setShapePosition(sX,sY,0);
-		shStar.setShapePosition(sX,sY,0);
-		shNum.setShapePosition(nX,nY,0);
+			GOGL.draw3DWall(0,-s,s, 0,s,-s, starTex);
 		
-		shOpStar.setPosition(x,y,z + sZ + 16);
-		shStar.setPosition(x,y,z + sZ + 16);
-		shNum.setPosition(x,y,z + nZ + 16);
+		// Draw Star
+		GOGL.transformClear();
+		GOGL.transformTranslation(x,y,z + sZ + 16);
+		GOGL.transformRotationZ(cDir);
+		GOGL.transformTranslation(sX,sY,0);
+		GOGL.transformScale(dStarSc);
+	
+			GOGL.setAlpha(starC);
+			GOGL.draw3DWall(0,-s,s, 0,s,-s, starTex);
+
+		// Draw Num
+		float nS = s*.6f;
+			
+		GOGL.transformClear();
+		GOGL.transformTranslation(x,y,z + nZ + 16);
+		GOGL.transformRotationZ(cDir);
+		GOGL.transformTranslation(nX,nY,0);
+		GOGL.transformScale(dNumSc,-dNumSc,dNumSc);
+
+			GOGL.setAlpha(numA);
+			GOGL.draw3DWall(0,-nS,nS, 0,nS,-nS, numTex,num);
+
+		GOGL.transformClear();
 		
-		shStar.setAlpha(starC);
-		shNum.setAlpha(numA);
+		GOGL.setAlpha(1);		
+	}
+	
+	public float calcDepth() {
+		return 10;
+	}
+
+	@Override
+	public void add() {
+		// TODO Auto-generated method stub
+		
 	}
 }

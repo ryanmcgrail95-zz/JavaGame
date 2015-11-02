@@ -1,0 +1,11 @@
+width: 36
+height: 36
+heightFraction: .8
+
+hasWings: true
+
+defenseStat: 1
+
+attackStat: 2
+attackType: jump
+element: fire

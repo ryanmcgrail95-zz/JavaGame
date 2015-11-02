@@ -14,13 +14,17 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.Comparator;
 
+import com.jogamp.opengl.util.texture.Texture;
+
 import cont.Messages;
 import cont.Text;
+import cont.TextureController;
 import datatypes.StringExt;
 import datatypes.lists.CleanList;
 import obj.prt.Floaties;
 import object.actor.Player;
 import object.environment.Tree;
+import paper.Background;
 import phone.SmartPhone;
 import time.Timer;
 import window.Window;
@@ -46,8 +50,11 @@ public abstract class Drawable extends Updatable {
 	
 
 	
-	public Drawable(boolean hoverable, boolean renderable) {		
+	public Drawable(boolean hoverable, boolean renderable) {	
+		super();
 		drawList.add(this);
+		
+		name = "Drawable";
 		
 		if(hoverable)
 			generateHoverColor();
@@ -77,6 +84,10 @@ public abstract class Drawable extends Updatable {
 	
 	public void render() {}
 	public void hover() {}
+	
+	public void update() {
+		//System.out.println(getClass().getName());
+	}
 		
 	public void destroy() {
 		drawList.remove(this);
@@ -135,7 +146,7 @@ public abstract class Drawable extends Updatable {
 				}
 			}
 		
-		//onscreenList.sort(Drawable.Comparators.DEPTH);
+		onscreenList.sort(Drawable.Comparators.DEPTH);
 	}
 	
 		public static void display() {
@@ -222,13 +233,15 @@ public abstract class Drawable extends Updatable {
 		
 		//Draw BG
 		GOGL.setOrtho(-1000);
-		RGBA skyTop = new RGBA(82,142,165), skyBottom = new RGBA(198,255,255);
+		/*RGBA skyTop = new RGBA(82,142,165), skyBottom = new RGBA(198,255,255);
 		float tY = 140,bY = 300;
 		GOGL.setColor(skyTop);
 		GOGL.fillRectangle(0,0,640,tY);
 		GOGL.fillVGradientRectangle(0,tY, 640,bY-tY, skyTop, skyBottom, 10);
 		GOGL.setColor(skyBottom);
-		GOGL.fillRectangle(0,bY,640,480-bY);
+		GOGL.fillRectangle(0,bY,640,480-bY);*/
+		
+		Background.draw();
 		
 		GOGL.getCamera().project();
 		
@@ -250,6 +263,6 @@ public abstract class Drawable extends Updatable {
 		for(Drawable d : onscreenList)
 			d.draw();
 
-		Floaties.draw();
+		//Floaties.draw();
 	}
 }

@@ -27,6 +27,8 @@ public class Chest extends Environmental implements Useable {
 	public Chest(float x, float y, String... items) {
 		super(x,y, true, false);
 		
+		name = "Chest";
+		
 		shouldAdd = true;
 		
 		w = 8;

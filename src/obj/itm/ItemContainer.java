@@ -71,7 +71,15 @@ public class ItemContainer {
 			drop(it, pt);
 	}
 	
-	public void add(String name, int amount) {Item.create(name,amount,this);}
+	public void add(String name, int amount) {
+		ItemBlueprint b = ItemController.get(name);
+		
+		int each = Math.min(amount, b.getStackMax()),
+			n = (int) Math.ceil(1f*amount/each);
+		
+		for(int i = 0; i < n; i++)
+			Item.create(name,each,this);
+	}
 	public void add(ItemBlueprint blueprint, int amount) {Item.create(blueprint.getName(),amount,this);}
 	public void add(Item obj) {obj.giveTo(this);}
 	

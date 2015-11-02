@@ -7,7 +7,7 @@ import functions.Math2D;
 import gfx.GOGL;
 import object.actor.Player;
 
-public class Planet extends Heightmap {
+public class Planet extends Heightmap2 {
 
 	private float xCenter, yCenter, zCenter, radius;
 	

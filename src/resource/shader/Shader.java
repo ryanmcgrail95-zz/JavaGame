@@ -115,8 +115,12 @@ public class Shader {
 	// STATIC
 	
 	public static void ini(GL2 gl) {
-		addShader(gl, "Galaxy");
+		addShader(gl, "FireSprite");
+		addShader(gl, "Fireball");
+		addShader(gl, "FireballGaussian");
 		addShader(gl, "Gaussian");
+		addShader(gl, "Rainbow");
+		/*addShader(gl, "Galaxy");
 		addShader(gl, "Grayscale");
 		addShader(gl, "Rainbow");
 		//addShader(gl, "Diffuse");
@@ -125,7 +129,7 @@ public class Shader {
 		addShader(gl, "Main");
 		addShader(gl, "Mirror");
 		//addShader(gl, "Ripple");
-		addShader(gl, "Water");
+		addShader(gl, "Water");*/
 	}
 	private static void addShader(GL2 gl, String name) {
 		shaderMap.put(name, new Shader(gl, name));

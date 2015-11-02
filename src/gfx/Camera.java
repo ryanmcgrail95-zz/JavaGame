@@ -1,5 +1,6 @@
 package gfx;
 
+import io.Keyboard;
 import io.Mouse;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import functions.Math3D;
 import object.actor.Actor;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import paper.Background;
 import time.Delta;
 
 
@@ -29,12 +31,13 @@ public class Camera extends Updatable {
 	private float dis, dir, dirZ, smoothing;
 	private boolean isLocked, isEnabled = true;
 	private FBO fbo;
+	private float[] upNormal = {0,0,1};
 
 	
 	private float smoothOnceFrac;
 	
 	private vec3 pos = new vec3(), toPos = new vec3();
-	private float fieldOfView = 45, viewFar = 3000, //3000
+	private float fieldOfView = 25, viewFar = 3000, //3000
 			viewNear = 1, whRatio;
 	private float focusAddX, focusAddY, focusAddZ;
 	
@@ -127,7 +130,8 @@ public class Camera extends Updatable {
 
 
 	public void update() {
-		vec3 toPos, pos, aPos = Math3D.calcPolarCoords(dis,  dir, dirZ);
+		vec3 toPos, pos, prevPos, aPos = Math3D.calcPolarCoords(dis,  dir, dirZ);
+		prevPos = (vec3) this.pos.copy();		
 		
 		switch(camFocusType) {
 			case CF_STATIC: toPos = new vec3(toX,toY,toZ);
@@ -166,6 +170,10 @@ public class Camera extends Updatable {
 		}
 		
 		camDir = Math2D.calcPtDir(this.pos.xy(), this.toPos.xy());
+		
+		prevPos = (vec3) this.pos.sub(prevPos);
+		Background.addPerpendicularMotion(
+				Math2D.calcProjDis(prevPos.x(),prevPos.y(), FastMath.cosd(camDir+90),FastMath.sind(camDir+90)));
 	}
 
 
@@ -209,7 +217,7 @@ public class Camera extends Updatable {
 	}
 
 
-	public float getFOV() {return fieldOfView + Math2D.calcLenX(20,GOGL.getTime());}
+	public float getFOV() {return fieldOfView;}
 	public float getWidthHeightRatio() {return whRatio;}
 	public float getViewNear() {return viewNear;}
 	public float getViewFar() {return viewFar;}
@@ -224,7 +232,7 @@ public class Camera extends Updatable {
 	public void gluLookAt(GLU glu) {
 		glu.gluLookAt(pos.x(),pos.y(),pos.z(),
 				toPos.x(),toPos.y(),toPos.z(),
-				0,0,1);
+				upNormal[0],upNormal[1],upNormal[2]);
 	}
 	
 	
@@ -263,5 +271,10 @@ public class Camera extends Updatable {
 			case PR_ORTHOGRAPHIC:		fbo.setOrtho(GOGL.gl);				break;
 			case PR_ORTHOPERSPECTIVE:	fbo.setOrthoPerspective(GOGL.gl);	break;
 		}
+	}
+	public void setUpNormal(float nX, float nY, float nZ) {
+		upNormal[0] = nX;
+		upNormal[1] = nY;
+		upNormal[2] = nZ;
 	}
 }

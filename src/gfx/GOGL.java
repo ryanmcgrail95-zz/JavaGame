@@ -20,10 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.ghost4j.document.DocumentException;
-import org.ghost4j.renderer.RendererException;
-
 import brain.Idea;
+import btl.BattleController;
 
 import com.jhlabs.image.BicubicScaleFilter;
 import com.jhlabs.image.CropFilter;
@@ -50,6 +48,7 @@ import object.environment.Fire;
 import object.environment.Floor;
 import object.environment.Grass;
 import object.environment.Heightmap;
+import object.environment.Heightmap2;
 import object.environment.OakTree;
 import object.environment.PalmTree;
 import object.environment.PineTree;
@@ -60,6 +59,7 @@ import object.environment.Water;
 import object.environment.WindMill;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import paper.PlayerPM;
 import phone.SmartPhone;
 import resource.model.Model;
 import resource.shader.Shader;
@@ -67,6 +67,8 @@ import resource.sound.Sound;
 import resource.sound.SoundBuffer;
 import time.Delta;
 import time.Timer;
+import twoD.Player2D;
+import twoD.Terrain2D;
 import window.Window;
 
 import com.jogamp.opengl.util.texture.Texture;
@@ -109,7 +111,6 @@ public final class GOGL {
 	private static Timer time = new Timer(360);
 	
     private static float[] perspectiveMatrix = new float[16];    
-    public static int[] RESOLUTION = {640,480};
 
 
     public static final int VIEW_FAR = 10000;
@@ -126,7 +127,9 @@ public final class GOGL {
 	public static int 
 		BORDER_LEFT = 3, // 3 is PERFECT but doesn't work, 2 works but isn't perfect
 		BORDER_TOP = 25, // 25 is PERFECT but doesn't work, 24 works but isn't perfect
-		SCREEN_WIDTH = 640, SCREEN_HEIGHT = 480;
+		SCREEN_WIDTH = 640, 
+		SCREEN_HEIGHT = 436;
+    public static int[] RESOLUTION = {SCREEN_WIDTH,SCREEN_HEIGHT};
 		
 	private static RGBA drawingColor = new RGBA(1,1,1,1);
 	private static Player player;
@@ -157,29 +160,20 @@ public final class GOGL {
             	gl = glautodrawable.getGL().getGL2();
             	
             	
-           		currentCamera = mainCamera = new Camera(Camera.PR_PERSPECTIVE,640,480);
+           		currentCamera = mainCamera = new Camera(Camera.PR_PERSPECTIVE,SCREEN_WIDTH,SCREEN_HEIGHT);
 
-        	println("Creating map...");
-        		new WorldMap();
-
-        	println("Initializing sounds...");
-            	Sound.iniLoad();
-
-        	println("Initializing textures...");
-            	TextureController.ini();                
+        	TextureController.ini();                
             	
-        	println("Initializing models...");
-            	Model.ini();
+        	Model.ini();
             	
-            	Text.ini();
+            Text.ini();
             	
             	GLText.initialize();
             	//CubeMap.ini();
             	            	
             	// Initialize Delta Time Controller
 
-        	println("Initializing items...");
-            	ItemController.ini();
+            ItemController.ini();
             	
             	Idea.ini();
 
@@ -189,89 +183,23 @@ public final class GOGL {
                 float border = 150 + Math2D.calcLenY(getTime())*20;
                 setViewPos(0,border,SCREEN_WIDTH-border,SCREEN_HEIGHT-border);
                 
-            
-                                
-                Floaties.ini();
-                
-                         
-                // Generate Environment
-                float seaLevel = 50;
-                
-        	println("Creating Heightmap...");
-            	
-                Heightmap m = new Heightmap(64, 2, "Resources/Heightmaps/hm1.jpg");
-            	//BlockTerrain b = BlockTerrain.createFromHeightmap("Resources/Heightmaps/hm1.jpg");
-            	BlockTerrain b = BlockTerrain.createFromHeightmap(m);
-                m.smooth(1);
-                m.halveResolution();
 
-                
-                /*Planet p = new Planet(2000,2000,240, 32, 16, "Resources/Heightmaps/hm1.jpg");
-                p.smooth(1);*/
-                
-                float aX, aY;
-                /*for(int i = 0; i < 20; i++) {
-                	aX = MathExt.rnd(-200,200);
-                	aY = MathExt.rnd(-200,200);
-                	Item.create("Rune Bar",1, 2000+aX,2000+aY,0);
-                }*/
-                
-                player = Player.getInstance();
-                	player.setX(2400);
-                	player.setY(2400);
-                	player.setZ(300);
-                	
-                	
-                                	
-                Actor a = new NPC(player.getX(),player.getY()+500,0);
-                //a.taskChase(player);
-                a.taskRunStore();
-                //partner = new Partner(20,20,0, "mario");
-                
-                //new Water(seaLevel);
-                //new Sword("Whatever");
-
-            	vec3 pt;
-                /*for(int i = 0; i < 10; i++) {
-                	pt = m.generateRandomPointBetween(seaLevel, seaLevel+5);
-                	new Grass(pt.x(),pt.y(),30,24,8,4, .5f);
-                }*/
-                
-        	println("Creating foliage...");
-                for(int i = 0; i < 400; i++) {
-                	pt = m.generateRandomPointAbove(seaLevel);
-                	new PineTree(pt.x(),pt.y());
-                }
-                
-                /*for(int i = 0; i < 50; i++) {
-                	pt = m.generateRandomPointBetween(seaLevel, seaLevel+10);
-                	new PalmTree(pt.x(),pt.y());
-                }*/
-                
-                for(int i = 0; i < 400; i++) {
-                	pt = m.generateRandomPointAbove(seaLevel);
-                	new Fern(pt.x(),pt.y());
-                }
-            
-                                
-        	println("Creating town...");
-                new WindMill(player.getX(),player.getY());
-                new Town(player.getX() + 500, player.getY());
-                
-                player.give("Rune Bar",1);
-                player.give("Empty Bucket",1);
-                player.give("Bread",1);
-		        player.give("Empty Bowl",1);
-		        player.addCoins(1000);
-		        
-		        
-		        new Chest(2600,2400,"Bread");
              
 		        
+                //FireSprite.ini();
+		        
+		        
+		        //iniModelRenderer(Model.MOD_CASTLE);
+		        iniPM();
+		        //ini3D();
+		        //ini2D();
                
             	gl.glEnable(gl.GL_DEPTH_TEST);
-                //gl.glEnable(gl.GL_ALPHA_TEST);
-            	gl.glEnable(GL2.GL_NORMALIZE);
+            	
+                gl.glEnable(gl.GL_ALPHA_TEST);
+                gl.glAlphaFunc(GL.GL_GREATER, 0);
+            	
+                gl.glEnable(GL2.GL_NORMALIZE);
             	
         	println("Initializing GUI...");
             	Window.ini();
@@ -282,7 +210,7 @@ public final class GOGL {
             	gcap = new GLCapabilities(gp);
             	gcap.setDepthBits(16);
         
-            	println("Initializing Shaders...");
+            println("Initializing Shaders...");
             	Shader.ini(gl);
             	
             	
@@ -291,9 +219,8 @@ public final class GOGL {
                 	new Sign(pt.x(),pt.y(),32,24,2,"buttTown");
                 }*/
             	
-            	new SmartPhone();
-            	//new Radio(2500,2500);
             	
+            	println("Finished Initialization");
             	//checkError();
             }
             
@@ -307,7 +234,7 @@ public final class GOGL {
             		clear();
             		return;
             	}*/
-            	
+    		
             	glad = glautodrawable;
             	
             	time.check();
@@ -317,30 +244,30 @@ public final class GOGL {
             	gl = glautodrawable.getGL().getGL2();
             	            	
             	setProjection();
-        		Drawable.display();            	
+            	
+        		Drawable.display();           
             	Camera.renderAll();
             	
             	
             	if(Keyboard.checkPressed('x'))
             		mainCamera.getFBO().saveScreenshot();
 
-            	
             	/*screenBuffer.attach(gl,false);
         		GOGL.clearScreen(RGBA.WHITE);
         		Drawable.draw3D();
         		screenBuffer.detach(gl);*/
-            	
+                 	
             	
             	disableBlending();
-            	setViewport(0,0,640,480);
+            	setViewport(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
             	clear();
             	setColor(RGBA.WHITE);
             	setOrtho();
-            	drawFBO(0,480,640,-480,mainCamera.getFBO());
+            	drawFBO(0,SCREEN_HEIGHT,SCREEN_WIDTH,-SCREEN_HEIGHT,mainCamera.getFBO());
             	enableBlending();
             	
             	Overlay.draw();
-            	
+        	
     			Keyboard.update();
         	}
         };
@@ -356,6 +283,8 @@ public final class GOGL {
 		gl.glViewport((int)x, (int)y, (int)w, (int)h);
 		//canv.setSize(w,h);
 		
+		viewPos[0] = x;
+		viewPos[1] = y;
 		viewPos[2] = w;
 		viewPos[3] = h;
 	}
@@ -415,8 +344,8 @@ public final class GOGL {
         gl.glLoadIdentity();
         
         // Perspective.
-        float widthHeightRatio = 640f/480; //getViewWidth()/getViewHeight();
-        glu.gluPerspective(45, widthHeightRatio, 1, VIEW_FAR); //1000
+        float widthHeightRatio = 1f*SCREEN_WIDTH/SCREEN_HEIGHT; //getViewWidth()/getViewHeight();
+        glu.gluPerspective(GOGL.getCamera().getFOV(), widthHeightRatio, 1, VIEW_FAR); //1000
         currentCamera.gluLookAt(glu);
         gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, perspectiveMatrix,0);
 
@@ -425,7 +354,9 @@ public final class GOGL {
         gl.glLoadIdentity();
 	}
 	
-	public static void repaint() {canv.display();}
+	public static void repaint() {
+		canv.display();
+	}
 	
 	public static GLCanvas getCanvas() {return canv;}
 
@@ -451,9 +382,29 @@ public final class GOGL {
 	}
 	public static void bind(int tex) {
 		gl.glEnable(GL2.GL_TEXTURE_2D);
-		gl.glBindTexture(GL2.GL_TEXTURE_2D, tex);			
+		gl.glBindTexture(GL2.GL_TEXTURE_2D, tex);
+		disableInterpolation();
 	}
 	public static void unbind() {
+		gl.glBindTexture(GL2.GL_TEXTURE_2D,0);
+		gl.glDisable(GL2.GL_TEXTURE_2D);
+	}
+	
+	public static void bind(Texture tex, int target) {
+		if(tex != null)
+			bind(tex.getTextureObject(),target);
+	}
+	public static void bind(int tex, int target) {
+		//gl.glEnable(GL2.GL_TEXTURE0+target);
+		//gl.glBindTexture(GL2.GL_TEXTURE0+target, tex);
+		gl.glEnable(GL2.GL_TEXTURE_2D);
+		gl.glActiveTexture(GL2.GL_TEXTURE0+target);
+		gl.glBindTexture(GL2.GL_TEXTURE_2D, tex);
+	}
+	public static void unbind(int target) {
+		//gl.glBindTexture(GL2.GL_TEXTURE0+target, 0);
+		//gl.glDisable(GL2.GL_TEXTURE0+target);
+		gl.glActiveTexture(GL2.GL_TEXTURE0+target);
 		gl.glBindTexture(GL2.GL_TEXTURE_2D,0);
 		gl.glDisable(GL2.GL_TEXTURE_2D);
 	}
@@ -473,14 +424,14 @@ public final class GOGL {
 	}
 	public static boolean isPtOnscreen(float x, float y, float z) {		
 		int[] pt = calcScreenPt(x,y,z);
-		return Math2D.checkRectangle(pt[0],pt[1], 0,0,640,480);
+		return Math2D.checkRectangle(pt[0],pt[1], 0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
 	}
 	
-	public static void setViewPos(float x1, float y1, float x2, float y2) {
-		viewPos[0] = x1;
-		viewPos[1] = y1;
-		viewPos[2] = x2;
-		viewPos[3] = y2;
+	public static void setViewPos(float x, float y, float w, float h) {
+		viewPos[0] = x;
+		viewPos[1] = y;
+		viewPos[2] = w;
+		viewPos[3] = h;
 	}
 	
 	
@@ -513,8 +464,11 @@ public final class GOGL {
 	
 	public static void setOrtho() {setOrtho(TOP_LAYER);}
 	public static void setOrtho(float w, float h) {setOrtho(w,h,TOP_LAYER);}
-	public static void setOrtho(float useLayer) {setOrtho(viewPos[2],viewPos[3],useLayer);}
+	public static void setOrtho(float useLayer) {setOrtho(viewPos[0],viewPos[1],viewPos[2],viewPos[3],useLayer);}
 	public static void setOrtho(float w, float h, float useLayer) {
+		setOrtho(viewPos[0],viewPos[1],w,h,useLayer);
+	}
+	public static void setOrtho(float x, float y, float w, float h, float useLayer) {
 				
 		projectionMode = PR_ORTHO;		
 		orthoLayer = useLayer;
@@ -526,7 +480,7 @@ public final class GOGL {
 		
 		gl.glMatrixMode(GL2.GL_PROJECTION);
 			gl.glLoadIdentity();
-			gl.glOrtho(0,w,h,0, -1000, 1000);
+			gl.glOrtho(x,w,h,y, -1000, 1000);
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 			gl.glLoadIdentity();
 		disableDepth();
@@ -643,7 +597,8 @@ public final class GOGL {
 	public static void drawFBO(float x, float y, FBO fbo) {drawFBO(x, y, fbo.getWidth(), fbo.getHeight(), fbo);}
 	public static void drawFBO(float x, float y, float w, float h, FBO fbo) {
 		fbo.bind(gl);
-			GOGL.fillRectangle(x, y, w, h);
+			enableInterpolation();
+			fillRectangle(x, y, w, h);
 		fbo.unbind(gl);
 	}
 	
@@ -748,7 +703,7 @@ public final class GOGL {
 	public static void rectangle(float x, float y, float w, float h, boolean fill) {rectangle(x,y,w,h,new float[] {0,0,1,1},fill);}
 	public static void rectangle(float x, float y, float w, float h, float[] bounds, boolean fill) {
 		gl.glBegin((fill ? GL2.GL_QUADS : GL.GL_LINE_LOOP));
-			gl.glTexCoord2d(bounds[0],bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
+			gl.glTexCoord2d(bounds[0], bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
 			gl.glTexCoord2d(bounds[2], bounds[1]);	gl.glVertex3f(x+w, y, orthoLayer);
 			gl.glTexCoord2d(bounds[2], bounds[3]);	gl.glVertex3f(x+w, y+h, orthoLayer);
 			gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);		
@@ -889,6 +844,11 @@ public final class GOGL {
 		GOGL.transformRotationY(90);
 		GOGL.transformRotationZ(-90);
 	}
+	public static void transformPaper() {
+		GOGL.transformRotationZ(currentCamera.getDirection());
+		GOGL.transformRotationY(-90);
+		GOGL.transformRotationZ(-90);
+	}
 		
 			
 		// Wall-Drawing Function
@@ -897,6 +857,12 @@ public final class GOGL {
 				draw3DWall(x1,y1,z1,x2,y2,z2,null);
 			}
 			public static void draw3DWall(float x1, float y1, float z1, float x2, float y2, float z2, Texture tex) {
+				draw3DWall(x1,y1,z1, x2,y2,z2, tex, new float[] {0,0,1,1});
+			}
+			public static void draw3DWall(float x1, float y1, float z1, float x2, float y2, float z2, MultiTexture tex, int frame) {
+				draw3DWall(x1,y1,z1, x2,y2,z2, tex.getTexture(), tex.getBounds(frame));				
+			}
+			public static void draw3DWall(float x1, float y1, float z1, float x2, float y2, float z2, Texture tex, float[] bounds) {
 				
 				if(tex != null) {
 					gl.glEnable(GL2.GL_TEXTURE_2D);
@@ -909,23 +875,24 @@ public final class GOGL {
 					nX = Math2D.calcLenX(dir);
 					nY = Math2D.calcLenY(dir);
 
+					
 				// Begin Model
 				gl.glBegin(GL2.GL_QUADS);
 					// Add Four Corners
 					gl.glNormal3f(nX,nY,0);
-					gl.glTexCoord2f(0, 0); 	
+					gl.glTexCoord2f(bounds[0],bounds[1]);	
 						gl.glVertex3d(x1, y1, z1);
 
 					gl.glNormal3f(nX,nY,0);
-					gl.glTexCoord2f(1, 0);
+					gl.glTexCoord2f(bounds[2],bounds[1]);
 						gl.glVertex3d(x2, y2, z1);
 					
 					gl.glNormal3f(nX,nY,0);
-					gl.glTexCoord2f(1, 1);
+					gl.glTexCoord2f(bounds[2],bounds[3]);
 						gl.glVertex3d(x2, y2, z2);
 					
 					gl.glNormal3f(nX,nY,0);
-					gl.glTexCoord2f(0, 1);
+					gl.glTexCoord2f(bounds[0],bounds[3]);	
 						gl.glVertex3d(x1, y1, z2);
 				// End (and Draw) Model
 				gl.glEnd();
@@ -1213,6 +1180,10 @@ public final class GOGL {
 	    gl.glUseProgram(shaderProgram);
 		gl.glUniform2fv(gl.glGetUniformLocation(shaderProgram, "iResolution"), 1, resI, 0);			
     	gl.glUniform1f(gl.glGetUniformLocation(shaderProgram, "iGlobalTime"), getTime()/50f);        
+    	
+    	gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "tex0"), 0);
+    	gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "tex1"), 1);
+    	
     	passShaderVec4("uColor",drawingColor.getArray());
     }
     
@@ -1265,21 +1236,33 @@ public final class GOGL {
     public static void enableTextures() 	{gl.glEnable(GL.GL_TEXTURE_2D);}
     public static void disableTextures() 	{gl.glDisable(GL.GL_TEXTURE_2D);}
     
-    public static void drawGaussian() {
-    	/*
-    	 * enableShader(gl, ShaderController.getShader("Gaussian"));
+    public static void enableShaderGaussian(float blurRadius) {
+    	enableShader("Gaussian");
 	    	
-	    	int shaderprogram = ShaderController.getShader("Gaussian").getProgram();
-	
-		    float[] resI = {
-		    		640, 480
-		    };
-			
-			int res = gl.glGetUniformLocation(shaderprogram, "iResolution");
-			int globTime = gl.glGetUniformLocation(shaderprogram, "iGlobalTime");
-			gl.glUniform1f(gl.glGetUniformLocation(shaderprogram, "iRadius"), 20);
-			gl.glUniform2fv(res, 1, resI, 0);			
-    	 */
+    	int shaderprogram = Shader.getShader("Gaussian").getProgram();
+
+	    float[] resI = {
+	    		SCREEN_WIDTH, SCREEN_HEIGHT
+	    };
+		
+		int res = gl.glGetUniformLocation(shaderprogram, "iResolution");
+		int globTime = gl.glGetUniformLocation(shaderprogram, "iGlobalTime");
+		gl.glUniform1f(gl.glGetUniformLocation(shaderprogram, "iRadius"), blurRadius); //20
+		gl.glUniform2fv(res, 1, resI, 0);			
+    }
+    public static void enableShaderFireballGaussian(float blurRadius) {
+    	enableShader("FireballGaussian");
+	    	
+    	int shaderprogram = Shader.getShader("Gaussian").getProgram();
+
+	    float[] resI = {
+	    		SCREEN_WIDTH, SCREEN_HEIGHT
+	    };
+		
+		int res = gl.glGetUniformLocation(shaderprogram, "iResolution");
+		int globTime = gl.glGetUniformLocation(shaderprogram, "iGlobalTime");
+		gl.glUniform1f(gl.glGetUniformLocation(shaderprogram, "iRadius"), blurRadius); //20
+		gl.glUniform2fv(res, 1, resI, 0);			
     }
     
 
@@ -1437,7 +1420,7 @@ public final class GOGL {
 		unbind();		
 	}
 
-	
+		
 	public static void enableLight(int num, float dir, float dirZ) {enableLight(num, Math3D.calcPolarCoords(dir, dirZ));}
 	public static void enableLight(int num, vec3 normal) {enableLight(num, normal.x(),normal.y(),normal.z());}
 	public static void enableLight(int num, float nX, float nY, float nZ) {enableLight(num, new float[] {nX,nY,nZ, 0});}
@@ -1466,6 +1449,7 @@ public final class GOGL {
 		enableLight(0,0,1,0);
 		enableLight(1,1,0,0);
 		enableLight(2,0,1,1);
+
 
 		gl.glEnable(GL2.GL_LIGHTING);
 	}
@@ -1579,12 +1563,26 @@ public final class GOGL {
 		setViewport(0,0,RESOLUTION[0],RESOLUTION[1]);
 	}
 
-	public static Texture loadTexture(String fileName) {
+	public static Texture loadTexture(String fileName) {return loadTexture(fileName, false);}
+	public static Texture loadTexture(String fileName, boolean grayscale) {
 		try {
-			return createTexture(ImageLoader.loadGrayscaleAlpha(fileName),false);
+			if(grayscale)
+				return createTexture(ImageLoader.loadGrayscaleAlpha(fileName),false);
+			else
+				return createTexture(ImageLoader.load(fileName),false);
 		} catch (IOException e) {
 			return null;
 		}
+	}
+	
+	
+	public static void enableInterpolation() {
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+	}
+	public static void disableInterpolation() {
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
 	}
 	
 
@@ -1689,4 +1687,97 @@ public final class GOGL {
 	public static void setCamera(Camera cam) {currentCamera = cam;}
 	public static Camera getCamera() {return currentCamera;}
 	public static Camera getMainCamera() {return mainCamera;}
+
+	public static void enableTextureRepeat() {
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+	}
+	public static void disableTextureRepeat() {
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE);
+	}
+	
+	public static void iniModelRenderer(Model mod) {
+		new ModelRenderer(mod);
+	}
+	
+	public static void iniPM() {
+        Sound.iniLoad();
+
+        new BattleController();
+        //new Floor(-64,-64,64,64,0,null);
+        //PlayerPM.create(0,0,10);
+	}
+	public static void ini3D() {
+        Sound.iniLoad();
+
+
+    	new WorldMap();
+
+        //Floaties.ini();
+                 
+        // Generate Environment
+        float seaLevel = 50;
+        
+    
+        Heightmap m = new Heightmap(64, 2, "Resources/Heightmaps/hm1.jpg");
+    	//BlockTerrain b = BlockTerrain.createFromHeightmap(m);
+        //m.smooth(1);
+        //m.halveResolution();
+
+                        
+        //player = Player.create(2400,2400,300);
+        player = Player.create(2400,2400,300);
+        
+        	
+                        	
+        //Actor a = new NPC(player.getX(),player.getY()+500,0);
+        //a.taskChase(player);
+        //a.taskRunStore();
+        
+        //new Water(seaLevel);
+        //new Sword("Whatever");
+
+    	vec3 pt;
+        /*for(int i = 0; i < 10; i++) {
+        	pt = m.generateRandomPointBetween(seaLevel, seaLevel+5);
+        	new Grass(pt.x(),pt.y(),30,24,8,4, .5f);
+        }*/
+        
+        for(int i = 0; i < 400; i++) {
+        	pt = m.generateRandomPointAbove(seaLevel);
+        	new PineTree(pt.x(),pt.y());
+        }
+                        
+        for(int i = 0; i < 400; i++) {
+        	pt = m.generateRandomPointAbove(seaLevel);
+        	new Fern(pt.x(),pt.y());
+        }
+    
+        new WindMill(player.getX(),player.getY());
+        new Town(player.getX() + 500, player.getY());
+        
+        
+        
+        new Chest(2600,2400,"Bread");
+        
+    	new SmartPhone();
+    	//new Radio(2500,2500);
+	}
+	
+	public static void ini2D() {
+		new Player2D(100,200);
+		Terrain2D.ini();
+	}
+
+	public static float getViewX() {
+		return viewPos[0];
+	}
+	public static float getViewY() {
+		return viewPos[1];
+	}
+	
+	public static int getScreenHeight() {
+		return SCREEN_HEIGHT;
+	}
 }

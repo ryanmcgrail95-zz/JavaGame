@@ -22,6 +22,12 @@ public class Fire extends Environmental implements Useable {
 	public Fire(float x, float y) {
 		super(x,y,true,false);
 		flickerTimer = new Timer(3);
+		BlockTerrain.getInstance().addLightSource(x,y,getZ()+5);
+	}
+	
+	public void destroy() {
+		flickerTimer.destroy();
+		super.destroy();
 	}
 	
 	

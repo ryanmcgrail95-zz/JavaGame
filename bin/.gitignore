@@ -1,5 +1,5 @@
-/Resources/
 /Reference/
+/Resources/
 /Smithing/
 /animation/
 /brain/
@@ -17,6 +17,8 @@
 /io/
 /obj/
 /object/
+/org/
+/paper/
 /path/
 /phone/
 /resource/
@@ -24,4 +26,5 @@
 /sts/
 /testbench/
 /time/
+/twoD/
 /window/

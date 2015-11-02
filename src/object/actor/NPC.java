@@ -18,6 +18,8 @@ public class NPC extends Actor {
 	
 	public NPC(float x, float y, float z) {
 		super(x,y,z);
+		
+		name = "NPC";
 	}
 	
 	

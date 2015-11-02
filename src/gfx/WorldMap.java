@@ -28,8 +28,8 @@ public class WorldMap extends HoldClosable {
 	}
 	
 	public void update() {
-		Player p = Player.getInstance();
-		topCam.focus(400-p.z(), 90, 89.5f, p);
+		//Player p = Player.getInstance();
+		//topCam.focus(400-p.z(), 90, 89.5f, p);
 	}
 	
 	public void render() {
@@ -79,5 +79,10 @@ public class WorldMap extends HoldClosable {
 		instance.setMeActive(active);
 		instance.topCam.setEnabled(active);
 	}
-	public static boolean isActive() {return instance.amIActive();}
+	public static boolean isActive() {
+		if(instance == null)
+			return false;
+		else 
+			return instance.amIActive();
+	}
 }

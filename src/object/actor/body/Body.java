@@ -30,7 +30,7 @@ public class Body {
 		walkCycle = new WalkCycle();
 		standCycle = new StandCycle();
 		
-		sword = new Sword("Whatever");
+		//sword = new Sword("Whatever");
 		
 		stand();
 	}

@@ -14,7 +14,7 @@ public class MergedFont extends Font {
 	private int width, height;
 	
 	public MergedFont(String name, float hangFrac) {
-		super(T_MERGED, hangFrac);
+		super(name, T_MERGED, hangFrac);
 		tex = new MultiTexture("Resources/Fonts/"+name+".png",16,16);
 		width = 8;
 		height = 8;

@@ -36,6 +36,8 @@ public class SmartPhone extends HoldClosable {
 	public SmartPhone() {
 		super(false,true);
 		
+		name = "SmartPhone";
+		
 		fbo = new FBO(GOGL.gl,WIDTH,HEIGHT);
 		
 		instance = this;
@@ -116,5 +118,10 @@ public class SmartPhone extends HoldClosable {
 	public static void setActive(boolean active) {
 		instance.setMeActive(active);
 	}
-	public static boolean isActive() {return instance.amIActive();}
+	public static boolean isActive() {
+		if(instance == null)
+			return false;
+		else 
+			return instance.amIActive();
+	}
 }

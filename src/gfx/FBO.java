@@ -89,11 +89,14 @@ public class FBO {
 	    gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, fbo);	    
 	}
 	
+	
+	
 	public void setOrtho(GL gl) {
 		GL2 gl2 = gl.getGL2();
 		gl2.glMatrixMode(GL2.GL_PROJECTION);
 		gl2.glLoadIdentity();
 		gl2.glOrtho(0,width,0,height, -1000,1000);
+		//gl2.glOrtho(GOGL.getViewX(),GOGL.getViewX()+width,GOGL.getViewY(),GOGL.getViewY()+height, -1000,1000);
         gl.glViewport(0,0,width,height);
 		gl2.glMatrixMode (GL2.GL_MODELVIEW);
 		gl2.glLoadIdentity();
@@ -112,8 +115,8 @@ public class FBO {
 		toY = camera.getToY();
 		toZ = camera.getToZ();
         // Perspective.
-        float widthHeightRatio = 640f/480; //getViewWidth()/getViewHeight();
-        glu.gluPerspective(45, widthHeightRatio, 1, 10000);
+        float widthHeightRatio = 1f*GOGL.SCREEN_WIDTH/GOGL.SCREEN_HEIGHT; //getViewWidth()/getViewHeight();
+        glu.gluPerspective(camera.getFOV(), widthHeightRatio, 1, 10000);
         GOGL.getCamera().gluLookAt(glu); 
         
         gl.glViewport(0,0,width,height);

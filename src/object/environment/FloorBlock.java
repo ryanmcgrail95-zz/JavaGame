@@ -3,6 +3,8 @@ package object.environment;
 import com.jogamp.opengl.util.texture.Texture;
 
 import functions.Math2D;
+import functions.MathExt;
+import gfx.GOGL;
 import object.primitive.Environmental;
 import object.primitive.Physical;
 
@@ -23,6 +25,8 @@ public class FloorBlock extends Environmental {
 	
 	
 	public FloorBlock(float x1, float y1, float z1, float x2, float y2, float z2, Texture tex) {
+		super(0,0,false,false);
+		
 		this.x1 = x1;		this.y1 = y1;		this.z1 = z1;
 		this.x2 = x2;		this.y2 = y2;		this.z2 = z2;
 		this.tex = tex;
@@ -138,9 +142,21 @@ public class FloorBlock extends Environmental {
 		public static Wall createBoundary(float x1, float y1, float x2, float y2) {
 			//Creates an invisible wall with the given two points. This will always be vertical.
 
-			Wall bnd = new Wall(x1, y1, Math2D.INFINITY, x2, y2, -Math2D.INFINITY, null);
+			Wall bnd = new Wall(x1, y1, MathExt.INFINITY, x2, y2, -MathExt.INFINITY, null);
 			bnd.setVisible(false);
 			
 			return bnd;
+		}
+
+
+		@Override
+		public void draw() {
+			GOGL.draw3DBlock(x1, y1, z1, x2, y2, z2, tex);
+		}
+
+		@Override
+		public void add() {
+			// TODO Auto-generated method stub
+			
 		}
 }

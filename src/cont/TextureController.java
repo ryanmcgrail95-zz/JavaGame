@@ -5,6 +5,7 @@ import gfx.ErrorPopup;
 import gfx.GOGL;
 import gfx.TextureExt;
 import image.filter.BGEraserFilter;
+import image.filter.GrayscaleAlphaFilter;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -20,6 +21,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureIO;
@@ -28,7 +30,7 @@ import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
 
 
 public class TextureController {
-	public final static byte M_NORMAL = 0, M_BGALPHA = 1;
+	public final static byte M_NORMAL = 0, M_BGALPHA = 1, M_MASK = 2;
 	private static Map<String, TextureExt> texMap = new HashMap<String, TextureExt>();
 	private static float time = 0;
 	
@@ -43,7 +45,7 @@ public class TextureController {
 		    if(fileName.endsWith(".gif"))
 		    	texExt = loadMulti(fileName, method);
 		    else
-		    	texExt = loadSingle(fileName); 
+		    	texExt = loadSingle(fileName, method); 
 	        	
 	        return texExt;
 	    } catch(IOException e) {
@@ -63,11 +65,17 @@ public class TextureController {
 	}
 	
 	
-	private static TextureExt loadSingle(String fileName) throws IOException {
+	private static TextureExt loadSingle(String fileName, byte method) throws IOException {
 
 		//Load Image
-		TextureExt texExt = new TextureExt(ImageLoader.load(fileName));
-	        
+		BufferedImage img = ImageLoader.load(fileName);
+		img = addAlpha(img);
+		
+		if(method == M_BGALPHA)
+			(new BGEraserFilter()).filter(img,img);
+		
+		TextureExt texExt = new TextureExt(img);
+		
         return texExt;
 	}
 	
@@ -75,12 +83,24 @@ public class TextureController {
 		List<BufferedImage> frames;
 		Texture texture;
 		
+		InputStream str;
+		if((str = FileExt.get(fileName)) == null)
+			return null;
 		
-		frames = getFrames(FileExt.get(fileName));		
-
-		if(method == M_BGALPHA)
+		frames = getFrames(str);
+		BufferedImage img;
+		
+		if(method == M_BGALPHA) {
+			for(int i = 0; i < frames.size(); i++) {
+				img = addAlpha(frames.get(i));
+				(new BGEraserFilter()).filter(img,img);
+				frames.set(i,img);
+			}
+		}
+		else if(method == M_MASK) {
 			for(BufferedImage i : frames)
-				(new BGEraserFilter()).filter(i,i);
+				(new GrayscaleAlphaFilter()).filter(i,i);
+		}
 		
 		return new TextureExt(frames);
 	}
@@ -90,6 +110,7 @@ public class TextureController {
 	public static ArrayList<BufferedImage> getFrames(InputStream gif) throws IOException {
 	    ArrayList<BufferedImage> frames = new ArrayList<BufferedImage>();
 	    ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
+	    
 	    ir.setInput(ImageIO.createImageInputStream(gif));
 	    
 	    for(int i = 0; i < ir.getNumImages(true); i++)
@@ -118,6 +139,9 @@ public class TextureController {
 	
 		load("Resources/Images/wall.png", "texBricks", TextureController.M_NORMAL);
         load("Resources/Images/Shadows/blockShadow.png", "texBlockShadow", M_NORMAL);
+
+        load("Resources/Images/fireMask.png", "fireMask", M_MASK);
+        load("Resources/Images/fireAni.png", "fireAni", M_MASK);
         
         load("Resources/Images/Items/coin.gif", "texCoin", M_BGALPHA);
         
@@ -131,13 +155,9 @@ public class TextureController {
         load("Resources/Images/iphone.png", "iphone", M_NORMAL);
 
         //BattleStar Images
-        load("Resources/Images/Battle/damageStar.gif", "texDamageStar", M_BGALPHA);
+        load("Resources/Images/Battle/star.png", "texDamageStar", M_BGALPHA);
         load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
-	}
-
-
-	public static void load(String imgName, byte mNormal) {
-		// TODO Auto-generated method stub
-		
+        
+        load("Resources/Images/Backgrounds/mountains.png", "bacMountains", M_NORMAL);
 	}
 }

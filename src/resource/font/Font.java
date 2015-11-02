@@ -12,8 +12,10 @@ public abstract class Font {
 	protected static Map<String, Font> map = new HashMap<String, Font>();
 	private byte type;
 	private float hangFrac;
+	private String name;
 	
-	protected Font(byte type, float hangFrac) {
+	protected Font(String name, byte type, float hangFrac) {
+		this.name = name;
 		this.type = type;
 		this.hangFrac = hangFrac;
 	}
@@ -38,4 +40,8 @@ public abstract class Font {
 	// MergedFont Methods
 	public abstract float[] getBounds(int frame);
 	public abstract Texture getTexture();
+
+	public String getName() {
+		return name;
+	}
 }

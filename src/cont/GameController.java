@@ -62,9 +62,58 @@ public class GameController extends JFrame implements WindowListener {
     
     
     //ANIMATING SCRIPTS
-	    public void gameLoop() {
+	public void gameLoop() {
+		Delta.setTargetFPS(60); //60
+	    Delta.setSpeed(1);
+	    long now,
+			lastLoopTime = System.nanoTime(),
+			targetTime = (long)(1000000000 / Delta.getTargetFPS()),
+			runTime;
+	    double delta;
+	       
+	    // keep looping round til the game ends
+	    while(isRunning) {
+	        // work out how long its been since the last update, this
+	        // will be used to calculate how far the entities should
+	        // move this loop
+	    	now = System.nanoTime();
+	        runTime = now - lastLoopTime;
+	        lastLoopTime = now;
+	        delta = 1. * runTime / targetTime;
+	          
+	        // update the frame counter
+	        lastFpsTime += runTime;
+	        fps++;
+	          
+	        // update our FPS counter if a second has passed since
+	        // we last recorded
+	        if (lastFpsTime >= 1000000000) {
+	            lastFpsTime = 0;
+	            fps = 0;
+	        }
+	          
+	        Delta.setDelta((float) delta);
+	          
+	        // draw everyting
+	        GOGL.repaint();
+	          
+	        // we want each frame to take 10 milliseconds, to do this
+	        // we've recorded when we started the frame. We add 10 milliseconds
+	        // to this and then factor in the current time to give 
+	        // us our final value to wait for
+	        // remember this is in ms, whereas our lastLoopTime etc. vars are in ns.
+	        try {
+	        	long sleepTime;
+	        	sleepTime = (lastLoopTime-System.nanoTime() + targetTime)/1000000;
+	        	  
+	        	if(sleepTime >= 0)
+	        		Thread.sleep(sleepTime);
+	        } catch(InterruptedException e) {}
+	    }	       
+	} 	
+	    public void gameLoop2() {
 	       long lastLoopTime = System.nanoTime();
-	       Delta.setTargetFPS(60);
+	       Delta.setTargetFPS(60); //60
 	       Delta.setSpeed(1);
 	       
 	       // keep looping round til the game ends
@@ -77,7 +126,6 @@ public class GameController extends JFrame implements WindowListener {
 	          lastLoopTime = now;
 	          double delta = updateLength / ((1000000000 / Delta.getTargetFPS()));
 	          
-	          
 	          // update the frame counter
 	          lastFpsTime += updateLength;
 	          fps++;
@@ -85,7 +133,6 @@ public class GameController extends JFrame implements WindowListener {
 	          // update our FPS counter if a second has passed since
 	          // we last recorded
 	          if (lastFpsTime >= 1000000000) {
-	             //System.out.println("(FPS: "+fps+")");
 	             lastFpsTime = 0;
 	             fps = 0;
 	          }

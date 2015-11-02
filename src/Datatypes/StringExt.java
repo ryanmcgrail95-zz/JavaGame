@@ -102,7 +102,7 @@ public class StringExt {
 		}
 		else {
 			outStr = str.substring(0,i);
-			str = str.replaceFirst(outStr, "");
+			str = str.substring(i);
 			outStr = outStr.replaceFirst("\n","");
 		}
 		

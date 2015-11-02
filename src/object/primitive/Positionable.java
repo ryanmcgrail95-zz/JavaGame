@@ -78,6 +78,9 @@ public abstract class Positionable extends Drawable {
 	public void addZVelocity(float nZ) {velocity.z(velocity.z()+nZ);}
 
 	
+	public void update() {
+		super.update();
+	}
 	public void updatePosition() {
 		positionPrevious.set(position);
 		

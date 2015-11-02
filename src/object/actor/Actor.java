@@ -1,11 +1,17 @@
 package object.actor;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import brain.Name;
 import cont.Messages;
 import cont.Text;
+import datatypes.StringExt;
 import datatypes.vec2;
 import datatypes.vec3;
 import datatypes.vec4;
@@ -18,15 +24,17 @@ import obj.itm.ItemBlueprint;
 import obj.prt.Dust;
 import object.actor.body.Body;
 import object.environment.Floor;
-import object.environment.Heightmap;
+import object.environment.Heightmap2;
 import object.environment.ResourceMine;
 import object.primitive.Physical;
 import object.primitive.Positionable;
+import paper.SpriteMap;
 import resource.sound.Sound;
 import sts.Stat;
 import time.Delta;
 import time.Timer;
 import window.StoreGUI;
+import fl.FileExt;
 import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
@@ -34,7 +42,6 @@ import functions.MathExt;
 import gfx.Camera;
 import gfx.GOGL;
 import gfx.RGBA;
-import gfx.SpriteMap;
 import gfx.TextureExt;
 
 public abstract class Actor extends Physical {
@@ -217,6 +224,8 @@ public abstract class Actor extends Physical {
 
 	public Actor(float x, float y, float z) {
 		super(x, y, z);
+		
+		name = "Actor";
 		
 		shouldAdd = true;
 
@@ -674,7 +683,7 @@ public abstract class Actor extends Physical {
 	}
 
 	private void dropItems() {
-		inv.dropAll(new vec3(x(), y(), Heightmap.getInstance().getZ(x(), y())));
+		inv.dropAll(new vec3(x(), y(), Heightmap2.getInstance().getZ(x(), y())));
 	}
 
 	public void buyItem(ItemBlueprint itemType, int value) {
@@ -701,6 +710,32 @@ public abstract class Actor extends Physical {
 			Messages.setActionMessage("Talk to Clerk");
 			if(Mouse.getLeftClick())
 				StoreGUI.open(stat.getName());
+		}
+	}
+	
+	public void loadInventory(String fileName) {
+		BufferedReader str = new BufferedReader(new InputStreamReader(FileExt.get(fileName)));
+		
+		String itemName, count;
+		String line;
+		StringExt lineExt = new StringExt();
+		try {
+			while((line = str.readLine()) != null) {
+				lineExt.set(line);
+				
+				itemName = lineExt.chompWord();
+				count = lineExt.chompWord();
+				
+				itemName = itemName.replace("(", "").replace(")","").replace("_"," ");
+				count = count.replace("x", "");
+				
+				this.give(itemName, Integer.parseInt(count));
+			}
+			
+			str.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

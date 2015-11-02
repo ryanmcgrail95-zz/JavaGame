@@ -16,7 +16,10 @@ public class LinearGrid {
 		width = grid.length;
 		height = grid[0].length;
 		
-		this.grid = grid;
+		this.grid = new float[width][height];
+		for(int x = 0; x < width; x++)
+			for(int y = 0; y < height; y++)
+				this.grid[x][y] = grid[x][y];
 	}
 	
 	
@@ -52,5 +55,14 @@ public class LinearGrid {
 			return z1 - offsetX*(z1-z2) - offsetY*(z2-z3);
 		else 
 			return z1 - offsetX*(z4-z3) - offsetY*(z1-z4);
+	}
+	
+	public void println() {
+		int sum = 0;
+		for(int x = 0; x < width; x++)
+			for(int y = 0; y < height; y++)
+				sum += grid[x][y];
+		
+		System.out.println(sum);
 	}
 }

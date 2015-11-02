@@ -6,15 +6,12 @@ public class MultiTexture {
 	private Texture tex;
 	private int xNum, yNum;
 	private float xSize, ySize;
+
+	public MultiTexture(String fileName, int xNum, int yNum, boolean grayscale) 	{set(GOGL.loadTexture(fileName,grayscale), xNum, yNum);}
+	public MultiTexture(String fileName, int xNum, int yNum) 	{set(GOGL.loadTexture(fileName), xNum, yNum);}
+	public MultiTexture(Texture tex, int xNum, int yNum) 		{set(tex, xNum,yNum);}
 	
-	public MultiTexture(String fileName, int xNum, int yNum) {
-		set(GOGL.loadTexture(fileName), xNum, yNum);
-	}
-	public MultiTexture(Texture tex, int xNum, int yNum) {
-		set(tex, xNum,yNum);
-	}
-	
-	private void set(Texture tex, int xNum, int yNum) {
+	private void set(Texture tex, int xNum, int yNum) {		
 		this.tex = tex;
 		this.xNum = xNum;
 		this.yNum = yNum;

@@ -37,6 +37,8 @@ public abstract class Tree extends ResourceMine {
 	public Tree(float x, float y) {
 		super(x,y);
 		
+		name = "Tree";
+		
 		shouldAdd = true;
 		
 		zScale = MathExt.rnd(.9f,2f);

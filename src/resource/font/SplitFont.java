@@ -19,7 +19,7 @@ public class SplitFont extends Font {
 	
 	// CONSTRUCTOR
 		public SplitFont(String name, float hangFrac) {
-			super(T_SPLIT, hangFrac);
+			super(name, T_SPLIT, hangFrac);
 			fontDir = "Resources/Fonts/" + name + "/";
 			loadCharacters();
 			

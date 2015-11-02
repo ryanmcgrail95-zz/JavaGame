@@ -66,7 +66,8 @@ public final class Keyboard implements KeyEventDispatcher {
 		
 		
 		if(event == E_DOWN) {
-			set(c,K_PRESSED);
+			if(get(c) == K_UP)
+				set(c,K_PRESSED);
 		}
 		else if(event == E_RELEASED)
 			set(c,K_RELEASED);

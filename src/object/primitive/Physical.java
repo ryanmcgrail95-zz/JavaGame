@@ -58,7 +58,9 @@ public abstract class Physical extends Positionable {
 		return didCol;
 	}
 	
-	public void update() {		
+	public void update() {
+		super.update();
+		
 		updatePosition();
 		collideAll();
 	}

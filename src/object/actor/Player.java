@@ -1,8 +1,9 @@
 package object.actor;
 
 import obj.itm.ItemBlueprint;
-import object.environment.Heightmap;
+import object.environment.Heightmap2;
 import object.environment.Waypoint;
+import paper.SpriteMap;
 import phone.SmartPhone;
 import window.Window;
 import io.Controller;
@@ -11,9 +12,10 @@ import io.Keyboard;
 import io.Mouse;
 import functions.Math2D;
 import gfx.Camera;
+import gfx.FireSprite;
 import gfx.GOGL;
 import gfx.Overlay;
-import gfx.SpriteMap;
+import gfx.RGBA;
 import gfx.WorldMap;
 
 public class Player extends Actor {	
@@ -22,7 +24,14 @@ public class Player extends Actor {
 		
 	private Player(float x, float y, float z) {
 		super(x, y, z);
+		
+		shouldAdd = false;
+		
+		name = "Player";
+		
 		type = T_PLAYER;
+		
+		loadInventory("Resources/Data/Player/inventory.dat");
 	}
 	
 	
@@ -62,6 +71,17 @@ public class Player extends Actor {
 	public void draw() {		
 		if(!isLookCameraActive())
 			super.draw();
+		
+		GOGL.setPerspective();
+		
+		GOGL.setColor(RGBA.WHITE);
+		GOGL.transformClear();
+			transformTranslation();
+			GOGL.transformTranslation(0,0,100);
+			GOGL.transformSprite();
+			
+			GOGL.drawFBO(-8,-16, 16,32, FireSprite.getFBO());
+		GOGL.transformClear();
 	}
 	
 	//Static Functions
@@ -116,7 +136,7 @@ public class Player extends Actor {
 			}
 			
 		//JUMPING
-		if(IO.getZButtonPressed()) {
+		if(Keyboard.checkDown('m')) {
 			setZ(300);
 			setZVelocity(0);
 			//roll();
@@ -174,8 +194,13 @@ public class Player extends Actor {
 	}
 	
 	public static Player getInstance() {
+		return instance;
+	}
+
+
+	public static Player create(float x, float y, float z) {
 		if(instance == null)
-			instance = new Player(0,0,0);
+			instance = new Player(x,y,z);
 		return instance;
 	}
 }

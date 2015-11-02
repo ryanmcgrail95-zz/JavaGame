@@ -16,6 +16,8 @@ limitations under the License.
 
 package image.filter;
 
+import gfx.RGBA;
+
 import java.awt.*;
 import java.awt.image.*;
 
@@ -26,31 +28,29 @@ import com.jhlabs.image.WholeImageFilter;
  */
 public class BGEraserFilter extends WholeImageFilter {
 	
-		public BGEraserFilter() {
+	public BGEraserFilter() {
 	}
 
 	protected int[] filterPixels( int width, int height, int[] inPixels, Rectangle transformedSpace ) {
 		int index = 0, r, g, b, a;
-		int bR, bG, bB;
+		int[] bg, col = new int[4];
 		int[] outPixels = new int[width * height];
 
-		bR = outPixels[0] & 0x00ff0000;
-		bG = outPixels[0] & 0x0000ff00;
-		bB = outPixels[0] & 0x000000ff;
+		bg = RGBA.convertInt2RGBA(inPixels[0]);
 		
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				int rgba = inPixels[index];
+				RGBA.convertInt2RGBA(inPixels[index], col);
 
-				a = rgba & 0xff000000;
-				r = rgba & 0x00ff0000;
-				g = rgba & 0x0000ff00;
-				b = rgba & 0x000000ff;
+				r = col[0];
+				g = col[1];
+				b = col[2];
+				a = col[3];
 				
-				if(r == bR && g == bG && b == bB)
+				if(r == bg[0] && g == bg[1] && b == bg[2])
 					a = 0;
 				
-				outPixels[index++] = (a << 24) | (r << 16) | (g << 8) | b;
+				outPixels[index++] = RGBA.convertRGBA2Int(r, g, b, a); //(a << 24) | (r << 16) | (g << 8) | b;
 			}
 		}
 		return outPixels;

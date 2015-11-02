@@ -1,5 +1,7 @@
 package functions;
 
+import time.Delta;
+
 public class MathExt {
 	public static final float INFINITY = Float.MAX_VALUE;
 
@@ -179,5 +181,26 @@ public class MathExt {
 	}
 	public static float grid(float x, float num) {
 		return x - snap(x,num);
+	}
+	
+	public static int floor(int value, int grid) {
+		return (int) Math.floor(value/grid)*grid;
+	}
+	public static float floor(float value, float grid) {
+		return (float) Math.floor(value/grid)*grid;
+	}
+	
+	public static int ceil(int value, int grid) {
+		return (int) Math.ceil(value/grid)*grid;
+	}
+	public static float ceil(float value, float grid) {
+		return (float) Math.ceil(value/grid)*grid;
+	}
+	
+	public static float round(float value, float grid) {
+		return (float) Math.round(value/grid)*grid;
+	}
+	public static float to(float start, float to, float spd) {
+		return start + Delta.convert((to - start)/spd);
 	}
 }

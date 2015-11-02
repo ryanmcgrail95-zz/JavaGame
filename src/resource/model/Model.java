@@ -12,6 +12,7 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.GL4;
+import com.jogamp.opengl.util.texture.Texture;
 
 import datatypes.mat4;
 import datatypes.vec2;
@@ -29,22 +30,28 @@ public class Model {
 	private int[] colorList;
 	private int vertexNum;
 	private int vertexBuffer;
-	private Material materials;
+	private Material[] materials;
 	
 	public final static int TRIANGLES = GL2.GL_TRIANGLES, QUADS = GL2.GL_QUADS;
 	private int modelType;
 	
 	private boolean hasColor;
 
-	public static Model MOD_PINEBRANCHES, MOD_PINETREE, MOD_PINESTUMP;
-	public static Model MOD_WMBLADES, MOD_WMFRAME, MOD_WMBODY;
-	public static Model MOD_HOUSEBODY, MOD_HOUSEFRAME;
-	public static Model MOD_BOWL;
-	public static Model MOD_FERN;
+	public static Model 
+		MOD_PINEBRANCHES, MOD_PINETREE, MOD_PINESTUMP,
+		MOD_WMBLADES, MOD_WMFRAME, MOD_WMBODY,
+		MOD_HOUSEBODY, MOD_HOUSEFRAME,
+		MOD_BOWL,
+		MOD_FERN,
+		MOD_TABLE,
+		MOD_BATTLE,
+		MOD_BATTLE2,
+		MOD_CASTLE,
+		MOD_FLOWER;
 	
 	public static void ini() {
 		
-		MOD_WMBLADES = OBJLoader.load("windmill").fix();
+		/*MOD_WMBLADES = OBJLoader.load("windmill").fix();
 		MOD_WMFRAME = OBJLoader.load("windmillframe").fix();
 		MOD_WMBODY = OBJLoader.load("windmillbody").fix();
 		
@@ -59,7 +66,19 @@ public class Model {
 			MOD_BOWL.flipNormals();
 		
 		MOD_FERN = OBJLoader.load("fern").fix();
-			MOD_FERN.flipNormals();
+			MOD_FERN.flipNormals();*/
+		
+		MOD_TABLE = OBJLoader.load("Peachs_Castle-Table_1").fix();
+			MOD_TABLE.mirrorUVVertically();
+		
+		MOD_BATTLE = OBJLoader.load("Battle-Pleasant_Path_1_flowerless").fix();
+			MOD_BATTLE.mirrorUVVertically();
+		
+		MOD_FLOWER = OBJLoader.load("flower").fix();
+			MOD_FLOWER.mirrorUVVertically();
+				
+		/*MOD_CASTLE = OBJLoader.load("Model/output").fix();
+			MOD_CASTLE.mirrorUVVertically();*/
 	}
 	
 	public Model(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<int[]> vertexList) {
@@ -74,7 +93,8 @@ public class Model {
 		this.modelType = modelType;		
 		setAll(pointList,normalList,uvList,colorList,vertexList);
 		
-		hasColor = true;		
+		hasColor = colorList.size() > 0;
+		
 		vertexBuffer = createAndFillVertexBuffer();
 	}
 	
@@ -108,7 +128,20 @@ public class Model {
 		// Delete Arrays
 		// Delete Material
 		
+		for(int i = 0; i < pointList.length; i++)
+			pointList[i] = null;
+		for(int i = 0; i < normalList.length; i++)
+			normalList[i] = null;
+		for(int i = 0; i < uvList.length; i++)
+			uvList[i] = null;
+		for(int i = 0; i < vertexList.length; i++)
+			vertexList[i] = null;
+		
 		// Delete GL Vertex Index/Buffer
+		GL2 gl = GOGL.gl;
+		gl.glDeleteBuffers(1, new int[] {vertexBuffer}, 0);
+
+		
 		// Empty Vertex Buffer
 	}
 	
@@ -122,39 +155,61 @@ public class Model {
 	public void draw() {
 		GL2 gl = GOGL.gl;
 		
-		int p,u,n;
+		int p,u,n,c;
+		int[] color = new int[4];
 		
-		//materials.enable();
+		Material curMat = null;
 		
+		GOGL.disableTextures();
+		GOGL.enableBlending();
+		GOGL.enableInterpolation();
 		gl.glBegin(GL2.GL_TRIANGLES);
 		for(int[] v : vertexList) {			
 			p = v[0];
 			u = v[1];
 			n = v[2];
+			c = v[3];
 			
-			if(u != -1)
-				gl.glTexCoord2fv(uvList[u],0);
-			if(n != -1)
-				gl.glNormal3fv(normalList[n],0);
-			gl.glVertex3fv(pointList[p],0);
+			if(p == -1) {
+				if(curMat != null)
+					curMat.disable();
+				gl.glEnd();
+
+				curMat = materials[u];
+				curMat.enable();
+				gl.glBegin(GL2.GL_TRIANGLES);
+			}
+			else {
+				if(u != -1)
+					gl.glTexCoord2fv(uvList[u],0);
+				if(n != -1)
+					gl.glNormal3fv(normalList[n],0);
+				if(c != -1) {
+					RGBA.convertInt2RGBA(colorList[c],color);
+					GOGL.setColor(new RGBA(colorList[c]));
+					gl.glColor4f(color[0]/255f,color[1]/255f,color[2]/255f,255f);
+				}
+				gl.glVertex3fv(pointList[p],0);
+			}
 		}
 		gl.glEnd();
 		
-		//materials.disable();
+		GOGL.disableTextures();
 	}
 	
 	
 	
 	public void drawFast() {
+		
+		
 		GL2 gl = GOGL.gl;
 		
 		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBuffer);
 		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		//gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
 		
-	
 		gl.glVertexPointer( 3, GL.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 0 );
 		gl.glNormalPointer( GL.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 5 * Buffers.SIZEOF_FLOAT );
 		gl.glColorPointer(3, GL.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 8 * Buffers.SIZEOF_FLOAT );
@@ -168,8 +223,9 @@ public class Model {
 
 		// Disable the different kinds of data 
 		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+		
 		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		//gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
 		gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 	}
@@ -248,10 +304,17 @@ public class Model {
 		}
 	}
 	
-	public void attachMaterials(Material mat) {
+	public void attachMaterials(Material[] mat) {
 		materials = mat;
 	}
 	
+	public void mirrorUVVertically() {
+		for(float[] uv : uvList)
+			uv[1] = 1-uv[1];
+	}
+	
+	
+	// Allow Model to Be Created this way in first place
 	
 	protected int createAndFillVertexBuffer() {
 		int[] bufferInd = new int[1];    
@@ -281,6 +344,9 @@ public class Model {
 	    int i = 0, k = 0;
 	    for(k = 0; k < vertexNum; k++) {
 	    	v = vertexList[k];
+	    	
+	    	if(v[0] == -1)
+	    		continue;
 	    	
 	    	// Add Point
 	    	array = pointList[v[0]];

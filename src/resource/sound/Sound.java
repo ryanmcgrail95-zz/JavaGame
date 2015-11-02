@@ -21,6 +21,7 @@ import com.jogamp.opengl.util.texture.Texture;
 import cont.GameController;
 import cont.TextureController;
 import datatypes.vec3;
+import datatypes.lists.CleanList;
 import fl.FileExt;
 import functions.Array;
 import functions.Math2D;
@@ -35,32 +36,48 @@ public class Sound {
     private static float listenerX, listenerY, listenerZ;
     
     private static SoundSource curMusic = null, newMusic = null;
-    private static List<SoundSource> sourceList = new ArrayList<SoundSource>();
+    private static CleanList<SoundSource> sourceList = new CleanList<SoundSource>();
 	private static List<SoundBuffer> bufferList = new ArrayList<SoundBuffer>();
 	private static List<String> musicList = new ArrayList<String>();
     private static Map<String, List<String>> playlistMap = new HashMap<String, List<String>>();
 	
 	public static void ini() {
-		try {
-			ALut.alutInit();
-		} catch(Exception e) {
-			ErrorPopup.open("Failed to initialize ALUT.", true);
-		}
+		boolean success = false;
+		
+		do {
+			try {
+				ALut.alutInit();
+				success = true;
+			} catch(Exception e) {
+				System.out.println("Failed to initialize ALUT.");
+				success = false;
+				//ErrorPopup.open("Failed to initialize ALUT.", true);
+			}
+		} while(!success);
 	}
 	public static void iniLoad() {
 
         //LOAD SOUNDS
-		loadSound("button", "Resources/Sounds/FX/button.ogg",80);
-		loadSound("blockCrumble", "Resources/Sounds/FX/blockCrumble.ogg");
+		//loadSound("button", "Resources/Sounds/FX/button.ogg",80);
+		//loadSound("blockCrumble", "Resources/Sounds/FX/blockCrumble.ogg");
         loadSound("footstep", "Resources/Sounds/FX/footstep.ogg",.5f);
         loadSound("spin", "Resources/Sounds/FX/spin.ogg");
-        loadSound("jump", "Resources/Sounds/FX/jump.ogg", 50);
+        loadSound("jump", "Resources/Sounds/FX/jump.ogg", 70);
         loadSound("blipMale", "Resources/Sounds/FX/blipMale.ogg", 80);
+
+		loadSound("fireAttack", "Resources/Sounds/FX/fireAttack.ogg",90);
         
+		loadSound("enemyDie", "Resources/Sounds/FX/enemyDie.ogg",110);
+		
+		loadSound("dodge", "Resources/Sounds/FX/dodge.ogg",50);
+		loadSound("dodgeCrunch", "Resources/Sounds/FX/dodgeCrunch.ogg",80);
+		loadSound("attack", "Resources/Sounds/FX/attack.ogg",100);
+
 		//loadSound("ampTest", "Resources/Sounds/Music/ampTest.ogg", 1, true);
 		//loadSound("overworld", "Resources/Sounds/Music/overworld.ogg", .05f, true);
 		loadSound("ffOverworld", "Resources/Sounds/Music/ffOverworld.ogg", .05f, true);
-		loadDirectory("Resources/Sounds/Music/Ace Attorney/", .05f);
+		//loadSound("ffOverworld", "Resources/Sounds/Music/ffOverworld.ogg", .05f, true);
+		//loadDirectory("Resources/Sounds/Music/Ace Attorney/", .05f);
 				
 		playMusic("ffOverworld");
 	}
@@ -102,7 +119,7 @@ public class Sound {
 				curMusic.play();
 			}
 		}
-		else
+		else if(curMusic != null)
 			curMusic.fade(1);
 	}
 	
@@ -118,16 +135,12 @@ public class Sound {
 	
 	
 	public static void clean() {
-		List<SoundSource> toRemove = new ArrayList<SoundSource>();
-
 		for(SoundSource src : sourceList) {
 			src.update();
-			if(src.isStopped())
-				toRemove.add(src);
-		}
-		for(SoundSource src : toRemove) {
-			src.destroy();
-			sourceList.remove(src);
+			if(src.isALStopped()) {
+				src.destroy();
+				sourceList.remove(src);
+			}
 		}
 	}
 		
@@ -350,5 +363,11 @@ public class Sound {
 	
 	public static List<String> getMusicList() {
 		return musicList;
+	}
+	public static boolean isPlaying(String name) {
+		for(SoundSource src : sourceList)
+			if(src.getParentBuffer().getName() == name)
+				return true;
+		return false;
 	}
 }

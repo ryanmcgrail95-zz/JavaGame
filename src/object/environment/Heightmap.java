@@ -5,9 +5,13 @@ import io.Mouse;
 import object.actor.Player;
 import object.primitive.Collideable;
 import object.primitive.Drawable;
+import object.primitive.Environmental;
 import object.primitive.Physical;
+import paper.PlayerPM;
 import resource.model.Model;
+import resource.model.ModelCreator;
 import functions.Math2D;
+import functions.Math3D;
 import functions.MathExt;
 import gfx.Camera;
 import gfx.GOGL;
@@ -21,27 +25,33 @@ import datatypes.LinearGrid;
 import datatypes.mat3;
 import datatypes.vec2;
 import datatypes.vec3;
+import datatypes.lists.CleanList;
 
 public class Heightmap extends Drawable implements Collideable {
 	private static Heightmap instance;
-	private float gridSize;
+	private float gridSize, chunkSize;
+	private CleanList<Chunk> chunkList;
 	private LinearGrid heightGrid;
+	private ModelCreator modC = new ModelCreator(Model.TRIANGLES);
 	
-	private float[][][] vertexGrid, normalGrid;
+	private float[][] vertexGrid;
+	private int[][] luxGrid;
+	private float[][][] normalGrid;
 	private int[][][] colorGrid;
 	
-	protected int width, height;	
+	private Chunk[][] chunkGrid;
+	
+	protected int width, height;
+	private float lightDis = 250;
 	
 	public Heightmap(float gridSize, float maxHeight, String fileName) {
-		
 		super(false,false);
+		
+		name = "Heightmap";
 		instance = this;
-		
-		shouldAdd = true;
-		visible = false;
-		
-		doUpdates = false;
+				
 		this.gridSize = gridSize;
+		this.chunkSize = this.gridSize*16;
 		
 		loadFromTexture(maxHeight, TextureController.load(fileName, fileName, TextureController.M_BGALPHA));
 	}
@@ -54,7 +64,9 @@ public class Heightmap extends Drawable implements Collideable {
 		shouldAdd = true;
 		
 		doUpdates = false;
-		this.gridSize = gridSize;		
+		this.gridSize = gridSize;
+		this.chunkSize = this.gridSize*16;
+		
 		loadFromTexture(maxHeight, tex);
 	}
 	
@@ -62,32 +74,41 @@ public class Heightmap extends Drawable implements Collideable {
 		width = tex.getWidth();
 		height = tex.getHeight();
 		
+		chunkList = new CleanList<Chunk>();
+		chunkGrid = new Chunk[width][height];
+
+		luxGrid = new int[width][height];
+		vertexGrid = new float[width][height];
+		colorGrid = new int[width][height][3];
+		normalGrid = new float[width][height][4];
+			
+		int chunkXNum, chunkYNum, cXX, cYY;
+		chunkXNum = (int) Math.floor(width/16);
+		chunkYNum = (int) Math.floor(height/16);
+		
+		Chunk c;
+
 		float[][] grid = new float[width][height];
 
-		vertexGrid = new float[width][height][4];
-		colorGrid = new int[width][height][3];
-		
-		normalGrid = new float[width][height][4];
-	
-		float maxH, minH;
-		maxH = 0;
-		minH = 1000000;
-		
-		for(int x = 0; x < width; x++)
-			for(int y = 0; y < height; y++) {
-				vertexGrid[x][y][0] = x*gridSize;
-				vertexGrid[x][y][1] = y*gridSize;
-				grid[x][y] = vertexGrid[x][y][2] = maxHeight*tex.getPixelColor(x,y).getRi();
-				vertexGrid[x][y][3] = 1;
-				
-				colorGrid[x][y] = generateColor(grid[x][y]);
-				
-				maxH = Math.max(maxH,grid[x][y]);
-				minH = Math.min(minH,grid[x][y]);
-			}
+		for(int cX = 0; cX < chunkXNum; cX++) {
+			for(int cY = 0; cY < chunkYNum; cY++) {								
+				for(int x = 0; x < 16; x++)
+					for(int y = 0; y < 16; y++) {
+						cXX = cX*16 + x;
+						cYY = cY*16 + y;
 						
+						grid[cXX][cYY] = vertexGrid[cXX][cYY] = maxHeight*tex.getPixelColor(cXX,cYY).getRi();
+						
+						colorGrid[cXX][cYY] = generateColor(grid[cXX][cYY]);
+					}
+				
+				
+				chunkList.add(c = new Chunk(cX,cY));
+				chunkGrid[cX][cY] = c;
+			}
+		}
+										
 		heightGrid = new LinearGrid(grid);
-		
 		calcNormals();
 	}
 	
@@ -98,11 +119,14 @@ public class Heightmap extends Drawable implements Collideable {
 	public float getHeight() {
 		return height*gridSize;
 	}
-	public float getZ(float x, float y) {
-		return heightGrid.get(x/gridSize,y/gridSize);
+	
+	public float getZ(float worldX, float worldY) {
+		return heightGrid.get(worldX/gridSize,worldY/gridSize);
 	}
 	protected float getVertexZ(int x, int y) {
-		return vertexGrid[MathExt.contain(0,x,width-1)][MathExt.contain(0,y,height-1)][2];
+		x = MathExt.contain(0,x,width-1);
+		y = MathExt.contain(0,y,height-1);
+		return vertexGrid[x][y];
 	}
 	
 	
@@ -141,118 +165,28 @@ public class Heightmap extends Drawable implements Collideable {
 		return false;
 	}
 	
-	public void add() {
+	public Chunk getChunk(float worldX, float worldY) {
+		int xx, yy;
+		xx = (int) Math.floor(worldX/chunkSize);
+		yy = (int) Math.floor(worldY/chunkSize);
 		
-		float[] v1, v2, v3, v4;
-		float[] vN1, vN2, vN3, vN4;
-		int[] vC1, vC2, vC3, vC4;
-		
-		GL2 gl = GOGL.gl;
-				
-		//GOGL.enableLighting();
-		//GOGL.setLightColori(73,214,127);
-		
-		float r, pX, pY;
-		r = 3000;
-		pX = Player.getInstance().getX();
-		pY = Player.getInstance().getY();
-		int leftX, rightX, topY, botY;
-		leftX = (int) Math.max(0,(pX-r)/gridSize);
-		rightX = (int) Math.min(width,(pX+r)/gridSize);
-		topY = (int) Math.max(0,(pY-r)/gridSize);
-		botY = (int) Math.min(height-1,(pY+r)/gridSize);
-		
-		
-		float vX1,vY1,vZ1, vX2,vY2,vZ2, vX3,vY3,vZ3, vX4,vY4,vZ4;		
-		for(int y = topY; y < botY; y++) {
-			vY1 = vY2 = y*gridSize;
-			vY3 = vY4 = (y+1)*gridSize;
-			
-			for(int x = leftX; x < rightX; x++) {
-				vX1 = vX3 = x*gridSize;
-				vX2 = vX4 = (x+1)*gridSize;
-
-				vN1 = getNormal(x,y);
-				vN2 = getNormal(x+1,y);
-				vN3 = getNormal(x,y+1);
-				vN4 = getNormal(x+1,y+1);
-				
-				vZ1 = getVertexZ(x,y);
-				vZ2 = getVertexZ(x+1,y);
-				vZ3 = getVertexZ(x,y+1);
-				vZ4 = getVertexZ(x+1,y+1);
-
-				vC1 = colorGrid[MathExt.contain(0,x,width-1)][MathExt.contain(0,y,height-1)];
-				vC2 = colorGrid[MathExt.contain(0,x+1,width-1)][MathExt.contain(0,y,height-1)];
-				vC3 = colorGrid[MathExt.contain(0,x,width-1)][MathExt.contain(0,y+1,height-1)];
-				vC4 = colorGrid[MathExt.contain(0,x+1,width-1)][MathExt.contain(0,y+1,height-1)];
-
-				GOGL.setLightColor(vC1[0],vC1[1],vC1[2]);
-				//gl.glColor3i(vC1[0],vC1[1],vC1[2]);
-					gl.glNormal3f(vN1[0], vN1[1], vN1[2]);
-					gl.glVertex3f(vX1,vY1,vZ1);
-				GOGL.setLightColor(vC2[0],vC2[1],vC2[2]);
-				//gl.glColor3i(vC2[0],vC2[1],vC2[2]);
-					gl.glNormal3f(vN2[0], vN2[1], vN2[2]);
-					gl.glVertex3f(vX2,vY2,vZ2);
-				GOGL.setLightColor(vC3[0],vC3[1],vC3[2]);
-				//gl.glColor3i(vC3[0],vC3[1],vC3[2]);
-					gl.glNormal3f(vN3[0], vN3[1], vN3[2]);
-					gl.glVertex3f(vX3,vY3,vZ3);		
-
-				GOGL.setLightColor(vC2[0],vC2[1],vC2[2]);
-					//gl.glColor3i(vC2[0],vC2[1],vC2[2]);				
-					gl.glNormal3f(vN2[0], vN2[1], vN2[2]);
-					gl.glVertex3f(vX2,vY2,vZ2);
-				GOGL.setLightColor(vC4[0],vC4[1],vC4[2]);
-				//gl.glColor3i(vC4[0],vC4[1],vC4[2]);
-					gl.glNormal3f(vN4[0], vN4[1], vN4[2]);
-					gl.glVertex3f(vX4,vY4,vZ4);
-				GOGL.setLightColor(vC3[0],vC3[1],vC3[2]);
-				//gl.glColor3i(vC3[0],vC3[1],vC3[2]);
-					gl.glNormal3f(vN3[0], vN3[1], vN3[2]);
-					gl.glVertex3f(vX3,vY3,vZ3);
-			}			
-		}
-				
-		
-		GOGL.setColor(1,1,1);
+		return chunkGrid[xx][yy];
+	}
+	
+	public void addEnvironmental(Environmental e) {
+		getChunk(e.getX(),e.getY()).addEnvironmental(e);
+	}
+	
+	public void add() {		
 	}
 	
 	public void draw() {
-		
-		/*vec3 norm;
-
-		GL2 gl = GOGL.gl;
-				
-		//GOGL.enableLighting();
-		//GOGL.setLightColori(134,199,98); //GOGL.setLightColori(73,214,127);
-		
-		float r, pX, pY;
-		r = 3000;
-		pX = Player.getInstance().getX();
-		pY = Player.getInstance().getY();
-		int leftX, rightX, topY, botY;
-		leftX = (int) Math.max(0,(pX-r)/gridSize);
-		rightX = (int) Math.min(width,(pX+r)/gridSize);
-		topY = (int) Math.max(0,(pY-r)/gridSize);
-		botY = (int) Math.min(height-1,(pY+r)/gridSize);
-		
-		
-		for(int y = topY; y < botY; y++) {
-			GOGL.begin(GOGL.P_TRIANGLE_STRIP);
-			for(int x = leftX; x < rightX; x++) {
-				for(int i = 1; i >= 0; i--) {
-					norm = getNormal(x,y+i);
-				    GOGL.vertex(x*gridSize,(y+i)*gridSize,get(x,y+i),0,0,norm.get(0), norm.get(1), norm.get(2));
-				}
-			}
-  			GOGL.end();
-		}		*/
+		for(Chunk c : chunkList)
+			c.draw();
 	}
 
 
-	public void smooth(int rad) {
+	/*public void smooth(int rad) {
 		for(int x = rad; x < width-rad; x++)
 			for(int y = rad; y < height-rad; y++) {
 				float v = 0;
@@ -265,7 +199,7 @@ public class Heightmap extends Drawable implements Collideable {
 			}
 		
 		calcNormals();
-	}
+	}*/
 
 	public static Heightmap getInstance() {
 		return instance;
@@ -353,7 +287,7 @@ public class Heightmap extends Drawable implements Collideable {
 	}
 
 
-	public void halveResolution() {
+	/*public void halveResolution() {
 		
 		gridSize *= 2;
 		
@@ -378,11 +312,201 @@ public class Heightmap extends Drawable implements Collideable {
 				
 		heightGrid = new LinearGrid(grid);
 		calcNormals();
+	}*/
+	
+	public void updateLighting() {		
+		PlayerPM p = PlayerPM.getInstance();
+		float px, py, pz;
+		px = p.getX();
+		py = p.getY();
+		pz = p.getZ();
+		
+		int lX, rX, tY, bY;
+		lX = (int) Math.floor((px-lightDis)/chunkSize);
+		rX = (int) Math.floor((px+lightDis)/chunkSize);
+		tY = (int) Math.floor((py-lightDis)/chunkSize);
+		bY = (int) Math.floor((py+lightDis)/chunkSize);
+		
+		int xInd, yInd;
+		float worldX, worldY, worldZ;
+		
+		Chunk c;
+		
+		for(int xx = lX; xx <= rX; xx++)
+			for(int yy = tY; yy <= bY; yy++) {
+				c = chunkGrid[xx][yy];
+				c.markDirty();
+				
+				if(c.checkOnscreen())
+					for(int x = 0; x < 16; x++)
+						for(int y = 0; y < 16; y++) {
+							xInd = xx*16+x;
+							yInd = yy*16+y;
+							
+							worldX = xInd*gridSize;
+							worldY = yInd*gridSize;
+							worldZ = getVertexZ(xInd,yInd);
+							
+							luxGrid[xInd][yInd]	= (int) (Math.max(32,lightDis - Math3D.calcPtDis(px,py,pz,  worldX,worldY,worldZ))/lightDis*255);
+						}
+			}
 	}
 
-	public void update() {}
+	public void update() {
+		updateLighting();
+		
+		for(Chunk c : chunkList)
+			c.update();
+	}
 
 	public float getGridSize() {
 		return gridSize;
+	}
+	
+	
+	private class Chunk {
+		private int xIndex, yIndex;
+		private Model mod;
+		private boolean isDirty, hasChecked, isOnscreen;
+		private CleanList<Environmental> envList;
+		
+		public Chunk(int cX, int cY) {
+			xIndex = cX;
+			yIndex = cY;
+			
+			isDirty = true;
+		}
+
+		public void addEnvironmental(Environmental e) {
+			envList.add(e);
+		}
+
+		public void markDirty() {
+			isDirty = true;
+		}
+		
+		public boolean checkOnscreen() {
+			if(hasChecked)
+				return isOnscreen;
+				
+			Camera cam = GOGL.getMainCamera();
+			
+			float wX, wY;
+			wX = getWorldX();
+			wY = getWorldY();
+			
+			isOnscreen = cam.checkOnscreen(wX,wY) ||
+					cam.checkOnscreen(wX+chunkSize,wY) ||
+					cam.checkOnscreen(wX,wY+chunkSize) || 
+					cam.checkOnscreen(wX+chunkSize,wY+chunkSize);
+			hasChecked = true;
+			
+			return isOnscreen;
+		}
+
+		public void update() {
+			if(isDirty)
+				render();
+			isDirty = false;
+		}
+		public void draw() {
+			if(mod != null)
+				if(checkOnscreen())
+					mod.drawFast();
+			hasChecked = false;
+		}
+		
+		public float getWorldX() {
+			return xIndex*chunkSize;
+		}
+		public float getWorldY() {
+			return yIndex*chunkSize;
+		}
+		
+		public boolean containsPoint(float worldX, float worldY) {
+			float 	relX = worldX-getWorldX(),
+					relY = worldY-getWorldY();
+			return (0 <= relX && relX < chunkSize && 0 <= relY && relY < chunkSize);
+		}
+		
+		
+		public void render() {
+			
+			if(mod != null)
+				mod.destroy();
+			
+			int x, y;
+			
+			float[] vN1, vN2, vN3, vN4;
+			int[] vC1, vC2, vC3, vC4;
+			float vL1, vL2, vL3, vL4;
+			float vX1,vY1,vZ1, vX2,vY2,vZ2, vX3,vY3,vZ3, vX4,vY4,vZ4;		
+			int xAmt, yAmt;
+			
+			if((xIndex+1)*16 == width)
+				xAmt = 15;
+			else
+				xAmt = 16;
+			
+			if((yIndex+1)*16 == height)
+				yAmt = 15;
+			else
+				yAmt = 16;
+			
+			for(int yy = 0; yy < yAmt; yy++) {
+				vY1 = vY2 = getWorldY() + yy*gridSize;
+				vY3 = vY4 = getWorldY() + (yy+1)*gridSize;
+				y = yIndex*16+yy;
+				
+				for(int xx = 0; xx < xAmt; xx++) {
+					x = xIndex*16+xx;
+					
+					vX1 = vX3 = getWorldX() + xx*gridSize;
+					vX2 = vX4 = getWorldX() + (xx+1)*gridSize;
+
+					vN1 = getNormal(x,y);
+					vN2 = getNormal(x+1,y);
+					vN3 = getNormal(x,y+1);
+					vN4 = getNormal(x+1,y+1);
+										
+					vZ1 = getVertexZ(x,y);
+					vZ2 = getVertexZ(x+1,y);
+					vZ3 = getVertexZ(x,y+1);
+					vZ4 = getVertexZ(x+1,y+1);
+					
+					vC1 = colorGrid[MathExt.contain(0,x,width-1)][MathExt.contain(0,y,height-1)];
+					vC2 = colorGrid[MathExt.contain(0,x+1,width-1)][MathExt.contain(0,y,height-1)];
+					vC3 = colorGrid[MathExt.contain(0,x,width-1)][MathExt.contain(0,y+1,height-1)];
+					vC4 = colorGrid[MathExt.contain(0,x+1,width-1)][MathExt.contain(0,y+1,height-1)];
+
+					vL1 = luxGrid[x][y]/255f;
+					vL2 = luxGrid[x+1][y]/255f;
+					vL3 = luxGrid[x][y+1]/255f;
+					vL4 = luxGrid[x+1][y+1]/255f;
+			
+					modC.setColor(vC1[0],vC1[1],vC1[2]);
+						modC.setBrightness(vL1);
+						modC.addVertexBT(vX1,vY1,vZ1,	vN1[0],vN1[1],vN1[2]);
+					modC.setColor(vC2[0],vC2[1],vC2[2]);
+						modC.setBrightness(vL2);
+						modC.addVertexBT(vX2,vY2,vZ2,	vN2[0],vN2[1],vN2[2]);
+					modC.setColor(vC3[0],vC3[1],vC3[2]);
+						modC.setBrightness(vL3);
+						modC.addVertexBT(vX3,vY3,vZ3,	vN3[0],vN3[1],vN3[2]);
+					
+					modC.setColor(vC2[0],vC2[1],vC2[2]);
+						modC.setBrightness(vL2);
+						modC.addVertexBT(vX2,vY2,vZ2,	vN2[0],vN2[1],vN2[2]);
+					modC.setColor(vC4[0],vC4[1],vC4[2]);
+						modC.setBrightness(vL4);
+						modC.addVertexBT(vX4,vY4,vZ4,	vN4[0],vN4[1],vN4[2]);
+					modC.setColor(vC3[0],vC3[1],vC3[2]);
+						modC.setBrightness(vL3);
+						modC.addVertexBT(vX3,vY3,vZ3,	vN3[0],vN3[1],vN3[2]);
+				}			
+			}
+			
+			mod = modC.endModel();
+		}
 	}
 }

@@ -10,7 +10,7 @@ import gfx.GOGL;
 import gfx.RGBA;
 import object.actor.Actor;
 import object.actor.Player;
-import object.environment.Heightmap;
+import object.environment.Heightmap2;
 
 public class Inventory extends ItemContainer {
 	private Actor owner;
@@ -116,7 +116,7 @@ public class Inventory extends ItemContainer {
 				GOGL.drawTexture(Mouse.getMouseX()-s/2, Mouse.getMouseY()-s/2, s,s, get(startInd).getSprite(0));
 			
 			if(!Mouse.getLeftMouse()) {
-				dropOne(get(startInd), Heightmap.getInstance().raycastMouse());
+				dropOne(get(startInd), Heightmap2.getInstance().raycastMouse());
 				startInd = -1;
 			}
 		}

@@ -11,12 +11,12 @@ public class Water extends Drawable {
 	float seaLevel;
 	
 	public Water(float seaLevel) {
-		super(true,false);
+		super(true,false);				
+		name = "water";
+
 		this.seaLevel = seaLevel;
 		
 		shouldAdd = true;
-		
-		name = "water";
 	}
 	
 	public void draw() {}
