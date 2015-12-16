@@ -13,7 +13,7 @@ public final class vec2 extends vec {
 	}
 		
 	
-	public static float[][] convert(List<vec2> list) {
+	/*public static float[][] convert(List<vec2> list) {
 		int si = list.size();
 		float[][] outArray = new float[si][2];
 		
@@ -21,5 +21,5 @@ public final class vec2 extends vec {
 			outArray[i] = list.get(i).array;
 		
 		return outArray;
-	}
+	}*/
 }

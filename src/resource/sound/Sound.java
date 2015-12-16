@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.jcraft.oggdecoder.OggData;
 import com.jogamp.openal.AL;
 import com.jogamp.openal.ALException;
@@ -17,17 +16,12 @@ import com.jogamp.openal.util.ALut;
 import com.jogamp.openal.util.WAVData;
 import com.jogamp.openal.util.WAVLoader;
 import com.jogamp.opengl.util.texture.Texture;
-
-import cont.GameController;
 import cont.TextureController;
 import datatypes.vec3;
 import datatypes.lists.CleanList;
 import fl.FileExt;
 import functions.Array;
-import functions.Math2D;
 import gfx.Camera;
-import gfx.ErrorPopup;
-import gfx.GOGL;
 
 public class Sound {
 	private static Map<String, SoundBuffer> bufferMap = new HashMap<String, SoundBuffer>();
@@ -36,7 +30,7 @@ public class Sound {
     private static float listenerX, listenerY, listenerZ;
     
     private static SoundSource curMusic = null, newMusic = null;
-    private static CleanList<SoundSource> sourceList = new CleanList<SoundSource>();
+    private static CleanList<SoundSource> sourceList = new CleanList<SoundSource>("Snd Src");
 	private static List<SoundBuffer> bufferList = new ArrayList<SoundBuffer>();
 	private static List<String> musicList = new ArrayList<String>();
     private static Map<String, List<String>> playlistMap = new HashMap<String, List<String>>();
@@ -204,7 +198,7 @@ public class Sound {
 	
 	
 	public static void updateListener(Camera camera) {
-		updateListener(camera.getPosition().getArray(), new float[] {0,0,0}, camera.getNormal().getArray(), new float[] {0,0,1});
+		updateListener(camera.getPosition(), new float[] {0,0,0}, camera.getNormal(), new float[] {0,0,1});
 	}
 	public static void updateListener(double cX, double cY, double cZ, double vX, double vY, double vZ, double nDirX, double nDirY, double nDirZ, double nUpX, double nUpY, double nUpZ) {
 		// Position of the listener.
@@ -369,5 +363,12 @@ public class Sound {
 			if(src.getParentBuffer().getName() == name)
 				return true;
 		return false;
+	}
+	
+	public static int getBufferNumber() {
+		return bufferList.size();
+	}
+	public static int getSourceNumber() {
+		return sourceList.size();
 	}
 }

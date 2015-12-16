@@ -4,7 +4,7 @@ import com.jogamp.opengl.util.texture.Texture;
 
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
+import gfx.G3D;
 import object.primitive.Environmental;
 import object.primitive.Physical;
 
@@ -151,7 +151,7 @@ public class FloorBlock extends Environmental {
 
 		@Override
 		public void draw() {
-			GOGL.draw3DBlock(x1, y1, z1, x2, y2, z2, tex);
+			G3D.draw3DBlock(x1, y1, z1, x2, y2, z2, tex);
 		}
 
 		@Override

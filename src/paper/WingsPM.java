@@ -1,8 +1,8 @@
 package paper;
 
 import time.Delta;
-import functions.Math2D;
-import gfx.GOGL;
+import gfx.GT;
+import gfx.G2D;
 import gfx.TextureExt;
 import cont.TextureController;
 
@@ -48,8 +48,8 @@ public class WingsPM implements AnimationsPM {
 		dX = -dW/2;
 		dY = dH;
 		
-		GOGL.transformTranslation(0,downH,-1);		
-		GOGL.drawTexture(dX,dY, dW, -dH, wingTex.getFrame(imageIndex));
-		GOGL.transformTranslation(0,-downH,1);
+		GT.transformTranslation(0,downH,-1);		
+		G2D.drawTexture(dX,dY, dW, -dH, wingTex.getFrame(imageIndex));
+		GT.transformTranslation(0,-downH,1);
 	}
 }

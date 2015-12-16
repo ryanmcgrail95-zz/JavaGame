@@ -1,12 +1,15 @@
 package io;
 
-import gfx.GLText;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
 import gfx.RGBA;
 
 public class Controller {
 	private static String actionText = "";
-	private static RGBA actionColor = new RGBA(60,60,165), actionLight = new RGBA(89,92, 235), actionDark = new RGBA(39,38,106);
+	private static RGBA 
+		actionColor = RGBA.createi(60,60,165),
+		actionLight = RGBA.createi(89,92, 235), 
+		actionDark = RGBA.createi(39,38,106);
 	
 	public static void setActionText(String text) {
 		actionText = text;
@@ -15,18 +18,18 @@ public class Controller {
 	
 	private static void drawAttackButton(float x, float y, float r) {
 		
-		GOGL.setColor(actionDark);
-		GOGL.fillPolygon(x, y, r, 18);
-		GOGL.setColor(actionColor);
-		GOGL.fillPolygon(x, y, r/28*23, 18);		
+		GL.setColor(actionDark);
+		G2D.fillPolygon(x, y, r, 18);
+		GL.setColor(actionColor);
+		G2D.fillPolygon(x, y, r/28*23, 18);		
 	}
 	private static void drawActionButton(float x, float y, float r) {
-		GOGL.setColor(actionDark);
-		GOGL.fillPolygon(x, y, r, 18);
-		GOGL.setColor(actionColor);
-		GOGL.fillPolygon(x, y, r/28*23, 18);
-		GOGL.setColor(RGBA.WHITE);
-		GLText.drawStringCentered(x, y, 2,2, actionText, true);
+		GL.setColor(actionDark);
+		GL.fillPolygon(x, y, r, 18);
+		GL.setColor(actionColor);
+		GL.fillPolygon(x, y, r/28*23, 18);
+		GL.setColor(RGBA.WHITE);
+		G2D.drawStringCentered(x, y, 2,2, actionText, true);
 	}
 	
 	

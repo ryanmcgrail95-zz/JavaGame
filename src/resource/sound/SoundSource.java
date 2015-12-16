@@ -109,7 +109,12 @@ public class SoundSource {
 
 	public void destroy() {
 		stop();
+		
+		al().alSourcei(sourceID[0], AL.AL_BUFFER, 0);
 		al().alDeleteSources(1, sourceID, 0);
+		
+		parentBuffer = null;
+		sourceID = null;
 	}
 	
 	

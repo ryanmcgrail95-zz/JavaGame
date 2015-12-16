@@ -5,21 +5,19 @@ import object.primitive.Drawable;
 import time.Delta;
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
+import gfx.GT;
 import gfx.MultiTexture;
 import gfx.RGBA;
 
-public class DamageSmoke extends Drawable {
+public class DamageSmoke extends SimpleParticle {
 	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/smoke.png",7,1);	
-	private float x, y, z, dX, dZ, direction, dDir, index;
-	private float size = 32, distance, speed;
+	private float dDir, index;
+	private float distance, speed;
 	
-	public DamageSmoke(float x, float z, float direction) {
-		super(false, false);
-		this.x = x;
-		this.y = -1;
-		this.z = z;
-		this.direction = direction;
+	public DamageSmoke(float x, float y, float z, float direction) {
+		super(x,y,z,32,direction, TEXTURE);
 		index = 0;
 		
 		distance = MathExt.rnd(16,40);
@@ -36,8 +34,10 @@ public class DamageSmoke extends Drawable {
 	public void update() {
 		float amt;
 		amt = (float) Math.pow(index/4f, .5f)*distance; //24
-		dX = x + amt*Math2D.calcLenX(direction);
-		dZ = z + amt*Math2D.calcLenY(direction);
+		setDrawPosition(
+			x() + amt*Math2D.calcLenX(getDirection()),
+			y(),
+			z() + amt*Math2D.calcLenY(getDirection()));
 		
 		index += calcIndex();
 		
@@ -45,34 +45,8 @@ public class DamageSmoke extends Drawable {
 			destroy();
 	}
 	
-	private float getAlpha() {
+	public float getAlpha() {
 		return (float) (Math.pow((7 - index)/7f, .5f));
 	}
-	private int getFrame() {
-		return (int) index;
-	}
-	
-	public void draw() {
-		GOGL.transformClear();
-			GOGL.transformTranslation(dX,y,dZ);
-			GOGL.transformPaper();
-			
-			//Need to be rotated 180 degrees???
-			GOGL.transformRotationZ(direction+180);
-			
-			//GOGL.setColor(RGBA.GRAY_LIGHT);
-			GOGL.setAlpha(getAlpha());
-			GOGL.drawTexture(-size/2,-size/2,size,size, TEXTURE, getFrame());
-			GOGL.resetColor();
-		GOGL.transformClear();
-	}
-
-	public float calcDepth() {
-		return 20;
-	}
-	@Override
-	public void add() {
-		// TODO Auto-generated method stub
-		
-	}
+	public int getFrame() {return (int) index;}
 }

@@ -50,7 +50,7 @@ public final class vec3 extends vec implements Interpolatable {
 		return arrays;
 	}
 	
-	public static float[][] convert(List<vec3> list) {
+	/*public static float[][] convert(List<vec3> list) {
 		int si = list.size();
 		float[][] outArray = new float[si][3];
 		
@@ -58,7 +58,7 @@ public final class vec3 extends vec implements Interpolatable {
 			outArray[i] = list.get(i).array;
 		
 		return outArray;
-	}
+	}*/
 	
 	public vec3 interpolate(vec3 other, float frac) {
 		float f = MathExt.contain(0, frac, 1), iF = 1-f;

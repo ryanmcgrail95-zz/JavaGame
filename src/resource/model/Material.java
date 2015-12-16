@@ -1,13 +1,8 @@
 package resource.model;
 
 import functions.Math2D;
-import gfx.GOGL;
-
-import com.jogamp.opengl.GL2;
+import gfx.GL;
 import com.jogamp.opengl.util.texture.Texture;
-
-import datatypes.vec3;
-import datatypes.vec4;
 
 public class Material {
 	private float[] ambient, diffuse, specular;
@@ -17,17 +12,10 @@ public class Material {
 	public Material(String name) {
 		this.name = name;
 	}
-	public Material(String name, vec4 ambient, vec4 diffuse, vec4 specular, Texture tex) {
-		this.name = name;
-		setAmbient(ambient);
-		setDiffuse(diffuse);
-		setSpecular(specular);
-		setTexture(tex);
-	}
 	
-	public void setAmbient(vec4 ambient) 	{this.ambient = ambient.getArray();}
-	public void setDiffuse(vec4 diffuse) 	{this.diffuse = diffuse.getArray();}
-	public void setSpecular(vec4 specular)	{this.specular = specular.getArray();}
+	public void setAmbient(float r, float g, float b, float a)	{this.ambient = new float[] {r,g,b,a};}
+	public void setDiffuse(float r, float g, float b, float a)	{this.diffuse = new float[] {r,g,b,a};}
+	public void setSpecular(float r, float g, float b, float a)	{this.specular = new float[] {r,g,b,a};}
 	public void setTexture(Texture tex) 	{this.tex = tex;}
 	
 	public boolean checkName(String oName) {
@@ -35,8 +23,8 @@ public class Material {
 	}
 	
 	public void enable() {
-		GL2 gl = GOGL.gl;
-		float s = 50 + Math2D.calcLenX(50,GOGL.getTime());
+		//GL2 gl = GL.getGL2();
+		float s = 50 + Math2D.calcLenX(50,GL.getTime());
 		float[] emission = {0,0,0,1};
 		
 		//gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, ambient, 0);
@@ -46,23 +34,16 @@ public class Material {
 		//gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_EMISSION, emission, 0);
 
 		if(tex != null) {
-			GOGL.bind(tex);
-			GOGL.enableTextureRepeat();
+			GL.bind(tex);
+			GL.setTextureRepeat(true);
 		}
 		else {
-			GOGL.disableTextures();
-			GOGL.enableBlending();
-			GOGL.enableInterpolation();
+			GL.disableTextures();
+			GL.enableBlending();
+			GL.enableInterpolation();
 		}
 	}
-	public void disable() {
-		GL2 gl = GOGL.gl;
-		GOGL.unbind();
-	}
-	public String getName() {
-		return name;
-	}
-	public Texture getTexture() {
-		return tex;
-	}
+	public void disable() {GL.unbind();}
+	public String getName() {return name;}
+	public Texture getTexture() {return tex;}
 }

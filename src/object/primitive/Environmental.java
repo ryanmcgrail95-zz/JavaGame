@@ -11,16 +11,16 @@ import object.environment.Heightmap;
 import object.environment.Heightmap2;
 
 public abstract class Environmental extends Positionable {
-	private static CleanList<Environmental> envList = new CleanList<Environmental>();
+	private static CleanList<Environmental> envList = new CleanList<Environmental>("Env");
 	public static RGBA COL_SELECTED = RGBA.WHITE, 
-			COL_TRUNK = new RGBA(72,75,49), 
-			COL_LEAVES = new RGBA(44,103,116);
+			COL_TRUNK = RGBA.createi(72,75,49), 
+			COL_LEAVES = RGBA.createi(44,103,116);
 	
 	public Environmental(float x, float y, boolean hoverable, boolean renderable) {
 		super(x,y,0,hoverable, renderable);
 		
-		if(Heightmap.getInstance() != null)
-			setZ(Heightmap.getInstance().getZ(x,y));
+		/*if(Heightmap.getInstance() != null)
+			setZ(Heightmap.getInstance().getZ(x,y));*/
 		
 		name = "Environmental";
 		

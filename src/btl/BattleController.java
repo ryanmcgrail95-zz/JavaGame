@@ -9,7 +9,8 @@ import com.jogamp.opengl.util.texture.Texture;
 import cont.TextureController;
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
 import gfx.RGBA;
 import gfx.TextureExt;
 import object.primitive.Drawable;
@@ -23,7 +24,7 @@ import datatypes.lists.CleanList;
 public class BattleController extends Drawable {
 	private static BattleController instance;
 	private byte state, prevState;
-	private final byte ST_FIRSTSTRIKE = 0, ST_PLAYER = 1, ST_ENEMY = 2, ST_ENEMY_DEATHS = 3;
+	private final byte ST_FIRSTSTRIKE = 0, ST_PLAYER = 1, ST_ENEMY = 2, ST_ENEMY_DEATHS = 3, ST_WON_BATTLE = 4;
 	
 	private Timer timer = new Timer(0,0);
 	
@@ -42,18 +43,21 @@ public class BattleController extends Drawable {
 	
 	private float alpha, rad = 393, toRad = 393, zPos = 17;
 	
-	private CleanList<BattleActor> playerActors = new CleanList<BattleActor>();
-	private CleanList<BattleActor> enemyActors = new CleanList<BattleActor>();
+	private CleanList<BattleActor> playerActors = new CleanList<BattleActor>("BA Good");
+	private CleanList<BattleActor> enemyActors = new CleanList<BattleActor>("BA Evil");
 	
 	private TextureExt basis = TextureController.loadExt("Resources/Images/battle.png", TextureController.M_NORMAL);
 	
 	public BattleController() {
 		super(false,false);
+		
+		name = "BattleController";
+		
 		playerActors.add(new BattlePlayer("mario", PLAYER_X, this));
 		playerActors.add(new BattlePlayer("luigi", PLAYER_X - 28, this));
-		enemyActors.add(new BattleEnemy("mario", 4, this));
-		enemyActors.add(new BattleEnemy("geno", 36, this));
-		enemyActors.add(new BattleEnemy("luigi", 72, this));
+		enemyActors.add(new BattleEnemy("watt", 4, this));
+		//enemyActors.add(new BattleEnemy("geno", 36, this));
+		//enemyActors.add(new BattleEnemy("luigi", 72, this));
 		
 		float row1Y = 80, row2Y = 105;
 		float[] purple = {.73f,.43f,.61f};
@@ -101,10 +105,17 @@ public class BattleController extends Drawable {
 			}
 		}
 		
-		if(!isDead) {
-			state = prevState;
-			continueTurn();
-		}
+		if(!isDead)
+			if(enemyActors.size() > 0) {
+				state = prevState;
+				continueTurn();
+			}
+			else {
+				state = ST_WON_BATTLE;
+				if(playerActors.size() > 0)
+					playerActors.get(0).gotoWinState();
+				focusPlayer();
+			}
 	}
 	
 	public void continueTurn() {
@@ -132,6 +143,7 @@ public class BattleController extends Drawable {
 				didGo = true;
 				break;
 			}
+		playerActors.broke();
 		if(!didGo)
 			endPlayerTurn();
 	}
@@ -160,6 +172,7 @@ public class BattleController extends Drawable {
 				didGo = true;
 				break;
 			}
+		enemyActors.broke();
 		if(!didGo)
 			endEnemyTurn();
 	}
@@ -169,13 +182,21 @@ public class BattleController extends Drawable {
 	
 	
 	public void destroy() {
-		super.destroy();
 		for(BattleActor b : playerActors)
 			b.destroy();
-		playerActors.clear();
+		playerActors.destroy();
+		playerActors = null;
+		
 		for(BattleActor b : enemyActors)
 			b.destroy();
-		enemyActors.clear();
+		enemyActors.destroy();
+		enemyActors = null;
+		
+		super.destroy();
+
+		instance = null;
+		timer.destroy();
+			timer = null;
 	}
 	
 	public void setTimer(float time) {
@@ -190,7 +211,6 @@ public class BattleController extends Drawable {
 	}
 	
 	public void endBattleWin() {
-		
 	}
 	
 	public void endBattleLoss() {
@@ -219,7 +239,7 @@ public class BattleController extends Drawable {
 
 	@Override
 	public void update() {
-		if(Keyboard.checkDown('H'))
+		/*if(Keyboard.checkDown('H'))
 			rad++;
 		else if(Keyboard.checkDown('J'))
 			rad--;
@@ -229,10 +249,10 @@ public class BattleController extends Drawable {
 		else if(Keyboard.checkDown('K'))
 			camZ--;
 		
-		/*if(Keyboard.checkDown('O'))
+		if(Keyboard.checkDown('O'))
 			dir++;
 		else if(Keyboard.checkDown('L'))
-			dir--;*/
+			dir--;
 		
 		if(Keyboard.checkDown('N'))
 			camX--;
@@ -240,10 +260,21 @@ public class BattleController extends Drawable {
 			camX++;
 			
 		
-		//System.out.println(rad + ", " + camX + ", " + camZ + ", "+ dir);
+		System.out.println(rad + ", " + camX + ", " + camZ + ", "+ dir);*/
 		updateCamera();
 	}
 
+	public void focusPlayer() {
+		toRad = 205;
+		toCamX = -74;
+		toCamZ = 18;
+		toDir = 8.6f;
+		xSpd = spd;
+		zSpd = spd;
+		dirSpd = spd;
+		radSpd = spd;
+	}
+	
 	public void focusEnemy() {
 		toRad = 374;
 		toCamX = 27;
@@ -297,6 +328,18 @@ public class BattleController extends Drawable {
 		radSpd = spd;
 	}
 	
+	public void focusSpike(float focX, float uSpd) {
+		toRad = 290;
+		toCamX = focX;
+		toCamZ = 21;
+		toDir = 8.6f;
+		
+		xSpd = uSpd*.5f;
+		zSpd = uSpd;
+		dirSpd = uSpd;
+		radSpd = uSpd;
+	}
+	
 	private void updateCamera() {
 		rad = MathExt.to(rad, toRad, radSpd);
 		camX = MathExt.to(camX, toCamX, xSpd);
@@ -312,38 +355,42 @@ public class BattleController extends Drawable {
 		y = toY - Math2D.calcLenX(rad,dir);
 		z = toZ + Math2D.calcLenY(rad,dir);
 		
-		GOGL.getMainCamera().setProjection(x,y,z,toX,toY,toZ);
+		GL.getMainCamera().setProjection(x,y,z,toX,toY,toZ);
 	}
 
 	@Override
 	public void draw() {
 		float dH, dY;
 		dH = -1f*basis.getHeight()/basis.getWidth()*640;
-		dY = GOGL.getScreenHeight()/2f - dH/2;
+		dY = GL.getScreenHeight()/2f - dH/2;
 		
 		
-		GOGL.setPerspective();
-		GOGL.setColor(RGBA.WHITE);
-		GOGL.transformClear();
-		GOGL.transformScale(390);
-		GOGL.transformRotationX(90);
-		
-			Model.MOD_BATTLE.draw();
+		GL.setPerspective();
+		GL.setColor(RGBA.WHITE);
+			Model.get("Battle-Pleasant_Path_1_Flowerless").draw();
 			
-		GOGL.transformClear();
 		
 		if(Keyboard.checkDown('a')) {		
-			GOGL.setOrtho();
-			GOGL.setColor(RGBA.WHITE);
-			GOGL.drawTexture(0,dY, 640,dH, basis.getFrame(0));
+			GL.setOrtho();
+			GL.setColor(RGBA.WHITE);
+			G2D.drawTexture(0,dY, 640,dH, basis.getTexture());
+			
+			
+			float d, rX, rY, x, y;
+			d = GL.getTime();
+			rX = 325;
+			rY = 300;
+					
+			x = Math2D.calcLenX(rX,d);
+			y = Math2D.calcLenY(rY,d);
+			
+			G2D.fillPolygon(x,y, 32, 16);
 		}
 	}
 
 
 	@Override
 	public void add() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	public List<BattleActor> getEnemyActors() {

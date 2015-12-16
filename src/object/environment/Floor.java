@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import functions.Math2D;
-import gfx.GOGL;
+import gfx.GL;
 
 import com.jogamp.opengl.util.texture.Texture;
 
@@ -24,7 +24,7 @@ public class Floor extends FloorBlock {
 	
 	//PARENT FUNCTIONS
 		public void draw() {
-			GOGL.draw3DFloor(x1,y1,x2,y2,z1,null);
+			GL.draw3DFloor(x1,y1,x2,y2,z1,null);
 		}
 		
 		

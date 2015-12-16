@@ -11,16 +11,25 @@ import cont.TextureController;
 import datatypes.lists.CleanList;
 
 public abstract class Updatable {
-	private static CleanList<Updatable> instanceList = new CleanList<Updatable>();
-	private static CleanList<Updatable> updateList = new CleanList<Updatable>();
+	private static CleanList<Updatable> instanceList = new CleanList<Updatable>("Inst");
+	private static CleanList<Updatable> updateList = new CleanList<Updatable>("Upd");
 	protected boolean doUpdates;
+	protected String name = "";
+	
+	private boolean canSurviveTransition;
 
 
 	public Updatable() {
 		doUpdates = true;
 		
-		instanceList.add(this);
+		canSurviveTransition = false;
+			
 		updateList.add(this);
+		instanceList.add(this);
+	}
+	
+	public void setSurviveTransition(boolean willSurvive) {
+		this.canSurviveTransition = willSurvive;
 	}
 	
 	public abstract void update();
@@ -32,7 +41,12 @@ public abstract class Updatable {
 
 		
 	//Global Functions
-		public static void updateAll() {
+		public static void transition() {
+			for(Updatable u : instanceList)
+				if(!u.canSurviveTransition)
+					u.destroy();
+		}
+		public static void updateAll() {			
 			Mouse.update();
 			Sound.update();			
 			
@@ -59,5 +73,13 @@ public abstract class Updatable {
 			for(Updatable u : instanceList)
 				u.destroy();
 			instanceList.clear();
+		}
+
+		public static CleanList<Updatable> getList() {
+			return instanceList;
+		}
+
+		public String getName() {
+			return name;
 		}
 }

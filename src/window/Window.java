@@ -14,7 +14,7 @@ import com.jogamp.opengl.util.awt.TextureRenderer;
 import datatypes.lists.CleanList;
 
 public class Window extends GUIFrame {	
-	private static CleanList<Window> windowList = new CleanList<Window>();
+	private static CleanList<Window> windowList = new CleanList<Window>("Window");
 	protected final static int SIDE_BORDER = 8, TOP_BORDER = 20;
 	protected final static byte W_CLOSE = 0;
 

@@ -12,7 +12,7 @@ public final class Math3D {
 		return (float) Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
 	}
 	
-	public static vec3 calcPtData(vec3 pt1, vec3 pt2) {
+	public static float[] calcPtData(vec3 pt1, vec3 pt2) {
 		float x1,y1,z1, x2,y2,z2, dis, dir, dirZ;
 		
 		x1 = pt1.get(0); y1 = pt1.get(1); z1 = pt1.get(2);
@@ -22,7 +22,7 @@ public final class Math3D {
 		dir = Math2D.calcPtDir(x1,y1, x2,y2);
 		dirZ = Math2D.calcPtDir(0,z1, Math2D.calcPtDis(x1,y1,x2,y2),z2);
 		
-		return new vec3(dis, dir, dirZ);
+		return new float[] {dis, dir, dirZ};
 	}
 	
 	

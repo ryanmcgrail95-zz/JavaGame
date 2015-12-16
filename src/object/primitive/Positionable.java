@@ -7,12 +7,13 @@ import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
 import gfx.Camera;
-import gfx.GOGL;
+import gfx.GL;
+import gfx.GT;
 
 public abstract class Positionable extends Drawable {
 	
 	private vec3 position, positionPrevious, velocity;
-	private float direction, zDirection;
+	private float direction, directionPrevious, zDirection;
 	
 	public Positionable(float x, float y, float z, boolean hoverable, boolean renderable) {
 		super(hoverable, renderable);
@@ -21,7 +22,15 @@ public abstract class Positionable extends Drawable {
 		velocity = new vec3(0,0,0);
 	}
 	
-	public void destroy() {super.destroy();}
+	public void destroy() {
+		super.destroy();
+		
+		position.destroy();
+		positionPrevious.destroy();
+		velocity.destroy();
+		
+		position = positionPrevious = velocity = null;
+	}
 	
 	
 	public void x(float x)		{position.x(x);}
@@ -43,7 +52,7 @@ public abstract class Positionable extends Drawable {
 	public void addZ(float aZ) 	{position.z(position.z()+aZ);}
 	
 
-	public void transformTranslation() {GOGL.transformTranslation(position);}
+	public void transformTranslation() {GT.transformTranslation(position);}
 	public void setPos(float x, float y) {
 		x(x);
 		y(y);
@@ -58,15 +67,25 @@ public abstract class Positionable extends Drawable {
 	public float getYPrevious() {return positionPrevious.y();}
 	public float getZPrevious() {return positionPrevious.z();}
 	
-	public void setXVelocity(float x) {velocity.x(x);}
-	public void setYVelocity(float y) {velocity.y(y);}
-	public void setZVelocity(float z) {velocity.z(z);}
+	public void setXVelocity(float x) {
+		velocity.x(x);
+		updateDirection();
+	}
+	public void setYVelocity(float y) {
+		velocity.y(y);
+		updateDirection();
+	}
+	public void setZVelocity(float z) {
+		velocity.z(z);
+		updateDirection();
+	}
 	public void setVelocity(float nX, float nY) {
 		setXVelocity(nX);
 		setYVelocity(nY);
 	}
 	public void setVelocity(float x, float y, float z) {
 		velocity.set(x,y,z);
+		updateDirection();
 	}
 
 	public float getXVelocity() {return velocity.x();}
@@ -83,13 +102,16 @@ public abstract class Positionable extends Drawable {
 	}
 	public void updatePosition() {
 		positionPrevious.set(position);
+		directionPrevious = direction;
 		
 		position.adde( Delta.convert(velocity) );
 	}
 	
 	public void step(float dis, float dir) {step(dis,dir,0);}
 	public void step(float dis, float dir, float dirZ) {
-		position.adde( Delta.convert(Math3D.calcPolarCoords(dis,dir,dirZ)) );
+		vec3 coords = (vec3) Delta.convert(Math3D.calcPolarCoords(dis,dir,dirZ));
+		position.adde( coords );
+		coords.destroy();
 	}
 	
 	public void stop() {
@@ -99,10 +121,10 @@ public abstract class Positionable extends Drawable {
 	
 	
 	public boolean checkOnscreen() {
-		return GOGL.getCamera().checkOnscreen(x(),y());
+		return GL.getCamera().checkOnscreen(x(),y());
 	}
 	public float calcDepth() {
-		return GOGL.getCamera().calcParaDistance(x(),y());
+		return GL.getCamera().calcParaDistance(x(),y());
 	}
 
 	public float calcDis(Positionable other) {return calcPtDis(other.x(), other.y());}
@@ -145,13 +167,15 @@ public abstract class Positionable extends Drawable {
 		setXYSpeed(getXYSpeed() + addAmt);
 	}
 	
+	private void updateDirection() {
+		if(getXYSpeed() > .1)
+			direction = velocity.getDirection();
+	}
 	public void setDirection(float direction) {
 		velocity.setDirection(this.direction = direction);
 	}
-	public float getDirection() {
-		if(getXYSpeed() == 0)	return direction;
-		else					return velocity.getDirection();
-	}
+	public float getDirection() {return direction;}
+	public float getDirectionPrevious() {return directionPrevious;}
 	
 	
 	// CHECKING

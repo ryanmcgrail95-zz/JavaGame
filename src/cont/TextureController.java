@@ -2,16 +2,13 @@ package cont;
 
 import fl.FileExt;
 import gfx.ErrorPopup;
-import gfx.GOGL;
+import gfx.GL;
 import gfx.TextureExt;
 import image.filter.BGEraserFilter;
 import image.filter.GrayscaleAlphaFilter;
 
-import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,9 +25,13 @@ import com.jogamp.opengl.util.texture.TextureIO;
 import com.sun.imageio.plugins.gif.GIFImageReader;
 import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
 
+import datatypes.lists.CleanList;
+
 
 public class TextureController {
 	public final static byte M_NORMAL = 0, M_BGALPHA = 1, M_MASK = 2;
+	private static CleanList<Texture> texList = new CleanList<Texture>("Tex");
+	private static CleanList<TextureExt> texExtList = new CleanList<TextureExt>("TexExt");
 	private static Map<String, TextureExt> texMap = new HashMap<String, TextureExt>();
 	private static float time = 0;
 	
@@ -45,8 +46,8 @@ public class TextureController {
 		    if(fileName.endsWith(".gif"))
 		    	texExt = loadMulti(fileName, method);
 		    else
-		    	texExt = loadSingle(fileName, method); 
-	        	
+		    	texExt = loadSingle(fileName, method);
+		    	        	
 	        return texExt;
 	    } catch(IOException e) {
 	    	ErrorPopup.open("Failed to load texture: " + fileName + ".", true);
@@ -75,13 +76,13 @@ public class TextureController {
 			(new BGEraserFilter()).filter(img,img);
 		
 		TextureExt texExt = new TextureExt(img);
+		img.flush();
 		
         return texExt;
 	}
 	
 	private static TextureExt loadMulti(String fileName, byte method) throws IOException {
 		List<BufferedImage> frames;
-		Texture texture;
 		
 		InputStream str;
 		if((str = FileExt.get(fileName)) == null)
@@ -102,7 +103,13 @@ public class TextureController {
 				(new GrayscaleAlphaFilter()).filter(i,i);
 		}
 		
-		return new TextureExt(frames);
+		TextureExt outTex = new TextureExt(frames);
+		
+		for(BufferedImage i : frames)
+			i.flush();
+		frames.clear();
+		
+		return outTex;
 	}
 	
 	
@@ -132,7 +139,7 @@ public class TextureController {
 	}
 	
 	public static TextureExt getTextureExt(String name) {return texMap.get(name);}
-	public static Texture getTexture(String name) 		{return texMap.get(name).getFrame(0);}
+	public static Texture getTexture(String name) 		{return texMap.get(name).getTexture();}
 
 	public static void ini() {
 		load("Resources/Images/Shadows/shadow.png", "texShadow", TextureController.M_NORMAL);
@@ -159,5 +166,25 @@ public class TextureController {
         load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
         
         load("Resources/Images/Backgrounds/mountains.png", "bacMountains", M_NORMAL);
+	}
+
+	public static int getNumber() {
+		return texList.size();
+	}
+
+	public static int getNumberExt() {
+		return texExtList.size();
+	}
+
+	public static void add(Texture tex) {texList.add(tex);}
+	public static void add(TextureExt tex) {texExtList.add(tex);}
+	public static void remove(Texture tex) {texList.remove(tex);}
+	public static void remove(TextureExt tex) {
+		texExtList.remove(tex);
+	}
+
+	public static void destroy(Texture t) {
+		remove(t);
+		t.destroy(GL.getGL());
 	}
 }

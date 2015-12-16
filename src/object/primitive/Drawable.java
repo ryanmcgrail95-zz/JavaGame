@@ -2,8 +2,7 @@ package object.primitive;
 import functions.Math2D;
 import gfx.Camera;
 import gfx.CameraFX;
-import gfx.GLText;
-import gfx.GOGL;
+import gfx.GL;
 import gfx.Gameboy;
 import gfx.Overlay;
 import gfx.RGBA;
@@ -30,12 +29,12 @@ import time.Timer;
 import window.Window;
 
 public abstract class Drawable extends Updatable {
-	private static CleanList<Drawable> renderList = new CleanList<Drawable>();
-	private static CleanList<Drawable> drawList = new CleanList<Drawable>();
-	private static CleanList<Drawable> hoverList = new CleanList<Drawable>();	
-	private static CleanList<Drawable> onscreenList = new CleanList<Drawable>();
-	private static CleanList<Drawable> onscreenAddList = new CleanList<Drawable>();
-	private static CleanList<Drawable> onscreenHoverList = new CleanList<Drawable>();
+	private static CleanList<Drawable> renderList = new CleanList<Drawable>("Render");
+	private static CleanList<Drawable> drawList = new CleanList<Drawable>("Draw");
+	private static CleanList<Drawable> hoverList = new CleanList<Drawable>("Hover");	
+	private static CleanList<Drawable> onscreenList = new CleanList<Drawable>("OS Draw");
+	private static CleanList<Drawable> onscreenAddList = new CleanList<Drawable>("OS Add");
+	private static CleanList<Drawable> onscreenHoverList = new CleanList<Drawable>("OS Hover");
 	
 	private static int colR = 1, colG = 0, colB = 0;
 	
@@ -45,9 +44,7 @@ public abstract class Drawable extends Updatable {
 
 
 	protected int R, G, B;
-	protected boolean visible = true, isHoverable = false, isRenderable = false;	
-	protected String name;
-	
+	protected boolean visible = true, isHoverable = false, isRenderable = false;		
 
 	
 	public Drawable(boolean hoverable, boolean renderable) {	
@@ -90,12 +87,12 @@ public abstract class Drawable extends Updatable {
 	}
 		
 	public void destroy() {
+		super.destroy();
 		drawList.remove(this);
 		if(isHoverable)
 			hoverList.remove(this);
 		if(isRenderable)
 			renderList.remove(this);
-		super.destroy();
 	}
 		
 		
@@ -115,9 +112,9 @@ public abstract class Drawable extends Updatable {
 		onscreenHoverList.clear();
 		
 		byte addHover = 2;
-		if(GOGL.getCamera() == GOGL.getMainCamera())
+		if(GL.getCamera() == GL.getMainCamera())
 			if(selectTimer.check()) {
-				if(Window.checkMouseAll() || !canSelectHoverable())
+				if(/*Window.checkMouseAll() ||*/ !canSelectHoverable())
 					addHover = 1;
 				else
 					addHover = 0;
@@ -130,7 +127,7 @@ public abstract class Drawable extends Updatable {
 			if(d.visible) {
 				if(d.checkOnscreen()) {
 					depth = d.calcDepth();
-					if(depth >= 0 && depth < GOGL.getCamera().getViewFar()) {
+					if(depth >= 0 && depth < GL.getCamera().getViewFar()) {
 						if(d.shouldAdd)
 							onscreenAddList.add(d);
 						else
@@ -150,8 +147,10 @@ public abstract class Drawable extends Updatable {
 	}
 	
 		public static void display() {
+			
 			if(selectTimer == null)
 				selectTimer = new Timer(5);
+			
 			
 			//presort(GOGL.getMainCamera());
 			
@@ -160,33 +159,33 @@ public abstract class Drawable extends Updatable {
 			
 			Mouse.resetCursor();
 			        	
-			GOGL.setOrtho();
+			GL.setOrtho();
 			for(Drawable d : renderList)
 				d.render();
-			Window.renderAll();
+			//Window.renderAll();
 			
 						
-        	GOGL.setViewport(0,0,640,480);
-			GOGL.setPerspective();
+        	GL.setViewport(0,0,640,480);
+			GL.setPerspective();
 			
 
 			if(canSelectHoverable() && onscreenHoverList.size() > 0) {
-				GOGL.allowLighting(false);
-				GOGL.clear();
+				GL.allowLighting(false);
+				GL.clear();
 				
 				for(Drawable d : onscreenHoverList) {
 					d.isSelected = false;
 					
-					GOGL.forceColor(new RGBA(d.R/255f,d.G/255f,d.B/255f));
+					GL.forceColor(RGBA.createi(d.R,d.G,d.B));
 					d.draw();
 				}
 			
 				RGBA idRGBA = Mouse.getPixelRGBA();
 				
 				int r,g,b;
-				r = idRGBA.getRi();
-				g = idRGBA.getGi();
-				b = idRGBA.getBi();
+				r = idRGBA.Ri();
+				g = idRGBA.Gi();
+				b = idRGBA.Bi();
 				
 				if(r < 0)	r += 256;
 				if(g < 0)	g += 256;
@@ -205,8 +204,8 @@ public abstract class Drawable extends Updatable {
 					}
 				}
 				
-				GOGL.allowLighting(true);
-				GOGL.unforceColor();
+				GL.allowLighting(true);
+				GL.unforceColor();
 			}
 	}
 
@@ -226,28 +225,32 @@ public abstract class Drawable extends Updatable {
 	
 	
 	private static boolean canSelectHoverable() {
-		return !SmartPhone.isActive() && !WorldMap.isActive();
+		return true; //return !SmartPhone.isActive() && !WorldMap.isActive();
 	}
 
 	public static void draw3D() {
 		
+		Camera cam = GL.getCamera();
+		
 		//Draw BG
-		GOGL.setOrtho(-1000);
-		/*RGBA skyTop = new RGBA(82,142,165), skyBottom = new RGBA(198,255,255);
-		float tY = 140,bY = 300;
-		GOGL.setColor(skyTop);
-		GOGL.fillRectangle(0,0,640,tY);
-		GOGL.fillVGradientRectangle(0,tY, 640,bY-tY, skyTop, skyBottom, 10);
-		GOGL.setColor(skyBottom);
-		GOGL.fillRectangle(0,bY,640,480-bY);*/
 		
-		Background.draw();
+		if(cam.checkBG()) {
+			GL.setOrtho(-1000);
+			Background.draw();
+		}
 		
-		GOGL.getCamera().project();
+		cam.project();
 		
-		GOGL.allowLighting(true);
-		GOGL.enableLighting();
-		GOGL.begin(GOGL.P_TRIANGLES);
+		CleanList<Drawable> drawList = cam.getDrawList();
+		if(drawList.size() > 0) {
+			for(Drawable d : drawList)
+				d.draw();
+			return;
+		}
+		
+		GL.allowLighting(true);
+		GL.enableLighting();
+		GL.begin(GL.P_TRIANGLES);
 		for(Drawable d : onscreenAddList) {
 			//d.isSelected)
 				d.add();//d.draw();
@@ -258,8 +261,8 @@ public abstract class Drawable extends Updatable {
 				//GOGL.unforceColor();
 			}*/
 		}
-		GOGL.end();
-		GOGL.disableLightings();
+		GL.end();
+		GL.disableLightings();
 		for(Drawable d : onscreenList)
 			d.draw();
 

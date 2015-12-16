@@ -4,6 +4,8 @@ import gfx.TextureExt;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import cont.TextureController;
 import datatypes.StringExt;
@@ -12,7 +14,7 @@ public final class SpriteMap implements AnimationsPM {
 	private final static String DIRECTORY = "Resources/Images/Characters/";
 	private static Map<String, SpriteMap> map = new HashMap<String, SpriteMap>();
 
-	private Map<Byte, TextureExt> texMap = new HashMap<Byte, TextureExt>();
+	private Map<Integer, TextureExt> texMap = new HashMap<Integer, TextureExt>();
 	private String name;
 	
 	
@@ -28,8 +30,8 @@ public final class SpriteMap implements AnimationsPM {
 	private SpriteMap(String name) {
 		this.name = name;
 		
-		TextureExt still, stillUp, run, runUp, jump, jumpUp, spin, land, hurt, burned;
-		TextureExt jumpLand, prepareJump, dodge;
+		TextureExt still, stillUp, run, runUp, jump, jumpUp, jumpFall, spin, land, hurt, burned;
+		TextureExt jumpLand, jumpLandHurt, prepareJump, dodge;
     	
         still = load("s");
         stillUp = load("su", still);
@@ -39,6 +41,7 @@ public final class SpriteMap implements AnimationsPM {
 
         jump = load("j", still);
         jumpUp = load("ju", jump);
+        jumpFall = load("jf", jump);
         
         spin = load("sp", still);
         
@@ -47,6 +50,7 @@ public final class SpriteMap implements AnimationsPM {
         burned = load("burned", hurt);
         
         jumpLand = load("jln", land);
+        jumpLandHurt = load("jlh", hurt);
         prepareJump = load("pj", still);
         dodge = load("d", still);
          
@@ -54,6 +58,8 @@ public final class SpriteMap implements AnimationsPM {
         addStill(still, stillUp);
         addRun(run, runUp);
         addJump(jump, jumpUp);
+        put(S_JUMP_FALL, jumpFall);
+        put(S_JUMP_LAND_HURT, jumpLandHurt);
         addSpin(spin);
         addLand(land);
     	put(S_JUMP_LAND, jumpLand);
@@ -65,10 +71,10 @@ public final class SpriteMap implements AnimationsPM {
         map.put(name, this);
 	}
 	
-	public TextureExt get(byte type) {
+	public TextureExt get(int type) {
 		return texMap.get(type);
 	}
-	private void put(byte type, TextureExt tex) {
+	private void put(int type, TextureExt tex) {
 		texMap.put(type, tex);
 	}
 	
@@ -128,4 +134,15 @@ public final class SpriteMap implements AnimationsPM {
 			texMap.put(S_LAND, spr);
 		}
 		public TextureExt getLand() 	{return texMap.get(S_LAND);}
+		
+		
+		public void destroy() {
+			map.remove(name);
+			
+			Set<Entry<Integer, TextureExt>> s = texMap.entrySet();
+			for(Entry<Integer, TextureExt> e : s)
+				e.getValue().destroy();
+			
+			texMap.clear();
+		}	
 }

@@ -5,7 +5,8 @@ import functions.MathExt;
 
 public class StringExt {
 	protected String str;
-	private static RandomList<Character> rndChar = new RandomList<Character>(); {
+	private final static RandomList<Character> rndChar = new RandomList<Character>("Chars");
+	static {
 		for(int i = 0; i < 26; i++) {
 			rndChar.add((char) ('a'+i));
 			rndChar.add((char) ('A'+i));
@@ -64,7 +65,7 @@ public class StringExt {
 		str = str.replaceFirst(""+c, "");
 		return c;
 	}
-	public void chompSpace() {
+	public void chompWhiteSpace() {
 		if(str == null)
 			return;
 		
@@ -81,7 +82,7 @@ public class StringExt {
 		if(str == null)
 			return "";
 		
-		chompSpace();
+		chompWhiteSpace();
 		
 		
 		int lineInd = str.indexOf('\n'),
@@ -106,7 +107,7 @@ public class StringExt {
 			outStr = outStr.replaceFirst("\n","");
 		}
 		
-		chompSpace();
+		chompWhiteSpace();
 		
 		return outStr;
 	}
@@ -121,7 +122,7 @@ public class StringExt {
 		}
 		else {
 			outStr = str.substring(0,i);
-			str = str.replaceFirst(outStr+c, "");
+			str = str.substring(i+1, str.length());
 		}
 		return outStr;
 	}
@@ -198,5 +199,25 @@ public class StringExt {
 	}
 	public boolean isEmpty() {
 		return str.length() == 0;
+	}
+	
+	public boolean startsWith(String string) {
+		return str.startsWith(string);
+	}
+	public boolean isWhiteSpace() {
+		int len = str.length();
+		char c;
+		
+		for(int i = 0; i < len; i++) {
+			c = str.charAt(i);
+			if(!(c == ' ' || c == '\n' || c == '\t'))
+				return false;
+		}
+
+		return true;
+	}
+	
+	public String toString() {
+		return str;
 	}
 }

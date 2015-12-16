@@ -10,6 +10,8 @@ public class BattleEnemy extends BattleActor {
 	}
 	
 	public void attack() {
+		super.attack();
+
 		state = ST_MOVE_TO;
 		target = parent.getPlayer();
 	}

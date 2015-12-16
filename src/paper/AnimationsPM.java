@@ -2,7 +2,7 @@ package paper;
 
 public interface AnimationsPM {
 	public final static float IMAGE_SPEED = .7f; //1.3f;
-	public final static Byte
+	public final static int
 		S_STILL = 0, S_STILL_UP = 1, 
 		S_RUN = 2, S_RUN_UP = 3,
 		S_JUMP = 4, S_JUMP_UP = 5,
@@ -15,5 +15,8 @@ public interface AnimationsPM {
 		S_HURT = 10,
 		S_DODGE = 11,
 		
-		S_BURNED = 12;
+		S_BURNED = 12,
+		
+		S_JUMP_FALL = 13,
+		S_JUMP_LAND_HURT = 14;
 }

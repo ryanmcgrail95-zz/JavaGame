@@ -2,7 +2,8 @@ package btl;
 
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
+import gfx.GL;
+import gfx.GT;
 import object.primitive.Drawable;
 import resource.model.Model;
 import time.Delta;
@@ -53,13 +54,13 @@ public class BattleFlower extends Drawable {
 			}
 		}
 		
-		GOGL.transformTranslation(x,y,z);
-		GOGL.transformTranslation(0,0,upZ);
-		GOGL.transformScale(390);
-		GOGL.setColor(color[0],color[1],color[2],1);
-			Model.MOD_FLOWER.draw();
-		GOGL.resetColor();
-		GOGL.transformClear();
+		GT.transformTranslation(x,y,z);
+		GT.transformTranslation(0,0,upZ);
+		GT.transformScale(390);
+		GL.setColorf(color[0],color[1],color[2],1);
+			Model.get("flower").draw();
+		GL.resetColor();
+		GT.transformClear();
 	}
 	
 	public void add() {}

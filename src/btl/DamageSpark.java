@@ -1,28 +1,23 @@
 package btl;
 
-import io.Keyboard;
-import object.primitive.Drawable;
 import time.Delta;
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
 import gfx.MultiTexture;
 
-public class DamageSpark extends Drawable {
-	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/spark.png",4,1,true);	
-	private float x, y, z, dX, dZ, direction, dDir, index;
-	private float size = 16, distance, speed;
+public class DamageSpark extends SimpleParticle {
+	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/spark.png",4,1,true);
+	private float dDir, index;
+	private float distance, speed, weight;
 	
-	public DamageSpark(float x, float z, float direction) {
-		super(false, false);
-		this.x = x;
-		this.y = -10;
-		this.z = z;
-		this.direction = direction;
+	public DamageSpark(float x, float y, float z, float direction, float weight, float disWeight, float spdWeight, float sizeWeight) {
+		super(x,y,z,16*sizeWeight,direction, TEXTURE);
 		index = 0;
 		
-		distance = MathExt.rnd(24,48);
-		speed = MathExt.rnd(.2f, .3f);
+		this.weight = weight; // .5
+		
+		distance = disWeight*MathExt.rnd(24,48);
+		speed = spdWeight*MathExt.rnd(.2f, .3f);
 	}	
 	
 	public float calcIndex() {
@@ -34,9 +29,12 @@ public class DamageSpark extends Drawable {
 	
 	public void update() {
 		float amt;
-		amt = (float) Math.pow(index/4f, .5f)*distance; //24
-		dX = x + amt*Math2D.calcLenX(direction);
-		dZ = z + amt*Math2D.calcLenY(direction);
+		amt = (float) Math.pow(index/4f, weight)*distance; // .5
+
+		setDrawPosition(
+			x() + amt*Math2D.calcLenX(getDirection()),
+			y(),
+			z() + amt*Math2D.calcLenY(getDirection()));
 		
 		index += Delta.convert(calcIndex());
 		
@@ -44,27 +42,9 @@ public class DamageSpark extends Drawable {
 			destroy();
 	}
 	
-	private int getFrame() {
-		return (int) (4* Math.pow(index/4, .5));
-	}
+	public float getAlpha() {return 1;}
 	
-	public void draw() {
-		GOGL.transformClear();
-			GOGL.transformTranslation(dX,y,dZ);
-			GOGL.transformPaper();
-			
-			//Need to be rotated 180 degrees???
-			GOGL.transformRotationZ(direction);
-			GOGL.drawTexture(-size/2,-size/2,size,size, TEXTURE, getFrame());
-		GOGL.transformClear();
-	}
-
-	public float calcDepth() {
-		return 20;
-	}
-	@Override
-	public void add() {
-		// TODO Auto-generated method stub
-		
+	public int getFrame() {
+		return (int) (4* Math.pow(index/4, weight));
 	}
 }

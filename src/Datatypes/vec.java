@@ -1,8 +1,10 @@
 package datatypes;
 
+import datatypes.lists.CleanList;
 import functions.Math2D;
 
 public abstract class vec {
+	private static CleanList<vec> vecList = new CleanList<vec>("Vecs");
 	protected float array[];
 	protected final int SIZE;
 	
@@ -12,6 +14,8 @@ public abstract class vec {
 		
 		for(int i = 0; i < size; i++)
 			array[i] = 0;
+		
+		vecList.add(this);
 	}
 	
 	protected vec(int size, float... values) {
@@ -19,6 +23,13 @@ public abstract class vec {
 		array = new float[size];
 		
 		set(values);
+		
+		vecList.add(this);
+	}
+	
+	public void destroy() {
+		vecList.remove(this);
+		array = null;
 	}
 	
 	public vec copy() {
@@ -63,17 +74,14 @@ public abstract class vec {
 	public vec norm() 	{return copy().norme();}
 	public vec norme() 	{return dive(len());}
 
-	public vec inv() {return mult(-1);}
 	public vec inve() {return multe(-1);}
 	
-	public vec add(float val) {return copy().adde(val);}
 	public vec adde(float val) {		
 		for(int i = 0; i < SIZE; i++)
 			set(i, array[i]+val);
 		return this;
 	}
 	
-	public vec add(vec other) {return copy().adde(other);}
 	public vec adde(vec other) {
 		if(other.SIZE != SIZE)
 			throw new UnsupportedOperationException();
@@ -84,19 +92,22 @@ public abstract class vec {
 		return this;
 	}
 
-	public vec sub(float val) {return add(-val);}
 	public vec sube(float val) {return adde(-val);}
-	public vec sub(vec other) {return add(other.inv());}
-	public vec sube(vec other) {return adde(other.inv());}
-	
-	public vec mult(float val) {return copy().multe(val);}
+	public vec sube(vec other) {
+		if(other.SIZE != SIZE)
+			throw new UnsupportedOperationException();
+
+		for(int i = 0; i < SIZE; i++)
+			set(i, array[i]-other.array[i]);
+		
+		return this;
+	}	
 	public vec multe(float val) {
 		for(int i = 0; i < SIZE; i++)
 			set(i, array[i]*val);	
 		return this;
 	}
 	
-	public vec div(float val) {return copy().dive(val);}
 	public vec dive(float val) {
 		if(val == 0)	throw new ArithmeticException();
 		else			return multe(1/val);
@@ -142,7 +153,9 @@ public abstract class vec {
 		return array;
 	}
 	
-	
+	public static int getNumber() {
+		return vecList.size();
+	}
 	
 	
 	public void x(float x) {set(0,x);}
@@ -153,13 +166,4 @@ public abstract class vec {
 	public float y() {return get(1);}
 	public float z() {return get(2);}
 	public float w() {return get(3);}
-
-	public vec2 xy() {return new vec2(x(),y());}
-	public vec2 yx() {return new vec2(y(),x());}
-	public vec2 xz() {return new vec2(x(),z());}
-	public vec2 zx() {return new vec2(z(),x());}
-	public vec2 yz() {return new vec2(y(),z());}
-	public vec2 zy() {return new vec2(z(),y());}
-	
-	public vec3 xyz() {return new vec3(x(),y(),z());}
 }

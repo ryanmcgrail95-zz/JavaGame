@@ -1,23 +1,15 @@
 package cont;
 
-import gfx.GLText;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
 import gfx.RGBA;
-
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.jogamp.opengl.util.texture.Texture;
-
 import datatypes.PrintString;
 import datatypes.lists.CleanList;
 
 public class Messages {
-	private static CleanList<Message> messageList = new CleanList<Message>();
+	private static CleanList<Message> messageList = new CleanList<Message>("Msgs");
 	private static PrintString actionString = new PrintString("");
 	
 	private static class Message {
@@ -80,15 +72,12 @@ public class Messages {
 	}
 	
 	public static void draw() {
-		List<Message> destroyList = new ArrayList<Message>();
 		int dY = 0;
-		float sX, sY, curTime;
-		sX = 1.5f;
-		sY = 1.5f;
+		float curTime;
 
 		if(!actionString.isEmpty()) {
 			actionString.advance(2);
-			GLText.drawString(0,dY,1,1,0,actionString);
+			G2D.drawString(0,dY,1,1,0,actionString);
 			dY += 12;
 		}
 
@@ -105,8 +94,8 @@ public class Messages {
 		    	curTime = curMessage.getTime();
 		    	
 	    	    //Draw Message
-		    	GOGL.setColor(new RGBA(1f,1f,1f,(curTime < 20) ? curTime/20 : 1));
-		    	GLText.drawStringCentered(0,dY, curMessage.getText(), true);
+		    	GL.setColor(RGBA.createf(1f,1f,1f,(curTime < 20) ? curTime/20 : 1));
+		    	G2D.drawStringCentered(0,dY, curMessage.getText(), true);
 	    	    
 	    	    //Move Next Message Down
 	    	    dY += 12;

@@ -80,7 +80,7 @@ public class Fireball extends Drawable {
 			destroy();
 	}
 	
-	public void draw() {
+	public void draw() {		
 		GOGL.transformClear();
 			GOGL.transformTranslation(x,y,z);
 			GOGL.transformPaper();

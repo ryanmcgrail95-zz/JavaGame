@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import collision.C3D;
 import datatypes.StringExt;
 import datatypes.lists.CleanList;
 import fl.FileExt;
@@ -231,8 +232,17 @@ public class Test {
 		return (value >> index) & 1;
 	}
 	
-	public static void main(String[] args) {
-		filter2();
+	public static void main(String[] args) {		
+		float[] pt = {0,0,10}, 
+				dir = {0,0,-1};
+		float[] pt1 = {-10,-5,0},
+				pt2 = {10,-5,0},
+				pt3 = {0,10,0};
+		float[][] ray = {pt, dir},
+				triangle = {pt3, pt1, pt2};
+		
+		System.out.println(C3D.raycastTriangle(ray, triangle));
+		
 		if(true)
 			return;
 		

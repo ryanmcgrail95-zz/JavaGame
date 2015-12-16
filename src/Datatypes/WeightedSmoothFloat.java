@@ -174,9 +174,7 @@ public class WeightedSmoothFloat {
 				y = points[i][1];
 				
 				points[i][0] = x*co - y*si;
-				points[i][1] = x*si + y*co;
-				
-				System.out.println(points[i][1]);
+				points[i][1] = x*si + y*co;				
 			}
 			
 			return points;

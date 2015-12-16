@@ -2,12 +2,10 @@ package btl;
 
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
-import gfx.MultiTexture;
-
+import gfx.G2D;
+import gfx.GL;
+import gfx.GT;
 import com.jogamp.opengl.util.texture.Texture;
-
-import cont.TextureController;
 import object.primitive.Drawable;
 import time.Delta;
 
@@ -15,7 +13,7 @@ public class DodgeStar extends Drawable {
 	private float x, y, z, dX, dZ;	
 	private float index, distance, direction, drawDir, ddSign, size = 12, alphaTime = .4f;
 	
-	private static final Texture starTex = GOGL.loadTexture("Resources/Images/Battle/dodgeStar.png");
+	private static final Texture starTex = GL.loadTexture("Resources/Images/Battle/dodgeStar.png");
 	
 	public DodgeStar(float x, float z, float direction) {
 		super(false,false);
@@ -50,17 +48,17 @@ public class DodgeStar extends Drawable {
 	
 	
 	public void draw() {
-		GOGL.transformClear();
-			GOGL.transformTranslation(dX,y,dZ);
-			GOGL.transformPaper();
+		GT.transformClear();
+			GT.transformTranslation(dX,y,dZ);
+			GT.transformPaper();
 			
 			//Need to be rotated 180 degrees???
 			if(index > 1)
-				GOGL.setAlpha((alphaTime - (index-1))/alphaTime);
-			GOGL.transformRotationZ(180 + drawDir);
-			GOGL.drawTexture(-size/2,-size/2,size,size, starTex);
-			GOGL.resetColor();
-		GOGL.transformClear();
+				GL.setAlpha((alphaTime - (index-1))/alphaTime);
+			GT.transformRotationZ(180 + drawDir);
+			G2D.drawTexture(-size/2,-size/2,size,size, starTex);
+			GL.resetColor();
+		GT.transformClear();
 	}
 
 	public float calcDepth() {
@@ -68,8 +66,5 @@ public class DodgeStar extends Drawable {
 	}
 
 	@Override
-	public void add() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void add() {}
 }

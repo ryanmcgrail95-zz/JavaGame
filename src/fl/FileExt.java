@@ -1,7 +1,12 @@
 package fl;
 
+import gfx.ErrorPopup;
+
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.InputStream;
 
 import javax.imageio.ImageIO;
@@ -19,6 +24,21 @@ public class FileExt {
 		return new File(fixNameGetFile(fileName));
 	}
 	
+	public static String readFile2String(String fileName) {
+		String str = "", line;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(getFile(fileName)));
+			
+			while((line = reader.readLine()) != null)
+				str += line+"\n";
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return str;
+	}
+	
 	public static String fixSlashes(String fileName) {
 		return fileName.replace("\\", "/");
 	}
@@ -29,10 +49,10 @@ public class FileExt {
 		fName = (fileName.startsWith("ResourcesContainer/")) ? fileName.replace("ResourcesContainer/", "") : fileName;
 		
 		if((new File("JavaGame.jar")).exists())
-			fName = "/" + fName;
+			fName = "../" + fName;
 		else 
 			fName = "../" + fName;
-		
+				
 		return fName;
 	}
 

@@ -1,0 +1,6 @@
+// Resources
+Model: flower.obj
+Model: Battle-Pleasant_Path_1_Flowerless.obj
+	scale: 390
+	rotation: 90 0 0
+Character: mario luigi watt geno

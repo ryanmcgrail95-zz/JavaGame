@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EclecticList<T> extends CleanList<T> {
+	public EclecticList(String name) {
+		super(name);
+	}
+
 	public void add(List<T> otherList) {
 		for(T obj : otherList)
 			add(obj);

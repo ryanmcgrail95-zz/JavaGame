@@ -2,7 +2,9 @@ package btl;
 
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
+import gfx.GL;
+import gfx.G2D;
+import gfx.GT;
 import gfx.MultiTexture;
 
 import com.jogamp.opengl.util.texture.Texture;
@@ -126,7 +128,7 @@ public class DamageStar extends Drawable {
 		}
 
 		float r, s, sX, sY, sZ, nX, nY, nZ, cDir, cX, cY;
-		cDir = GOGL.getMainCamera().getDirection();
+		cDir = GT.getMainCamera().getDirection();
 		cX = Math2D.calcLenY(1, cDir);
 		cY = Math2D.calcLenX(1, cDir);
 		
@@ -171,39 +173,39 @@ public class DamageStar extends Drawable {
 		dNumSc *= 1 + .6f*Math2D.calcLenY(180 * nF);
 
 		// Draw Op Star
-		GOGL.transformClear();
-		GOGL.transformTranslation(x,y,z + sZ + 16);
-		GOGL.transformRotationZ(cDir);
-		GOGL.transformTranslation(sX,sY,0);
-		GOGL.transformScale(dStarSc);
+		GT.transformClear();
+		GT.transformTranslation(x,y,z + sZ + 16);
+		GT.transformRotationZ(cDir);
+		GT.transformTranslation(sX,sY,0);
+		GT.transformScale(dStarSc);
 		
-			GOGL.draw3DWall(0,-s,s, 0,s,-s, starTex);
+			GT.draw3DWall(0,-s,s, 0,s,-s, starTex);
 		
 		// Draw Star
-		GOGL.transformClear();
-		GOGL.transformTranslation(x,y,z + sZ + 16);
-		GOGL.transformRotationZ(cDir);
-		GOGL.transformTranslation(sX,sY,0);
-		GOGL.transformScale(dStarSc);
+		GT.transformClear();
+		GT.transformTranslation(x,y,z + sZ + 16);
+		GT.transformRotationZ(cDir);
+		GT.transformTranslation(sX,sY,0);
+		GT.transformScale(dStarSc);
 	
-			GOGL.setAlpha(starC);
-			GOGL.draw3DWall(0,-s,s, 0,s,-s, starTex);
+			GT.setAlpha(starC);
+			GT.draw3DWall(0,-s,s, 0,s,-s, starTex);
 
 		// Draw Num
 		float nS = s*.6f;
 			
-		GOGL.transformClear();
-		GOGL.transformTranslation(x,y,z + nZ + 16);
-		GOGL.transformRotationZ(cDir);
-		GOGL.transformTranslation(nX,nY,0);
-		GOGL.transformScale(dNumSc,-dNumSc,dNumSc);
+		GT.transformClear();
+		GT.transformTranslation(x,y,z + nZ + 16);
+		GT.transformRotationZ(cDir);
+		GT.transformTranslation(nX,nY,0);
+		GT.transformScale(dNumSc,-dNumSc,dNumSc);
 
-			GOGL.setAlpha(numA);
-			GOGL.draw3DWall(0,-nS,nS, 0,nS,-nS, numTex,num);
+			GT.setAlpha(numA);
+			GT.draw3DWall(0,-nS,nS, 0,nS,-nS, numTex,num);
 
-		GOGL.transformClear();
+		GT.transformClear();
 		
-		GOGL.setAlpha(1);		
+		GL.setAlpha(1);		
 	}
 	
 	public float calcDepth() {

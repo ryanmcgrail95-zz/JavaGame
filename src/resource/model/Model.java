@@ -5,24 +5,29 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import resource.Resource;
 
 import com.jogamp.common.nio.Buffers;
-import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.texture.Texture;
 
 import datatypes.mat4;
-import datatypes.vec2;
-import datatypes.vec3;
 import datatypes.vec4;
+import datatypes.lists.CleanList;
 import fl.FileExt;
-import gfx.GOGL;
+import gfx.GL;
 import gfx.RGBA;
 
-public class Model {
+public class Model extends Resource {
+	
+	private static Model instance;
+	
 	private float[][] pointList;
 	private float[][] normalList;
 	private float[][] uvList;
@@ -32,10 +37,18 @@ public class Model {
 	private int vertexBuffer;
 	private Material[] materials;
 	
+	private mat4 preMatrix = new mat4();
+	
+	private static Map<String, Model> modelMap = new HashMap<String, Model>();
+	
+	private float[][][] triangles;
+	
 	public final static int TRIANGLES = GL2.GL_TRIANGLES, QUADS = GL2.GL_QUADS;
 	private int modelType;
 	
 	private boolean hasColor;
+	
+	private static CleanList<Model> modList = new CleanList<Model>("Mods");
 
 	public static Model 
 		MOD_PINEBRANCHES, MOD_PINETREE, MOD_PINESTUMP,
@@ -68,34 +81,41 @@ public class Model {
 		MOD_FERN = OBJLoader.load("fern").fix();
 			MOD_FERN.flipNormals();*/
 		
-		MOD_TABLE = OBJLoader.load("Peachs_Castle-Table_1").fix();
-			MOD_TABLE.mirrorUVVertically();
-		
-		MOD_BATTLE = OBJLoader.load("Battle-Pleasant_Path_1_flowerless").fix();
-			MOD_BATTLE.mirrorUVVertically();
-		
-		MOD_FLOWER = OBJLoader.load("flower").fix();
-			MOD_FLOWER.mirrorUVVertically();
-				
 		/*MOD_CASTLE = OBJLoader.load("Model/output").fix();
 			MOD_CASTLE.mirrorUVVertically();*/
 	}
 	
-	public Model(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<int[]> vertexList) {
+	
+	public Model(String fileName) {
+		super(fileName, Resource.R_MODEL);
+		instance = this;
+		modelMap.put(removeType(fileName),this);
+	}
+	public Model() {
+		super("", Resource.R_MODEL);
+		instance = this;
+		modelMap.put(removeType(""),this);
+	}
+	
+	public void create(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<int[]> vertexList) {
 		this.modelType = modelType;
 		setAll(pointList, normalList, uvList, new ArrayList<Integer>(), vertexList);
 		
 		hasColor = false;
 		vertexBuffer = createAndFillVertexBuffer();
+		
+		modList.add(this);
 	}
 	
-	public Model(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<Integer> colorList, List<int[]> vertexList) {		
+	public void create(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<Integer> colorList, List<int[]> vertexList) {		
 		this.modelType = modelType;		
 		setAll(pointList,normalList,uvList,colorList,vertexList);
 		
 		hasColor = colorList.size() > 0;
 		
 		vertexBuffer = createAndFillVertexBuffer();
+		
+		modList.add(this);
 	}
 	
 	private void setAll(List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<Integer> colorList, List<int[]> vertexList) {
@@ -138,31 +158,24 @@ public class Model {
 			vertexList[i] = null;
 		
 		// Delete GL Vertex Index/Buffer
-		GL2 gl = GOGL.gl;
+		GL2 gl = GL.getGL2();
 		gl.glDeleteBuffers(1, new int[] {vertexBuffer}, 0);
 
 		
 		// Empty Vertex Buffer
 	}
 	
-	public Model fix() {
-		scale(2f);
-		flipNormals();
-		
-		return this;
-	}
-	
 	public void draw() {
-		GL2 gl = GOGL.gl;
+		GL2 gl = (GL2) GL.getGL();
 		
 		int p,u,n,c;
 		int[] color = new int[4];
 		
 		Material curMat = null;
 		
-		GOGL.disableTextures();
-		GOGL.enableBlending();
-		GOGL.enableInterpolation();
+		GL.disableTextures();
+		GL.enableBlending();
+		GL.enableInterpolation();
 		gl.glBegin(GL2.GL_TRIANGLES);
 		for(int[] v : vertexList) {			
 			p = v[0];
@@ -186,7 +199,7 @@ public class Model {
 					gl.glNormal3fv(normalList[n],0);
 				if(c != -1) {
 					RGBA.convertInt2RGBA(colorList[c],color);
-					GOGL.setColor(new RGBA(colorList[c]));
+					GL.setColor(RGBA.create(colorList[c]));
 					gl.glColor4f(color[0]/255f,color[1]/255f,color[2]/255f,255f);
 				}
 				gl.glVertex3fv(pointList[p],0);
@@ -194,7 +207,7 @@ public class Model {
 		}
 		gl.glEnd();
 		
-		GOGL.disableTextures();
+		GL.disableTextures();
 	}
 	
 	
@@ -202,7 +215,7 @@ public class Model {
 	public void drawFast() {
 		
 		
-		GL2 gl = GOGL.gl;
+		GL2 gl = GL.getGL2();
 		
 		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBuffer);
 		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
@@ -210,19 +223,19 @@ public class Model {
 		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
 		
-		gl.glVertexPointer( 3, GL.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 0 );
-		gl.glNormalPointer( GL.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 5 * Buffers.SIZEOF_FLOAT );
-		gl.glColorPointer(3, GL.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 8 * Buffers.SIZEOF_FLOAT );
+		gl.glVertexPointer( 3, GL2.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 0 );
+		gl.glNormalPointer( GL2.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 5 * Buffers.SIZEOF_FLOAT );
+		gl.glColorPointer(3, GL2.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 8 * Buffers.SIZEOF_FLOAT );
 
 	
 		// Draw the buffer
-		gl.glPolygonMode( GL.GL_FRONT, GL2.GL_FILL );
+		gl.glPolygonMode( GL2.GL_FRONT, GL2.GL_FILL );
 		gl.glDrawArrays(modelType, 0, vertexNum);
 		
 		// Unbind the buffer
 
 		// Disable the different kinds of data 
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, 0 );
+		gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
 		
 		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 		//gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
@@ -241,9 +254,10 @@ public class Model {
 
 	
 	public void add() {
-		GL2 gl = GOGL.gl;
+		/*GL2 gl = GL.getGL2();
 		
-		float[] matA = GOGL.getModelMatrix().array();
+		mat4 m = GL.getModelMatrix();
+		float[] matA = m.array();
 		
 		int p,u,n;
 		int[] color;
@@ -254,7 +268,7 @@ public class Model {
 			
 			if(hasColor) {
 				color = RGBA.convertInt2RGBA(colorList[v[3]]);
-				GOGL.setLightColor(color[0],color[1],color[2]);
+				GL.setLightColor(color[0],color[1],color[2]);
 			}
 
 			if(u != -1)
@@ -263,44 +277,60 @@ public class Model {
 				gl.glNormal3fv(mult(matA,normalList[n]),0);
 			gl.glVertex3fv(mult(matA,pointList[p]),0);
 		}
+		
+		m.destroy();*/
 	}
 
 	
 	public void transform(mat4 transformMatrix) {
-		for(float[] v : pointList) {
-			vec4 curVertex = new vec4(v[0],v[1],v[2],1);
-			curVertex.multe(transformMatrix);
-			
-			v[0] = curVertex.x();
-			v[1] = curVertex.y();
-			v[2] = curVertex.z();
-		}
+		destroyTriangles();
+		if(pointList == null)
+			preMatrix.multe(transformMatrix);
+		else
+			for(float[] v : pointList) {
+				vec4 curVertex = new vec4(v[0],v[1],v[2],1);
+				curVertex.multe(transformMatrix);
+				
+				v[0] = curVertex.x();
+				v[1] = curVertex.y();
+				v[2] = curVertex.z();
+				
+				curVertex.destroy();
+			}
 	}
 
 	public void translate(float tX, float tY, float tZ) {
-		transform(mat4.createTranslationMatrix(tX,tY,tZ));
+		mat4 tr = mat4.createTranslationMatrix(tX,tY,tZ);
+		transform(tr);
+		tr.destroy();
 	}
 	
 	public void rotateX(float rot) {
-		transform(mat4.createRotationMatrixX(rot));
+		mat4 tr = mat4.createRotationXMatrix(rot);
+		transform(tr);
+		tr.destroy();
 	}
 	public void rotateY(float rot) {
-		transform(mat4.createRotationMatrixY(rot));
+		mat4 tr = mat4.createRotationYMatrix(rot);
+		transform(tr);
+		tr.destroy();
 	}
 	public void rotateZ(float rot) {
-		transform(mat4.createRotationMatrixZ(rot));
+		mat4 tr = mat4.createRotationZMatrix(rot);
+		transform(tr);
+		tr.destroy();
 	}
 	
 	public void scale(float scaleFactor) {scale(scaleFactor,scaleFactor,scaleFactor);}
 	public void scale(float sX, float sY, float sZ) {
-		transform(mat4.createScaleMatrix(sX,sY,sZ));
+		mat4 tr = mat4.createScaleMatrix(sX,sY,sZ);
+		transform(tr);
+		tr.destroy();
 	}
 	
 	public void flipNormals() {
 		for(float[] v : normalList) {
-			v[0] *= -1;
-			v[1] *= -1;
-			v[2] *= -1;
+			v[0] *= -1;	v[1] *= -1;	v[2] *= -1;
 		}
 	}
 	
@@ -319,7 +349,7 @@ public class Model {
 	protected int createAndFillVertexBuffer() {
 		int[] bufferInd = new int[1];    
 		
-		GL2 gl = GOGL.gl;
+		GL2 gl = (GL2) GL.getGL();
 		
 		int error, n = 0;
 		while((error = gl.glGetError()) != 0);
@@ -328,15 +358,15 @@ public class Model {
         gl.glGenBuffers(1, bufferInd, 0 );
  
         // create vertex buffer data store without initial copy
-        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, bufferInd[0] );
-        gl.glBufferData(GL.GL_ARRAY_BUFFER,
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, bufferInd[0] );
+        gl.glBufferData(GL2.GL_ARRAY_BUFFER,
                           vertexNum * ( 3 * 3 + 2 ) * Buffers.SIZEOF_FLOAT, // # vertices * # of #s in each datatype * float size * 4 datatypes
                           null,
                           GL2.GL_DYNAMIC_DRAW );
         	 
 	    // map the buffer and write vertex and color data directly into it
-	    gl.glBindBuffer( GL.GL_ARRAY_BUFFER, bufferInd[0] );
-	    ByteBuffer bytebuffer = gl.glMapBuffer( GL.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
+	    gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[0] );
+	    ByteBuffer bytebuffer = gl.glMapBuffer( GL2.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
 	    //FloatBuffer floatbuffer = bytebuffer.order( ByteOrder.nativeOrder() ).asFloatBuffer();
 	 	    
 	    float[] array;
@@ -378,8 +408,89 @@ public class Model {
 	    }	    
 	    
 	    bytebuffer.position(0);	    
-	    gl.glUnmapBuffer( GL.GL_ARRAY_BUFFER );
+	    gl.glUnmapBuffer( GL2.GL_ARRAY_BUFFER );
 
 	    return bufferInd[0];
+	}
+	
+	public int getVertexNumber() {
+		int p = 0;
+		for(int[] v : vertexList)
+			if(v[0] != -1)
+				p++;
+		return p;
+	}
+	public static int getNumber() {
+		return modList.size();
+	}
+	
+	
+	public float[][][] getTriangles() {
+		if(triangles != null)
+			return triangles;
+		
+		int triNum = getVertexNumber()/3;
+
+		triangles = new float[triNum][3][3];
+		
+		int p, vi = 0;
+		for(int tri = 0; tri < triNum; tri++)
+			for(int v = 0; v < 3; v++) {
+				do
+					p = vertexList[vi++][0];
+				while(p == -1);
+				
+				for(int i = 0; i < 3; i++)
+					triangles[tri][v][i] = pointList[p][i];
+			}
+		
+		return triangles;
+	}
+
+
+	public void load(String fileName) {
+		if(fileName != "") {
+			OBJLoader.loadInto(fileName, this);	
+			
+			// Necessary for Fixing Model
+			scale(2f);
+			scale(1,-1,-1);
+			flipNormals();
+		}
+		
+		preMatrix.println();
+		transform(preMatrix);
+		preMatrix.destroy();
+		preMatrix = null;
+		
+		mirrorUVVertically();
+		
+		//this.scale(390);
+		//this.rotateY(90);
+	}
+
+	public void unload() {
+		destroy();
+	}
+	
+	public void destroyTriangles() {
+		if(triangles == null)
+			return;
+		
+		for(float[][] i : triangles) {
+			for(float[] ii : i)
+				ii = null;
+			i = null;
+		}
+		
+		triangles = null;
+	}
+
+
+	public static Model get() {
+		return instance;
+	}
+	public static Model get(String name) {
+		return modelMap.get(name);
 	}
 }

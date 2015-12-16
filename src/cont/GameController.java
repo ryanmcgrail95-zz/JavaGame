@@ -6,11 +6,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-import gfx.GOGL;
+import gfx.GL;
 import object.primitive.Updatable;
 import resource.sound.Sound;
 import time.Delta;
@@ -41,11 +39,11 @@ public class GameController extends JFrame implements WindowListener {
 
     	this.setVisible(true);
     	//setSize(GOGL.SCREEN_WIDTH, GOGL.SCREEN_HEIGHT);
-    	setSize(GOGL.SCREEN_WIDTH+2*GOGL.BORDER_LEFT, GOGL.SCREEN_HEIGHT+GOGL.BORDER_LEFT+GOGL.BORDER_TOP);
+    	setSize(GL.SCREEN_WIDTH+2*GL.BORDER_LEFT, GL.SCREEN_HEIGHT+GL.BORDER_LEFT+GL.BORDER_TOP);
     	setResizable(false);
     	    	
     	Sound.ini();
-        GOGL.start3D(this);
+        GL.start3D(this);
 	    
         
         IO.ini();
@@ -79,7 +77,7 @@ public class GameController extends JFrame implements WindowListener {
 	    	now = System.nanoTime();
 	        runTime = now - lastLoopTime;
 	        lastLoopTime = now;
-	        delta = 1. * runTime / targetTime;
+	        delta = 1. * runTime / ((long)(1000000000 / Delta.getTargetFPS()));
 	          
 	        // update the frame counter
 	        lastFpsTime += runTime;
@@ -95,7 +93,7 @@ public class GameController extends JFrame implements WindowListener {
 	        Delta.setDelta((float) delta);
 	          
 	        // draw everyting
-	        GOGL.repaint();
+	        GL.repaint();
 	          
 	        // we want each frame to take 10 milliseconds, to do this
 	        // we've recorded when we started the frame. We add 10 milliseconds
@@ -104,7 +102,7 @@ public class GameController extends JFrame implements WindowListener {
 	        // remember this is in ms, whereas our lastLoopTime etc. vars are in ns.
 	        try {
 	        	long sleepTime;
-	        	sleepTime = (lastLoopTime-System.nanoTime() + targetTime)/1000000;
+	        	sleepTime = (lastLoopTime-System.nanoTime() + (long)(1000000000 / Delta.getTargetFPS()))/1000000;
 	        	  
 	        	if(sleepTime >= 0)
 	        		Thread.sleep(sleepTime);
@@ -140,7 +138,7 @@ public class GameController extends JFrame implements WindowListener {
 	          Delta.setDelta((float) delta);
 	          
 	          // draw everyting
-	          GOGL.repaint();
+	          GL.repaint();
 	          
 	          // we want each frame to take 10 milliseconds, to do this
 	          // we've recorded when we started the frame. We add 10 milliseconds

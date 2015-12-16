@@ -17,8 +17,11 @@ import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
+import datatypes.lists.CleanList;
+
 public class FBO {
 	
+	private static CleanList<FBO> fboList = new CleanList<FBO>("FBOs");
 	private int fbo, tex, texDepth, rb;
 	private int width, height;
 	
@@ -26,6 +29,8 @@ public class FBO {
 		this.width = width;
 		this.height = height;
 		ini(gl);
+		
+		fboList.add(this);
 	}
 	
 	private void ini(GL gl) {
@@ -68,7 +73,7 @@ public class FBO {
 	    	    
 	    gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0);	   
 	    
-	    GOGL.checkError();
+	    //GOGL.checkError();
 	    /*gl2.glDrawBuffer(GL2.GL_NONE);
 	    gl2.glReadBuffer(GL2.GL_NONE);*/
 	}
@@ -78,7 +83,7 @@ public class FBO {
 	}
 	public void attach(GL gl, boolean ortho) {
 				
-		GOGL.currentFBO = this;
+		G2D.currentFBO = this;
 
  		if(ortho)
  			setOrtho(gl);
@@ -107,7 +112,7 @@ public class FBO {
 		gl2.glMatrixMode(GL2.GL_PROJECTION);
 		gl2.glLoadIdentity();
 		float camX, camY, camZ, toX, toY, toZ;
-		Camera camera = GOGL.getCamera();
+		Camera camera = G3D.getCamera();
 		camX = camera.getX();
 		camY = camera.getY();
 		camZ = camera.getZ();
@@ -115,9 +120,9 @@ public class FBO {
 		toY = camera.getToY();
 		toZ = camera.getToZ();
         // Perspective.
-        float widthHeightRatio = 1f*GOGL.SCREEN_WIDTH/GOGL.SCREEN_HEIGHT; //getViewWidth()/getViewHeight();
+        float widthHeightRatio = 1f*G3D.SCREEN_WIDTH/G3D.SCREEN_HEIGHT; //getViewWidth()/getViewHeight();
         glu.gluPerspective(camera.getFOV(), widthHeightRatio, 1, 10000);
-        GOGL.getCamera().gluLookAt(glu); 
+        G3D.getCamera().gluLookAt(glu); 
         
         gl.glViewport(0,0,width,height);
 		gl2.glMatrixMode (GL2.GL_MODELVIEW);
@@ -140,7 +145,7 @@ public class FBO {
 		gl2.glOrtho(-width/2,width/2,-height/2,height/2, -1000,10000);
 
         glu = GLU.createGLU(gl);
-        GOGL.getCamera().gluLookAt(glu);
+        G3D.getCamera().gluLookAt(glu);
         gl.glViewport(0,0,width,height);
 	    gl2.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl2.glLoadIdentity();
@@ -150,7 +155,7 @@ public class FBO {
 	    gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0);
 		gl.glEnable(GL2.GL_DEPTH_TEST);
 		
-		GOGL.currentFBO = null;
+		G2D.currentFBO = null;
 	}
 	
 	public void bind(GL gl) {
@@ -208,7 +213,19 @@ public class FBO {
 	
 	public void clear(GL gl, RGBA color) {
 		attach(gl);
-		GOGL.clear(color);
+		G2D.clear(color);
 		detach(gl);
+	}
+
+	public void destroy(GL gl) {
+		gl.glDeleteFramebuffers(1, new int[] {fbo}, 0);
+		gl.glDeleteTextures(1, new int[] {tex}, 0);
+		gl.glDeleteTextures(1, new int[] {texDepth}, 0);
+		
+		fboList.remove(this);
+	}
+
+	public static int getNumber() {
+		return fboList.size();
 	}
 }

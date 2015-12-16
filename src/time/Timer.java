@@ -17,6 +17,7 @@ public class Timer extends Updatable {
 	// CONSTRUCTORS
 		public Timer(float time, float timeMax) {
 			super();
+			name = "Timer";
 			
 			this.time = time;
 			this.maxTime = timeMax;

@@ -4,8 +4,19 @@ heightFraction: .8
 
 hasWings: true
 
+maxHP: 10
 defenseStat: 1
 
-attackStat: 2
-attackType: jump
-element: fire
+attack {
+	attackName: "Fire Stomp"
+	attackStat: 2
+	attackType: jump
+	element: fire
+}
+
+attack {
+	attackName: "Ice Stomp"
+	attackStat: 2
+	attackType: jump
+	element: icyfire
+}

@@ -46,13 +46,22 @@ public class vec4 extends vec {
 	}
 	
 
-	public vec4 mult(mat4 other) {
-		return (new vec4(this)).multe(other);
-	}
 	public vec4 multe(mat4 other) {
-		for(int r = 0; r < 4; r++)
-			set(r, other.getCol(r).dot(this));
+		vec4 m = mult(other);
+		set(m);
+		m.destroy();
+		
 		return this;
+	}
+	public vec4 mult(mat4 other) {
+		vec4 outVec = new vec4(this);
+		vec4 m;
+		for(int r = 0; r < 4; r++) {
+			m = other.getRow(r);
+			outVec.set(r, m.dot(this));
+			m.destroy();
+		}
+		return outVec;
 	}
 		
 	public vec4 mult3(vec4 other) {

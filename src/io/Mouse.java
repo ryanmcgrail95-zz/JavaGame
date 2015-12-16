@@ -1,9 +1,8 @@
 package io;
 
 import functions.Math2D;
-import gfx.GOGL;
+import gfx.GL;
 import gfx.RGBA;
-
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -27,8 +26,8 @@ public class Mouse implements MouseListener, MouseMotionListener {
 
 	public static void ini() {
 		Mouse instance = new Mouse();
-		GOGL.getCanvas().addMouseListener(instance);
-		GOGL.getCanvas().addMouseMotionListener(instance);
+		GL.getCanvas().addMouseListener(instance);
+		GL.getCanvas().addMouseMotionListener(instance);
 		
 		leftTimer = new Timer(1); rightTimer = new Timer(1);
 		cursorResetTimer = new Timer(2);
@@ -185,10 +184,10 @@ public class Mouse implements MouseListener, MouseMotionListener {
 	}
 	
 	public static Color getPixelColor() {
-		return GOGL.getPixelColor(getMousePickX(), getMousePickY());
+		return GL.getPixelColor(getMousePickX(), getMousePickY());
 	}
 	public static RGBA getPixelRGBA() {
-		return GOGL.getPixelRGBA(getMousePickX(), getMousePickY());
+		return GL.getPixelRGBA(getMousePickX(), getMousePickY());
 	}
 	
 	

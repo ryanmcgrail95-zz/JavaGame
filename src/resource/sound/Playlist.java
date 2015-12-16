@@ -17,6 +17,8 @@ public class Playlist extends Updatable {
 	private float speed = 1;
 	
 	public Playlist(String... list) {
+		name = "Playlist";
+
 		this.list = new ArrayList<String>();
 		
 		List<String> playlist;

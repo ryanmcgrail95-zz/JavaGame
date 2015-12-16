@@ -2,21 +2,21 @@ package object.primitive;
 import datatypes.vec3;
 import datatypes.lists.CleanList;
 import object.environment.FloorBlock;
+import resource.model.Model;
 import functions.FastMath;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.Camera;
-import gfx.GOGL;
 
 
 public abstract class Physical extends Positionable {
-	private static CleanList<Physical> physicalList = new CleanList<Physical>();
+	private static CleanList<Physical> physicalList = new CleanList<Physical>("Phys");
 	//protected final static float CHAR_SPEED = 1, MAX_SPEED = CHAR_SPEED*2.6f; //CHAR_SPEED*1.5
-	protected final static float GRAVITY_ACCEL = .5f, //.8f
-			JUMP_SPEED = Math2D.calcSpeed(64,GRAVITY_ACCEL);
+	protected final static float GRAVITY_ACCEL = .8f, //.5f
+			JUMP_SPEED = Math2D.calcSpeed(32,GRAVITY_ACCEL);
 	protected float maxSpeed;
 		
-	protected boolean inAir, onFloor;
+	protected boolean inAir;
 	protected FloorBlock curFloor = null;
 	protected float floorZ = 0;
 	//TYPE VARIABLES
@@ -89,7 +89,7 @@ public abstract class Physical extends Positionable {
 			boolean isItem = (type == T_ITEM);
 			    
 			this.floorZ = floorZ;
-			onFloor = true;
+			inAir = false;
 			
 			setZ(floorZ);
 
@@ -108,6 +108,10 @@ public abstract class Physical extends Positionable {
 		
 		protected boolean collideSize(Physical p) {
 			return (calcDis(p) <= size+p.size);
+		}
+		
+		protected boolean collideModel(Model m) {
+			return false;
 		}
 		
 		public boolean collideLine(float x1, float y1, float x2, float y2) {

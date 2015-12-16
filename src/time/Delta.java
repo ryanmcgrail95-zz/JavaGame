@@ -3,8 +3,6 @@ package time;
 import java.util.concurrent.Callable;
 
 import datatypes.vec;
-import functions.Math2D;
-import gfx.GOGL;
 
 public final class Delta {
 

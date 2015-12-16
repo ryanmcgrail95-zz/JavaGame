@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import functions.MathExt;
 
 public class RandomList<K> extends CleanList<K> {
+	public RandomList(String name) {
+		super(name);
+	}
+
 	public K get() {
 		int si = size(), i;
 		do

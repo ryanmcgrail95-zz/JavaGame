@@ -21,19 +21,11 @@ public class Math2D {
 	public static float calcLenY(float dis, float dir) {
 		return (float) (dis*FastMath.sind(dir));
 	}
-	
-	
-	public static float calcPtDis(vec2 pt1, vec2 pt2) {return calcPtDis(pt1.x(), pt1.y(), pt2.x(), pt2.y());}
-	public static float calcPtDis(float x1, float y1, vec2 pt2) {return calcPtDis(x1, y1, pt2.x(), pt2.y());}
-	public static float calcPtDis(vec2 pt1, float x2, float y2) {return calcPtDis(pt1.x(), pt1.y(), x2, y2);}
+		
 	public static float calcPtDis(float x1, float y1, float x2, float y2) {
 		return (float) Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
 	}
 		
-	
-	public static float calcPtDir(vec2 pt1, vec2 pt2) {return calcPtDir(pt1.x(), pt1.y(), pt2.x(), pt2.y());}
-	public static float calcPtDir(float x1, float y1, vec2 pt2) {return calcPtDir(x1, y1, pt2.x(), pt2.y());}
-	public static float calcPtDir(vec2 pt1, float x2, float y2) {return calcPtDir(pt1.x(), pt1.y(), x2, y2);}
 	public static float calcPtDir(float x1, float y1, float x2, float y2) {
 		return (float) (FastMath.atan2(y2-y1, x2-x1)/Math.PI*180);
 	}
@@ -53,9 +45,6 @@ public class Math2D {
 		return (float) Math.sqrt(2*deltaX*accel);
 	}
 	
-	
-
-	public static boolean checkCircle(vec2 pt, vec2 cPt, float cR) {return checkCircle(pt.x(),pt.y(),cPt.x(),cPt.y(),cR);}
 	public static boolean checkCircle(float x, float y, float cX, float cY, float cR) {
 		return (calcPtDis(x,y,cX,cY) <= cR);
 	}
@@ -79,10 +68,16 @@ public class Math2D {
 	}
 	
 	public static float calcLineDis(float px, float py, float x1, float y1, float x2, float y2, boolean segment) {
-	    return calcPtDis(calcLinePt(px,py,x1,y1,x2,y2,segment), px, py);
+	    vec2 pt = calcLinePt(px,py,x1,y1,x2,y2,segment);
+		float dis = calcPtDis(pt.x(),pt.y(), px, py);
+		pt.destroy();
+		return dis;
 	}
 	public static float calcLineDir(float px, float py, float x1, float y1, float x2, float y2, boolean segment) {
-	    return calcPtDir(px, py, calcLinePt(px,py,x1,y1,x2,y2,segment));
+		vec2 pt = calcLinePt(px,py,x1,y1,x2,y2,segment);
+		float dir = calcPtDir(px,py, pt.x(),pt.y());
+		pt.destroy();
+		return dir;
 	}
 
 	public static float calcSmoothTurn(float dir, float toDir) {

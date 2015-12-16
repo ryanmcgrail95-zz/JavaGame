@@ -1,7 +1,9 @@
 package paper;
 
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
 import com.jogamp.opengl.util.texture.Texture;
+
 import cont.TextureController;
 
 public class Background {
@@ -17,10 +19,12 @@ public class Background {
 			bgX -= bgW;
 	}
 	public static void draw() {
-		bgH = GOGL.getScreenHeight();
+		bgH = GL.getScreenHeight();
 		bgW = 1f*bgTex.getWidth()/bgTex.getHeight()*bgH;
 
-		GOGL.drawTexture(bgX-bgW,bgH, bgW,-bgH, bgTex);
-		GOGL.drawTexture(bgX,bgH, bgW,-bgH, bgTex);
+		GL.setColorf(1,1,1);
+		
+		G2D.drawTexture(bgX-bgW,bgH, bgW,-bgH, bgTex);
+		G2D.drawTexture(bgX,bgH, bgW,-bgH, bgTex);
 	}
 }

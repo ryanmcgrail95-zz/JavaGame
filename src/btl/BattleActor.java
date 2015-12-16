@@ -4,16 +4,18 @@ import cont.TextureController;
 import io.Keyboard;
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GLText;
-import gfx.GOGL;
+import gfx.GL;
+import gfx.GT;
 import gfx.RGBA;
-import gfx.TextureExt;
 import object.primitive.Positionable;
 import paper.AnimationsPM;
+import paper.Attack;
 import paper.BodyPM;
 import paper.CharacterPM;
+import paper.PlayerPM;
 import paper.SpriteMap;
 import resource.sound.Sound;
+import rm.Room;
 import time.Delta;
 
 public abstract class BattleActor extends Positionable {
@@ -21,13 +23,15 @@ public abstract class BattleActor extends Positionable {
 	
 	private CharacterPM myChar;
 	private BodyPM myBody;
-	private boolean hasAttacked = false;
-	
-	private int maxHP = 10, hp = maxHP;
+	private boolean hasAttacked = false, isDestroyed = false;
+		
+	private int hp;
 	
 	protected float originalX;
 	
-	private boolean isInvincible = false ;
+	private boolean
+		isInvincible = false,
+		isMetal = false;
 	
 	protected static int groundZ = 0;
 	
@@ -47,15 +51,20 @@ public abstract class BattleActor extends Positionable {
 		hopZMax = 32,
 		hopNumberMax = 5,
 		hopNumber = 0,
-		hopZ = 0;
+		hopZ = 0,
+		
+		moveToX0 = -1000,
+		moveToZ0 = -1000;
 	
 	
-	protected byte state;
+	protected int state;
 	
 	
 	private float flashTimer, flashTimerMax = 360;
 	
 	protected BattleActor target;
+	
+	private Attack currentAttack;
 	
 	protected boolean isPlayer;
 	
@@ -67,11 +76,11 @@ public abstract class BattleActor extends Positionable {
 		jumpPointX,
 		jumpX0,
 		jumpZ0,
-		jumpHeight = 48, hopHeight = jumpHeight*.5f;
+		jumpHeight = 48, hopHeight = jumpHeight*.5f, jumpOutHeight = 48;
 
 	protected float jumpDir = 0;
 	
-	protected final static byte
+	protected final static int
 		ST_STILL = 0,
 		ST_MOVE_TO = 1,
 		ST_MOVE_BACK = 2,
@@ -94,8 +103,43 @@ public abstract class BattleActor extends Positionable {
 		ST_ATTACK_HAMMER = 14,
 		
 		ST_TOUCHED_SPIKE = 15,
-		ST_SPIKE_HOPPING_BACK = 16;
+		ST_SPIKE_HOPPING_BACK = 16,
 		
+		ST_WIN_START = 19,
+		ST_WIN_JUMP = 17,
+		ST_WIN_RUN_OUT = 18,
+		
+		ST_SPIKE_FALL = 20,
+		
+		ST_WIN_JUMP_OUT = 21;
+		
+	
+	public void destroy() {
+		super.destroy();
+		myBody.destroy();
+			myBody = null;
+			myChar = null;
+			currentAttack = null;
+			zPreviouses = null;
+			target = null;
+		isDestroyed = true;				
+		parent = null;
+	}
+	
+	public void dieDestroy() {
+		super.destroy();
+		myBody.destroy();
+			myBody = null;
+			myChar = null;
+			currentAttack = null;
+			zPreviouses = null;
+			target = null;
+		isDestroyed = true;
+				
+		parent.remove(this);
+		parent.continueDeathAnimations();
+		parent = null;
+	}
 				
 	
 	protected boolean moveTo(float toX, float speed) {
@@ -104,16 +148,112 @@ public abstract class BattleActor extends Positionable {
 		
 		speed = Delta.convert(speed);
 		
-		if(isLess)
+		//Move X Back and Set It
+		setX(x = (isLess) ? Math.min(x+speed, toX) : Math.max(toX, x-speed));
+		
+		return x == toX; 
+	}
+	
+	protected boolean moveFall(float toX) {
+		float x = getX();
+		boolean isLess = x < toX;
+		
+		if(moveToX0 == -1000) {
+			moveToX0 = x;
+			moveToZ0 = getZ();
+		}
+		
+		float speed;
+		speed = Math.abs(toX - moveToX0)/10;
+		speed = Delta.convert(speed);
+		
+		//Move X Back and Set It
+		setX(x = (isLess) ? Math.min(x+speed, toX) : Math.max(toX, x-speed));
+		
+		float z;
+		z = Math.abs(x - toX)/Math.abs(toX - moveToX0);
+			z = (float) (moveToZ0*Math.pow(z, .5f));
+			System.out.println(z);
+		setZ(z);
+		
+		if(x == toX) {
+			moveToX0 = -1000;
+			moveToZ0 = -1000;
+			setZ(0);
+			return true;
+		}
+		
+		return false;
+	}
+	
+	protected boolean moveToHop(float toX) {
+		float x = getX();
+		boolean isLess = x < toX;
+		
+		if(moveToX0 == -1000)
+			moveToX0 = x;
+		
+		float speed;
+		speed = Math.abs(toX - moveToX0)/40;
+		speed = Delta.convert(speed);
+		
+		//Move X Back and Set It
+		setX(x = (isLess) ? Math.min(x+speed, toX) : Math.max(toX, x-speed));
+		
+		float z;
+		z = Math.abs(x - moveToX0)/Math.abs(toX - moveToX0)*180*3;
+			z = hopHeight*Math.abs(Math2D.calcLenY(z));
+		setZ(z);
+		
+		if(x == toX) {
+			moveToX0 = -1000;
+			setZ(0);
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private boolean moveToSmooth(float toX, float toZ, float spd, float error) {
+		float x, z;
+		x = getX();
+		z = getZ();
+		
+		x += (toX - x)/spd;
+		z += (toZ - z)/spd;
+		
+		setX(x);
+		setZ(z);
+		
+		if(Math.abs(toX - x) < error && Math.abs(toZ - z) < error) {
+			setX(toX);
+			setZ(toZ);
+			return true;
+		}
+		return false;
+	}
+
+	protected boolean moveTo(float toX, float toZ, float speed) {
+		float x = getX(), z = getZ();
+		boolean isLessX = x < toX, isLessZ = z < toZ;
+		
+		speed = Delta.convert(speed);
+		
+		if(isLessX)
 			x = Math.min(x+speed, toX);
 		else
 			x = Math.max(toX, x-speed);
+		if(isLessZ)
+			z = Math.min(z+speed, toZ);
+		else
+			z = Math.max(toZ, z-speed);
 		
 		setX(x);
+		setZ(z);
 		
-		return getX() == toX; 
+		return getX() == toX && getZ() == toZ;
 	}
-	
+
 	
 	
 	protected float calcJumpSpeed(boolean on) {
@@ -127,7 +267,20 @@ public abstract class BattleActor extends Positionable {
 		spd = Delta.convert(spd);
 		
 		return on ? spd : 2*spd;
+	}	
+	protected float calcHopSpeed() {
+		float f = .99f, //.8
+			jumpF = jumpDir/180, 
+			spd,
+			minSpd = 6, //3
+			maxSpd = 6; //9
+		
+		spd = (minSpd*(1-jumpF) + maxSpd*jumpF) * (Math.abs(Math2D.calcLenX(jumpDir))*f + 1-f);
+		spd = Delta.convert(spd);
+		
+		return spd;
 	}
+
 	
 	protected boolean jumpOn() 	{return jump(true);}
 	protected boolean jumpOff() {return jump(false);}
@@ -189,10 +342,53 @@ public abstract class BattleActor extends Positionable {
 		}
 		return false;
 	}
+	
+	private boolean jumpInPlace(boolean out) {
+		if(!isJumping) {
+			Sound.play("jump");
+				
+			jumpX0 = getX();
+			jumpZ0 = getZ();
+			isJumping = true;
+		}
+		
+		float toX, toZ;
+		
+		toX = jumpX0;
+		toZ = jumpZ0;
+				
+		// Animate Jumping
+		float prevJumpDir = jumpDir;
+		
+		if(out)
+			jumpDir += calcHopSpeed();
+		else
+			jumpDir += calcJumpSpeed(true);
+		
+		float jumpH;
+		jumpH = jumpOutHeight;
+		
+		setZ(toZ+Math2D.calcLenY(jumpH, jumpDir));
+		
+		if(jumpDir > 180)
+			if(prevJumpDir < 180)
+				jumpDir = 180;
+		
+		if(jumpDir > 180) {
+			setX(toX);
+			setZ(toZ);
+			isJumping = false;
+			jumpDir = 0;
+			return true;
+		}
+		return false;
+	}
 
 	
 	public BattleActor(String name, float x, boolean isPlayer, BattleController parent) {
 		super(x,0,0, false,false);
+		
+		setSurviveTransition(true);
 		
 		this.name = name;
 		this.originalX = x;
@@ -200,6 +396,7 @@ public abstract class BattleActor extends Positionable {
 		this.parent = parent;		
 		
 		myChar = CharacterPM.getCharacter(name);
+			hp = myChar.getMaxHP();
 		myBody = new BodyPM(myChar);
 
 		setAnimationStill();
@@ -213,15 +410,22 @@ public abstract class BattleActor extends Positionable {
 		
 		checkActionCommand();
 		
-		animateModel();
+		animateModel();		
 		
-		switch(myChar.getAttackType()) {
-			case CharacterPM.AT_JUMP:	updateJumpAttack();		break;
-			case CharacterPM.AT_HAMMER:	updateHammerAttack();	break;
-		}
+		if(isDestroyed)
+			return;
+
+		myBody.animateModel();
+
+		if(currentAttack != null)
+			switch(currentAttack.getAttackType()) {
+				case Attack.AT_JUMP:	updateJumpAttack();		break;
+				case Attack.AT_HAMMER:	updateHammerAttack();	break;
+			}
 		
-		if(getZ() <= groundZ)
-			setZ(groundZ);
+		if(!isDestroyed)		
+			if(getZ() <= groundZ)
+				setZ(groundZ);
 	}
 	
 	private void updateZPrevious() {
@@ -257,16 +461,11 @@ public abstract class BattleActor extends Positionable {
 				deathAngle = 360*3;
 				
 				deathFallAngle += Delta.convert(8);
-				if(deathFallAngle > 90) {
-					destroy();
-					parent.remove(this);
-					parent.continueDeathAnimations();
-					parent = null;
-				}
+				if(deathFallAngle > 90)
+					dieDestroy();
 			}
 		}
-		
-		
+				
 		// Slowly Reset Squish/Shake Values to Normal
 		squishFraction = MathExt.to(squishFraction, 1, 5);
 		shakeFraction = MathExt.to(shakeFraction, 0, 3);
@@ -293,7 +492,9 @@ public abstract class BattleActor extends Positionable {
 		return getZ() + myBody.getExtraBaseHeight() + myBody.getHeight();
 	}
 
-	public abstract void attack();
+	public void attack() {
+		currentAttack = myChar.getRandomAttack();
+	}
 
 	
 	@Override
@@ -301,9 +502,7 @@ public abstract class BattleActor extends Positionable {
 		return 2;
 	}
 	
-	public void setAnimation(byte type) {
-		myBody.setAnimation(type);
-	}
+
 	
 	
 	public void createAttackBurst() {	
@@ -313,7 +512,10 @@ public abstract class BattleActor extends Positionable {
 				sX, sZ;
 			sX = getX() + MathExt.rnd(-rndPos,rndPos);
 			sZ = getTopZ() + MathExt.rnd(-rndPos,rndPos);
-			new DamageSpark(sX,sZ,MathExt.rnd(360));
+			new DamageSpark(sX,-10,sZ,MathExt.rnd(360), .5f, 1, 1, 1);
+			
+			if(i < 8)
+				new DamageSpark(sX,-10,sZ,MathExt.rnd(360), 1.6f, .4f, 1.2f, 2.1f);
 		}
 	}
 	public void createSmokeBurst() {	
@@ -325,7 +527,7 @@ public abstract class BattleActor extends Positionable {
 			sX = getX() + MathExt.rnd(-rndPos,rndPos);
 			sZ = getZ() + MathExt.rnd(-rndPos,rndPos);
 			sD = i/16f*180 + MathExt.rnd(-rndDir,rndDir);
-			new DamageSmoke(sX,sZ,sD);
+			new DamageSmoke(sX,-1,sZ,sD);
 		}
 	}
 	public void createFireBurst(boolean isHot) {		
@@ -336,11 +538,20 @@ public abstract class BattleActor extends Positionable {
 		new DodgeStar(getX(),getTopZ(),sD);
 	}
 	
+	public void setAnimation(byte type) {
+		myBody.setAnimation(type);
+	}
 	
 	public void setAnimationStill() {myBody.setAnimationStill();}
 	public void setAnimationRun() 	{myBody.setAnimationRun();}
-	public void setAnimationJump() 	{myBody.setAnimationJump();}
+	public void setAnimationJump() 	{
+		if(jumpDir < 90)
+			myBody.setAnimationJump();
+		else
+			myBody.setAnimationJumpFall();
+	}
 	public void setAnimationLand()	{myBody.setAnimationLand();}
+	public void setAnimationJumpLandHurt()	{myBody.setAnimationJumpLandHurt();}
 	public void setAnimationHurt()	{myBody.setAnimationHurt();}
 	public void setAnimationBurned(){myBody.setAnimationBurned();}
 	public void setAnimationDodge()	{myBody.setAnimationDodge();}
@@ -392,16 +603,15 @@ public abstract class BattleActor extends Positionable {
 				focusJump();
 				
 				if(jumpOn()) {
-					if(target.hasSpike()) {
+					if(!target.hasSpike()) {
 						state = ST_DAMAGE;
 						parent.setTimer(4);					
 						squishFraction = .5f;
-						target.damage(calcDamage(), myChar.getElement(), false);
+						target.damage(calcDamage(), currentAttack.getElement(), false);
 						setAnimationLand();
 					}
-					else {
-						state = ST_TOUCHED_SPIKE;
-					}
+					else
+						gotoSpikeState();
 				}
 				break;
 				
@@ -418,12 +628,11 @@ public abstract class BattleActor extends Positionable {
 						state = ST_JUMP_AGAIN_LAND;
 						parent.setTimer(4);
 						squishFraction = .5f;
-						target.damage(calcDamage(), myChar.getElement(), false);
+						target.damage(calcDamage(), currentAttack.getElement(), false);
 						setAnimationLand();
 					}
-					else {
-						state = ST_TOUCHED_SPIKE;
-					}
+					else
+						gotoSpikeState();
 				}
 				break;
 			
@@ -460,17 +669,20 @@ public abstract class BattleActor extends Positionable {
 				else
 					doneJumping = jumpOn();
 
-				if(doneJumping) {
-					setX(target.getX());
-					setZ(target.getTopZ());
-					
-					parent.setTimer(4);
-					
-					target.damage(calcDamage(), myChar.getElement(), true);
-					
-					setAnimationLand();
-					state = ST_DODGE_LAND;
-				}
+				if(doneJumping) 
+					if(!target.hasSpike()) {
+						setX(target.getX());
+						setZ(target.getTopZ());
+						
+						parent.setTimer(4);
+						
+						target.damage(calcDamage(), currentAttack.getElement(), true);
+						
+						setAnimationLand();
+						state = ST_DODGE_LAND;
+					}
+					else
+						gotoSpikeState();
 				break;
 				
 			case ST_JUMP_OFF:
@@ -484,6 +696,47 @@ public abstract class BattleActor extends Positionable {
 				break;
 				
 			case ST_TOUCHED_SPIKE:
+				float uSpd = 6;
+				
+				if(isPlayer)
+					parent.focusSpike(getX(), uSpd);
+				setAnimationJumpLandHurt();
+				
+				float toX, toZ, dis, disP;
+				toX = target.x() - getSign()*32;
+				toZ = target.getTopZ()+32;
+				
+				disP = Math2D.calcPtDis(getX(),getZ(), toX,toZ);
+				
+				if(moveToSmooth(toX, toZ, uSpd, .1f)) {
+					float mi = 30, ti = 10;
+					if(parent.getTimer() == 0)
+						parent.setTimer(mi+ti);
+					if(parent.getTimer() < mi) {
+						parent.setTimer(0);
+						state = ST_SPIKE_FALL;
+						parent.focusNeutral();
+					}
+				}
+				
+				dis = Math2D.calcPtDis(getX(),getZ(), toX,toZ);
+				if(MathExt.between(dis, 8, disP))
+					target.shimmer();
+				
+				break;
+			case ST_SPIKE_FALL:
+				if(moveFall(target.x() - getSign()*40))
+					state = ST_SPIKE_HOPPING_BACK;
+				break;
+			case ST_SPIKE_HOPPING_BACK:
+				if(moveToHop(originalX)) {
+					state = ST_STILL;
+					
+					setAnimationStill();
+					target.setAnimationStill();
+					
+					endAttack();	
+				}
 				break;
 				
 			case ST_MOVE_BACK:
@@ -497,12 +750,58 @@ public abstract class BattleActor extends Positionable {
 					endAttack();
 				}
 				break;
+				
+			case ST_WIN_START:
+				if(parent.checkTimer()) {
+					state = ST_WIN_JUMP_OUT;
+					GL.beginPageCurl();
+					parent.setTimer(1);
+					Room.revertRoom();
+					PlayerPM.getInstance().setVisible(false);
+					PlayerPM.getInstance().setPos(x(), y(), z());
+				}
+				break;
+			case ST_WIN_JUMP_OUT:
+				if(parent.checkTimer()) {
+					//GL.getMainCamera().enable(false);
+				}
+				setAnimationJump();
+				if(jumpInPlace(true) && GL.getPageCurl() == 1) {
+					PlayerPM.getInstance().setVisible(true);
+					GL.endPageCurl();
+					BattleController.getInstance().destroy();
+				}
+				break;
+
+			case ST_WIN_JUMP:
+				setAnimationJump();
+				if(jumpInPlace(false))
+					state = ST_WIN_RUN_OUT;
+				break;
+			case ST_WIN_RUN_OUT:
+				setAnimationRun();
+				if(moveTo(originalX + 80, MOVE_SPEED/2)) {
+					state = ST_STILL;
+					//TransitionController.startTransitionColor("what", RGBA.BLACK, 20);
+				}
+				break;
 		}
 	}
 
-	public void updateHammerAttack() {
-		boolean doneJumping;
+	private void gotoSpikeState() {
+		state = ST_TOUCHED_SPIKE;
 		
+		addHP(-1);
+		new DamageStar(target.getX(),-5,target.getZ(),1, isPlayer);
+		target.createAttackBurst();
+		
+	}
+
+	public void shimmer() {
+		myBody.shimmerSpike(getX(),getTopZ());
+	}
+
+	public void updateHammerAttack() {
 		switch(state) {
 			case ST_MOVE_TO:
 				jumpPointX = target.getX() - getSign()*16;
@@ -531,7 +830,7 @@ public abstract class BattleActor extends Positionable {
 		return isPlayer ? 1 : -1;
 	}
 	private int calcDamage() {
-		return myChar.getAttack() - target.myChar.getDefense();
+		return currentAttack.getAttack() - target.myChar.getDefense();
 	}
 
 	public void damageHop() {
@@ -546,10 +845,13 @@ public abstract class BattleActor extends Positionable {
 	public void damage(int amt, byte element, boolean dodge) {
 		if(isInvincible)
 			amt = 0;
-		else if(dodge)
+		if(isMetal)
+			amt--;
+		if(dodge)
 			amt--;
 		
-		hp = Math.max(0, hp-amt);
+		if(amt > 0)	
+			addHP(-amt);
 					
 		if(dodge) {
 			startActiveDodgeAnimation(amt);
@@ -596,6 +898,11 @@ public abstract class BattleActor extends Positionable {
 		}
 	}
 	
+	private void addHP(int amt) {
+		hp = MathExt.contain(0, hp+amt, getMaxHP());
+	}
+
+
 	public void startActiveDodgeAnimation(int damageAmt) {
 		if(!myBody.checkAnimation(AnimationsPM.S_DODGE)) {
 			setAnimationDodge();
@@ -611,7 +918,10 @@ public abstract class BattleActor extends Positionable {
 	}
 	
 	public boolean canActionCommand() {
-		if(myChar.getAttackType() == CharacterPM.AT_JUMP)
+		if(currentAttack == null)
+			return false;
+		
+		if(currentAttack.getAttackType() == Attack.AT_JUMP)
 			if(state == ST_JUMP_ON || state == ST_JUMP_AGAIN) {
 				if(jumpDir > 130)
 					if(jumpTimes == 0)
@@ -623,7 +933,10 @@ public abstract class BattleActor extends Positionable {
 	public void checkActionCommand() {
 		boolean timed = false;
 		
-		if(myChar.getAttackType() == CharacterPM.AT_JUMP && Keyboard.checkPressed('U'))
+		if(currentAttack == null)
+			return;
+		
+		if(currentAttack.getAttackType() == Attack.AT_JUMP && Keyboard.checkPressed('U'))
 			timed = canActionCommand();
 		
 		if(timed)
@@ -632,18 +945,26 @@ public abstract class BattleActor extends Positionable {
 			else
 				state = ST_DAMAGE_DODGED;
 	}
-	
+		
 	@Override
 	public void draw() {
 		
-		GOGL.setPerspective();
+		boolean inMain, inMario, overCurl;
+		inMain = GL.getCamera() == GL.getMainCamera();
+		inMario = GL.getCamera() == GL.getMarioCamera();
+		overCurl = GL.getPageCurl() > -1 && inMario;
 		
-		float dXS, dYS, dXT, dZT;
-		dYS = squishFraction;
-		dXS = (1 + 1-squishFraction);
-
-		if(!isPlayer)
-			dXS *= -1;
+		if(!(overCurl || inMain))
+			return;
+		
+		if(isDestroyed)
+			return;
+		
+		GL.setPerspective();
+		
+		float dXT, dZT;
+		
+		myBody.setScale( (isPlayer ? 1 : -1)*(2-squishFraction), squishFraction);
 		
 		dZT = hopZ;
 			
@@ -659,64 +980,64 @@ public abstract class BattleActor extends Positionable {
 			dZT += MathExt.rnd(4);
 		
 
-		GOGL.transformClear();
-			GOGL.transformTranslation(getX(),getY(),0);
-			GOGL.transformTranslation(dXT,0,0);
+		GT.transformClear();
+			GT.transformTranslation(getX(),getY(),0);
+			GT.transformTranslation(dXT,0,0);
 			
-			GOGL.forceColor(RGBA.BLACK);
-			float shH = myBody.getSpriteWidth()*.4f/2, shW = shH*1.5f;
-			GOGL.setAlpha(.5f);
-			GOGL.draw3DFloor(-shW,-shH,shW,shH,.1f, TextureController.getTexture("texShadow"));
-			GOGL.unforceColor();
+			if(GL.getCamera() == GL.getMainCamera()) {
+				GL.forceColor(RGBA.BLACK);
+				float shH = myBody.getSpriteWidth()*.4f/2, shW = shH*1.5f;
+				GL.setAlpha(.5f);
+				GL.draw3DFloor(-shW,-shH,shW,shH,.1f, TextureController.getTexture("texShadow"));
+				GL.unforceColor();
+				GL.setAlpha(1);
+			}
 
-			GOGL.setAlpha(1);
-
-			GOGL.transformTranslation(0,0,getZ()+dZT);
-			
-			GOGL.transformRotationZ(deathAngle);
-			GOGL.transformPaper();
-
-			GOGL.transformRotationX(deathFallAngle);
-
-			GOGL.transformScale(dXS,dYS,1);
-			GOGL.setColor(RGBA.WHITE);
-			
-			if(canActionCommand() || (flashTimer != 0 && Math2D.calcLenY(flashTimer*4) > 0))
-				GOGL.forceColor(RGBA.WHITE);
+			if(GL.getPageCurl() == -1 || inMario) {
+				GT.transformTranslation(0,0,getZ()+dZT);
 				
-			GOGL.enableShader("Rainbow");
-			
-			myBody.draw();
-			
-			GOGL.unforceColor();
-			GOGL.disableShaders();
-		GOGL.transformClear();
+				GT.transformRotationZ(deathAngle);
+				//GL.transformPaper();
+	
+				GT.transformRotationX(deathFallAngle);
+	
+				GL.setColor(RGBA.WHITE);
+				
+				if(canActionCommand() || (flashTimer != 0 && Math2D.calcLenY(flashTimer*4) > 0))
+					GL.forceColor(RGBA.WHITE);
+								
+				if(isInvincible)
+					GL.enableShaderRainbow();
+				else if(isMetal)
+					GL.enableShaderMetal(getX(),getY(),getZ());
+				myBody.draw();
+				GL.unforceColor();
+				GL.disableShaders();
+			}
+		GT.transformClear();
 		
 		/*if(state == ST_JUMP_ON && jumpTimes == 1) {
 			int si = zPreviouses.length;
 			for(int i = 0; i < si; i++) {
-				GOGL.transformClear();
-				GOGL.transformTranslation(getX(),getY(),zPreviouses[i]);
-				GOGL.transformPaper();
+				GL.transformClear();
+				GL.transformTranslation(getX(),getY(),zPreviouses[i]);
+				GL.transformPaper();
 				
-				GOGL.setAlpha(.5f*i/si);				
-				GOGL.drawTexture(dX,dH+dZ, dW, -dH, sprite.getFrame(imageIndex));
-				GOGL.resetColor();
+				GL.setAlpha(.5f*i/si);				
+				GL.drawTexture(dX,dH+dZ, dW, -dH, sprite.getFrame(imageIndex));
+				GL.resetColor();
 				
-				GOGL.transformClear();
+				GL.transformClear();
 			}
 		}*/
-		//GOGL.setColor(RGBA.BLACK);
-		//GOGL.fillRectangle(dX,dZ, dW, -dH);
+		//GL.setColor(RGBA.BLACK);
+		//GL.fillRectangle(dX,dZ, dW, -dH);
 	}
 	
 	@Override
-	public void add() {
-	}
+	public void add() {}
 	
-	private boolean hasSpike() {
-		return myBody.hasSpike();
-	}
+	private boolean hasSpike() {return myBody.hasSpike();}
 	
 	private void endAttack() {
 		hasAttacked = true;
@@ -728,7 +1049,13 @@ public abstract class BattleActor extends Positionable {
 	}
 
 	public int getHP() {return hp;}
-	public int getMaxHP() {
-		return maxHP;
+	public int getMaxHP() {return myChar.getMaxHP();}
+
+
+	public void gotoWinState() {
+		if(state != ST_WIN_START && state != ST_WIN_JUMP_OUT && state != ST_WIN_JUMP && state != ST_WIN_RUN_OUT) {
+			parent.setTimer(60);
+			state = ST_WIN_START;
+		}
 	}
 }

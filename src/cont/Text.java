@@ -3,15 +3,14 @@ package cont;
 import datatypes.PrintString;
 import datatypes.StringExt;
 import io.Controller;
-import io.Mouse;
 import object.actor.Actor;
 import object.actor.Player;
 import time.Timer;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.Camera;
-import gfx.GLText;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
 import gfx.RGBA;
 
 public final class Text {
@@ -84,29 +83,29 @@ public final class Text {
 			boxY += shockStrength*MathExt.rnd(-1,1);
 		}
 		
-		GOGL.setColor(new RGBA(0,0,0,.8f));
-		GOGL.fillRectangle(boxX,boxY, 640-(2*r), 100);
+		GL.setColor(new RGBA(0,0,0,.8f));
+		GL.fillRectangle(boxX,boxY, 640-(2*r), 100);
 		
 		float s = 1.0f;
 		
-		GOGL.forceColor(RGBA.WHITE);
-		GLText.drawString(boxX+p,boxY+p, s,s, 8, textString);
+		GL.forceColor(RGBA.WHITE);
+		G2D.drawString(boxX+p,boxY+p, s,s, 8, textString);
 
 		if(moveOnscreen())
 			if(textString.advance("blipMale")) {
-				GOGL.setColor(RGBA.WHITE);
+				GL.setColor(RGBA.WHITE);
 				float bX,bY,tX,tY;
 				bX = boxX+(640-2*r);
 				bY = boxY+(100);
-				tX = bX-6 + Math2D.calcLenX(4,8*GOGL.getTime());
+				tX = bX-6 + Math2D.calcLenX(4,8*GL.getTime());
 				tY = bY-6;
-				GOGL.fillPolygon(tX,tY, 8, 3);
+				GL.fillPolygon(tX,tY, 8, 3);
 				
 				if(Controller.getActionPressed()) {
 					if(fullString.isEmpty()) {
 						close();
 						if(isTalking)
-							GOGL.getMainCamera().unlock();
+							GL.getMainCamera().unlock();
 					}
 					else
 						getNextSection();
@@ -114,7 +113,7 @@ public final class Text {
 			}
 
 		
-		GOGL.unforceColor();		
+		GL.unforceColor();		
 	}
 	
 	
@@ -129,7 +128,7 @@ public final class Text {
 
 	public static void talk(Actor a1, Actor a2, String string) {
 		
-		Camera cam = GOGL.getMainCamera();
+		Camera cam = GL.getMainCamera();
 		
 		isTalking = true;
 
@@ -167,7 +166,7 @@ public final class Text {
 	
 	public static void chest(String itemName) {
 		
-		Camera cam = GOGL.getMainCamera();
+		Camera cam = GL.getMainCamera();
 		Actor a = Player.getInstance();
 		isTalking = true;
 		

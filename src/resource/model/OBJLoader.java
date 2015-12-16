@@ -6,33 +6,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import cont.GameController;
 import cont.ImageLoader;
 import datatypes.StringExt;
-import datatypes.vec2;
-import datatypes.vec3;
-import datatypes.vec4;
 import fl.FileExt;
-import gfx.GOGL;
+import gfx.GL;
 import gfx.RGBA;
 
 public final class OBJLoader {
-	public static Model load(String name) {
-		System.out.println(name);
-		
-		Model mod = loadModel("Resources/Models/" + name + ".obj");
-		
-		return mod;
+	public static void loadInto(String name, Model mod) {
+		loadModel("Resources/Models/" + name, mod);
 	}
 	
-	private static void loadMaterials(String fileName, List<Material> mats) {
-		Material curMaterial = null;
-		vec4 ambient, diffuse, specular;
-		
+	private static void loadMaterials(String fileName, List<Material> mats, Model mod) {
+		Material curMaterial = null;		
 		File f = FileExt.getFile(fileName);
 		String curDirectory = fileName.replace(f.getName(),"");
 				
@@ -52,22 +39,16 @@ public final class OBJLoader {
 					curMaterial = new Material(name);
 					mats.add(curMaterial);
 				}
-				else if(type.equals("Ka")) {
-					ambient = new vec4(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
-					curMaterial.setAmbient(ambient);
-				}
-				else if(type.equals("Ks")) {
-					specular = new vec4(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
-					curMaterial.setSpecular(specular);
-				}
-				else if(type.equals("Kd")) {
-					diffuse = new vec4(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
-					curMaterial.setDiffuse(diffuse);
-				}
+				else if(type.equals("Ka"))
+					curMaterial.setAmbient(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
+				else if(type.equals("Ks"))
+					curMaterial.setSpecular(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
+				else if(type.equals("Kd"))
+					curMaterial.setDiffuse(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
 				else if(type.equals("map_Kd")) {
 					String n = lineExt.chompWord();
 					BufferedImage i = ImageLoader.load(curDirectory+n);
-					curMaterial.setTexture(GOGL.createTexture(i, false));
+					curMaterial.setTexture(GL.createTexture(i, false));
 				}
 			}
 		} catch (IOException e) {
@@ -76,7 +57,7 @@ public final class OBJLoader {
 		}
 	}
 	
-	private static Model loadModel(String fileName) {
+	private static void loadModel(String fileName, Model mod) {
 
 		List<Material> mats = new ArrayList<Material>();
 		
@@ -91,7 +72,6 @@ public final class OBJLoader {
 		boolean hasColor = false;
 		
 		String materialName = "";
-		Model curModel;
 		
 		File f = FileExt.getFile(fileName);
 		String curDirectory = fileName.replace(f.getName(),"");
@@ -99,6 +79,7 @@ public final class OBJLoader {
 		try {
 			String line, type;
 			StringExt lineExt = new StringExt();
+			
 			BufferedReader r = new BufferedReader(new InputStreamReader(FileExt.get(fileName)));
 			Material[] matsArray = new Material[0];;
 			
@@ -108,7 +89,7 @@ public final class OBJLoader {
 				type = lineExt.chompWord(); 
 
 				if(type.equals("mtllib")) {
-					loadMaterials(curDirectory + lineExt.get(), mats);
+					loadMaterials(curDirectory + lineExt.get(), mats, mod);
 					
 					matsArray = new Material[mats.size()];
 					for(int i = 0; i < mats.size(); i++)
@@ -169,15 +150,11 @@ public final class OBJLoader {
 				}
 			}
 			
-			curModel = new Model(Model.TRIANGLES, pointList, normalList, uvList, colorList, vertexList);
-			curModel.attachMaterials(matsArray);
+			mod.create(Model.TRIANGLES, pointList, normalList, uvList, colorList, vertexList);
+			mod.attachMaterials(matsArray);
 
 			mats.clear();
-
-			return curModel;
 		} catch (IOException e) {
 		}
-		
-		return null;
 	}
 }

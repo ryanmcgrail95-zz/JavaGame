@@ -1,9 +1,10 @@
 package datatypes;
 
-public class mat3 {
+public class mat3 extends mat {
 	vec3 mat[];
 	
 	public mat3() {
+		super();
 		mat = new vec3[3];
 		
 		mat[0] = new vec3(1,0,0);
@@ -12,12 +13,14 @@ public class mat3 {
 	}
 	
 	public mat3(mat3 other) {
+		super();
 		mat = new vec3[3];
 		
 		set(other);
 	}
 	
 	public mat3(float nA1, float nA2, float nA3, float nB1, float nB2, float nB3, float nC1, float nC2, float nC3) {
+		super();
 		mat = new vec3[3];
 		
 		mat[0] = new vec3(nA1,nA2,nA3);
@@ -26,12 +29,23 @@ public class mat3 {
 	}
 
 	public mat3(vec3 v1, vec3 v2, vec3 v3) {
+		super();
 		mat = new vec3[3];
 		
 		mat[0] = new vec3(v1);
 		mat[1] = new vec3(v2);
 		mat[2] = new vec3(v3);
 	}
+	
+	
+	public void destroy() {
+		super.destroy();
+		for(int i = 0; i < 3; i++) {
+			mat[i].destroy();
+			mat[i] = null;
+		}
+	}
+	
 	
 	public mat3 copy() {
 		return new mat3(this);
@@ -95,14 +109,18 @@ public class mat3 {
 		return newV;
 	}
 	
-	public mat3 multe(float value) {
-		set(mult(value));
+	public mat3 multe(float value) { 
+		mat3 newM = mult(value);
+		set(newM);
+		newM.destroy();
 		
 		return this;
 	}
 	
 	public mat3 multe(mat3 other) {
-		set(mult(other));
+		mat3 newM = mult(other);
+		set(newM);
+		newM.destroy();
 		
 		return this;
 	}

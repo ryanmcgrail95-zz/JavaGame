@@ -1,0 +1,15 @@
+width: 36
+height: 36
+heightFraction: .7
+
+maxHP: 10
+defenseStat: 0
+
+imageSpeed: .35
+
+attack {
+	attackName: "Jump"
+	attackStat: 1
+	attackType: jump
+	element: none
+}

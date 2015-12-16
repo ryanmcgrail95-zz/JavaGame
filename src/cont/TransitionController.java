@@ -1,46 +1,43 @@
 package cont;
 
-import gfx.GOGL;
-
-import java.awt.Color;
-import java.awt.Graphics2D;
+import gfx.G2D;
+import gfx.GL;
+import gfx.RGBA;
 import java.awt.image.BufferedImage;
-
-import datatypes.SmoothFloat;
-import rm.RoomController;
+import datatypes.WeightedSmoothFloat;
 
 public class TransitionController {
 	private static byte T_NONE = -1, T_FADE = 0, T_IMAGE = 1;
 	private static byte trType = T_NONE;
 	private static String trRoom = "";
-	private static Color trColor = Color.BLACK;
+	private static RGBA trColor = RGBA.BLACK;
 	private static BufferedImage trImg = null;
-	private static SmoothFloat trFrac = new SmoothFloat(0);
+	private static WeightedSmoothFloat trFrac = new WeightedSmoothFloat(0);
 	
 	
 	
 
-	public static void update(float deltaT) {
-		if(trTimer > -1) {
-			trTimer -= trSpeed;
-			
-			if(trTimer <= 0 && !trDone) {
-				RoomController.switchRoom(trRoom);
-				trDone = true;
-			}
-		}
-		else if(trTimer < -1) {
-			trTimer = -1;
+	public static void update() {		
+		float before, after;
+		before = trFrac.getFraction();
+
+		trFrac.step();
+		
+		after = trFrac.getFraction();
+		if(before < 1 && after >= 1) {
+			//RoomController.switchRoom(trRoom);
 			trType = T_NONE;
 		}
 	}
 	
-	public static void draw(Graphics2D g) {
+	public static void draw() {
+		update();
+		
 		if(trType == T_FADE) {
-			Color curColor = new Color(trColor.getRed(),trColor.getGreen(),trColor.getBlue(), (float) (1 - Math.abs(trTimer)));
-			
-			g.setColor(curColor);
-			g.fillRect(0,0,GOGL.SCREEN_WIDTH,GOGL.SCREEN_HEIGHT);
+			GL.setColor(trColor);
+			GL.setAlpha(1 - trFrac.get());
+			G2D.fillRectangle(0,0,GL.SCREEN_WIDTH,GL.SCREEN_HEIGHT);
+			GL.resetColor();
 		}
 		else if(trType == T_IMAGE) {
 			/*
@@ -65,24 +62,22 @@ public class TransitionController {
 	
 	
 	public static void startTransitionImage(String roomName, BufferedImage img, double speed) {
-		if(trTimer == -1) {
+		/*if(trTimer == -1) {
 			trRoom = roomName;
 			trType = T_IMAGE;
 			trImg = img;
 			trTimer = 1;
 			trSpeed = speed;
 			trDone = false;
-		}
+		}*/
 	}
 	
-	public static void startTransitionColor(String roomName, Color toColor, double speed) {
-		if(trTimer == -1) {
+	public static void startTransitionColor(String roomName, RGBA col, int steps) {
+		if(trFrac.get() == 0) {
 			trRoom = roomName;
 			trType = T_FADE;
-			trColor = toColor;
-			trTimer = 1;
-			trSpeed = speed;
-			trDone = false;
+			trColor = col;
+			trFrac.restart(1,0,  0,-1,  steps);
 		}
 	}
 }

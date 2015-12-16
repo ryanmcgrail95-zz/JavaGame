@@ -1,17 +1,12 @@
 package resource.model;
 
+import functions.Math2D;
 import functions.Math3D;
-import gfx.GOGL;
 import gfx.RGBA;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import datatypes.vec2;
-import datatypes.vec3;
-import datatypes.vec4;
 
 public class ModelCreator {
 	private List<float[]> pointList = new ArrayList<float[]>();	
@@ -71,6 +66,32 @@ public class ModelCreator {
 		vertexList.add(new int[] {ptIndex,-1,nIndex,cIndex} );
 	}
 	
+	public void addVertex(float x, float y, float z, float nX, float nY, float nZ) {
+		Integer ptIndex, nIndex, cIndex;
+		long nSignature = (int)(nX*10)*10000 + (int)(nY*10)*100 + (int)(nZ*10);
+		long cSignature = ((int)(color[0]*brightness))*256*256 + ((int)(color[1]*brightness))*256 + (int)(color[2]*brightness);
+
+		float[] vec = {x,y,z,1};
+		pointList.add(vec);
+		ptIndex = pointList.size()-1;
+		
+		nIndex = normalMap.get(nSignature);
+		if(nIndex == null) {
+			float[] norm = {nX,nY,nZ,0};
+			normalList.add(norm);
+			normalMap.put(nSignature,nIndex = normalList.size()-1);
+		}
+		
+		cIndex = colorMap.get(cSignature);
+		if(cIndex == null) {
+			int col = RGBA.convertRGBA2Int((int)(color[0]*brightness),(int)(color[1]*brightness),(int)(color[2]*brightness),255);
+			colorList.add(col);
+			colorMap.put(cSignature,cIndex = colorList.size()-1);
+		}
+		
+		vertexList.add(new int[] {ptIndex,-1,nIndex,cIndex} );
+	}
+	
 	private void begin() {		
 		clear();
 	}
@@ -84,18 +105,69 @@ public class ModelCreator {
 				+ "# points: " + pointList.size() +"\n"
 				+ "# normals: " + normalList.size() +"\n"
 				+ "# colors: " + colorList.size() +"\n";
-		//GOGL.println(outText);				
+		System.out.println(outText);				
 		
-		Model mod = new Model(modelType,pointList,normalList,uvList,colorList,vertexList);
-		
+		Model mod = new Model();
+			mod.create(modelType,pointList,normalList,uvList,colorList,vertexList);
+			mod.load();
+			
 		clear();
 		
 		return mod;
 	}
 
 	
-	
+	public void add3DModelCylinder(float x, float y, float z, float r, float h, int numPts) {
+		float dir, xx,yy, pX=0,pY=0, nX, nY;
+		for(int i = 0; i <= numPts; i++) {
+			dir = 1f*i/numPts*360;
+			
+			nX = Math2D.calcLenX(dir);
+			nY = Math2D.calcLenY(dir);
+			xx = x + r*nX;
+			yy = y + r*nY;
+					
+			if(i != 0)
+				add3DModelWall(xx,yy,z+h, pX,pY,z, nX,nY,0);
+			
+			pX = xx;
+			pY = yy;
+		}
+	}
+
 	public void add3DModelWall(float x1, float y1, float z1, float x2, float y2, float z2,  float nX, float nY, float nZ) {
+		float[] mat, v1, v2, v3, v4;
+		/*mat = getModelMatrix().array();
+		v1 = mult(mat, new float[] {x1,y,z1,1});
+		v2 = mult(mat, new float[] {x2,y,z1,1});
+		v3 = mult(mat, new float[] {x1,y,z2,1});
+		v4 = mult(mat, new float[] {x2,y,z2,1});
+		n = mult(mat,new float[] {0,(x1 < x2) ? 1 : -1,0,0});*/
+		v1 = new float[] {x1,y1,z1,1};
+		v2 = new float[] {x2,y2,z1,1};
+		v3 = new float[] {x1,y1,z2,1};
+		v4 = new float[] {x2,y2,z2,1};
+
+		if(modelType == Model.TRIANGLES) {
+			addVertex(v1[0],v1[1],v1[2], nX,nY,nZ);
+			addVertex(v2[0],v2[1],v2[2], nX,nY,nZ);
+			addVertex(v3[0],v3[1],v3[2], nX,nY,nZ);
+	
+			addVertex(v2[0],v2[1],v2[2], nX,nY,nZ);
+			addVertex(v4[0],v4[1],v4[2], nX,nY,nZ);
+			addVertex(v3[0],v3[1],v3[2], nX,nY,nZ);
+		}
+		else if(modelType == Model.QUADS) {
+			addVertex(v1[0],v1[1],v1[2], nX,nY,nZ);
+			addVertex(v2[0],v2[1],v2[2], nX,nY,nZ);
+			addVertex(v4[0],v4[1],v4[2], nX,nY,nZ);
+			addVertex(v3[0],v3[1],v3[2], nX,nY,nZ);
+		}
+		
+		v1 = v2 = v3 = v4 = null;
+	}
+
+	public void add3DModelWallBT(float x1, float y1, float z1, float x2, float y2, float z2,  float nX, float nY, float nZ) {
 		float[] mat, v1, v2, v3, v4;
 		/*mat = getModelMatrix().array();
 		v1 = mult(mat, new float[] {x1,y,z1,1});

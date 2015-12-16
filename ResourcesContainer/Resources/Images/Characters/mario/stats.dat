@@ -2,7 +2,12 @@ width: 36
 height: 36
 heightFraction: .7
 
-attackStat: 1
+maxHP: 10
 defenseStat: 0
-attackType: hammer
-element: none
+
+attack {
+	attackName: "Jump"
+	attackStat: 1
+	attackType: jump
+	element: none
+}

@@ -9,12 +9,23 @@ import java.util.NoSuchElementException;
 
 
 public class CleanList<T> extends ArrayList<T> implements Iterable<T> {
+	private static CleanList<CleanList> completeList = new CleanList<CleanList>("CleanLists");
+	
 	private HashMap<Integer,Boolean> removeMap = new HashMap<Integer,Boolean>();
 	private ArrayList<Integer> removeList = new ArrayList<Integer>();
 	private boolean moveForward = true;
 	private byte isIterating = 0, removeNum = 0;
+	private String name;
 	
 	private ArrayList<ListIterator> iteratorList = new ArrayList<ListIterator>();
+	
+	public CleanList(String name) {
+		super();
+		
+		this.name = name;
+		if(completeList != null)
+			completeList.add(this);
+	}
 	
 	public void remove() {
 		if(isIterating > 0)
@@ -146,5 +157,34 @@ public class CleanList<T> extends ArrayList<T> implements Iterable<T> {
 		it2 = get(ind2);
 		set(ind1, it2);
 		set(ind2, it1);
+	}
+	public static int getLoops() {
+		int loopNum = 0;
+		for(CleanList c : completeList)
+			loopNum += c.isIterating;
+		return loopNum;
+	}
+
+	public static int totalSize() {
+		int totalSize = 0;
+		for(CleanList c : completeList)
+			totalSize += c.size() + c.removeList.size() + c.removeMap.size();
+		return totalSize;
+	}
+	
+	public static CleanList<CleanList> getLists() {
+		return completeList;
+	}
+	public static int getNumber() {
+		return completeList.size();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void destroy() {
+		clear();
+		completeList.remove(this);
 	}
 }
