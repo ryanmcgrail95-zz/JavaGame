@@ -11,21 +11,22 @@ import gfx.RGBA;
 public class PartnerPM extends ActorPM {
 	private static PartnerPM instance;
 	
-	private PartnerPM(float x, float y, float z) {
-		super("mario",x,y,z);
+	private PartnerPM(String type, float x, float y, float z) {
+		super(type,x,y,z);
+		followActor = PlayerPM.getInstance();
 	}
 	
 	@Override
-	protected void control() {
-	}
+	protected void control() {}
 
-	public static PartnerPM create() {
+	public static PartnerPM create() {return create("luigi");}
+	public static PartnerPM create(String type) {
 		if(instance == null)	
-			instance = new PartnerPM(0,0,0);
+			instance = new PartnerPM(type,0,0,0);
 		return instance;
 	}
-	public static PartnerPM create(float x, float y, float z) {
-		create().setPos(x,y,z);
+	public static PartnerPM create(String type, float x, float y, float z) {
+		create(type).setPos(x,y,z);
 		return instance;
 	}
 	public static PartnerPM getInstance() {

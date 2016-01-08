@@ -21,7 +21,13 @@ public class Math2D {
 	public static float calcLenY(float dis, float dir) {
 		return (float) (dis*FastMath.sind(dir));
 	}
-		
+
+	public static double calcAbsLenX(float dir) {return calcAbsLenX(1,dir);}
+	public static double calcAbsLenX(float dis, float dir) {return Math.abs(calcLenX(1,dir));}
+
+	public static double calcAbsLenY(float dir) {return calcAbsLenY(1,dir);}
+	public static double calcAbsLenY(float dis, float dir) {return Math.abs(calcLenY(1,dir));}
+	
 	public static float calcPtDis(float x1, float y1, float x2, float y2) {
 		return (float) Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
 	}

@@ -3,6 +3,7 @@ package paper;
 import java.util.LinkedList;
 import java.util.List;
 
+import collision.C3D;
 import io.Controller;
 import io.IO;
 import io.Keyboard;
@@ -14,40 +15,14 @@ import gfx.RGBA;
 public class PlayerPM extends ActorPM {
 	private static PlayerPM instance;
 	
-	
-	private List<Instant> instantList = new LinkedList<Instant>();
-	private int instantNum = 10;
-	
-	private class Instant {
-		public float x,y,z, direction;
-		
-		public Instant(float x, float y, float z, float direction) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
-			this.direction = direction;
-		}
-	}
-	
-	
-	
 	private PlayerPM(float x, float y, float z) {
 		super("mario",x,y,z);
-		PartnerPM.create(x, y, z);
+		instance = this;
+		PartnerPM.create("luigi", x, y, z);
 		
-		for(int i = 0; i < instantNum; i++)
-			addInstant();
+		C3D.splitModel(Model.get("Pleasant_Path_3").getTriangles(), 10,10,48);
 	}
-	
-	public void addInstant() {
-		while(instantList.size() >= instantNum)
-			instantList.remove(0);
-		instantList.add(new Instant(getX(),getY(),getZ(),getDirection()));
-	}
-	public Instant getInstant() {
-		return instantList.get(0);
-	}
-	
+		
 	@Override
 	public void update() {
 		super.update();
@@ -58,12 +33,7 @@ public class PlayerPM extends ActorPM {
 	@Override
 	protected void control() {
 		controlMove();
-		controlJump();
-		
-		addInstant();
-		Instant i = getInstant();
-		PartnerPM p = PartnerPM.getInstance();
-		p.move(true, i.x,i.y);
+		controlJump();		
 	}
 	
 	public void draw() {
@@ -71,29 +41,38 @@ public class PlayerPM extends ActorPM {
 		
 		GL.setPerspective();
 		GL.setColor(RGBA.WHITE);
-		GT.transformClear();		
-			Model.get("Battle-Pleasant_Path_1").draw();
+		GT.transformClear();
+			GL.enableShader("Model");
+			
+			if(Keyboard.checkDown('t'))
+				Model.get("Pleasant_Path_3").draw();
+			else
+				Model.get("Pleasant_Path_3").drawFast();
+			GL.disableShaders();
 		GT.transformClear();
 	}
 	
 	private void controlMove() {
 		float moveDir = Controller.getDPadDir();
-		move(true, moveDir, true);
+		move(!Keyboard.checkDown('q'), moveDir, true);
+		
+		if(Keyboard.checkPressed('e')) {
+			z(100);
+			setZVelocity(0);
+		}
 	}
 	private void controlJump() {
 		if(IO.getAButtonPressed())
 			jump();
 	}
 	private void controlSpin() {
-		if(Keyboard.checkDown('m')) {
-			setZ(300);
-			setZVelocity(0);
-		}
+		if(Keyboard.checkDown('m'))
+			startSpin();
 	}
 
 	public static PlayerPM create() {
 		if(instance == null)	
-			instance = new PlayerPM(0,0,0);
+			new PlayerPM(0,0,0);
 		return instance;
 	}
 	public static PlayerPM create(float x, float y, float z) {

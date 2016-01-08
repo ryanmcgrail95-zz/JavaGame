@@ -6,11 +6,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
 import gfx.GL;
 import object.primitive.Updatable;
 import resource.sound.Sound;
+import rm.Room;
 import time.Delta;
 
 
@@ -138,7 +141,8 @@ public class GameController extends JFrame implements WindowListener {
 	          Delta.setDelta((float) delta);
 	          
 	          // draw everyting
-	          GL.repaint();
+	          if(!Room.isLoading())
+	        	  GL.repaint();
 	          
 	          // we want each frame to take 10 milliseconds, to do this
 	          // we've recorded when we started the frame. We add 10 milliseconds

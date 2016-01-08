@@ -27,15 +27,20 @@ public class Room {
 	private final static String BASE_DIRECTORY = "Resources/Rooms/";
 	private static String curRoom = "Toad Town Center", prevRoom;
 	private static List<Resource> resourceList = new ArrayList<Resource>();
-
+	private static boolean isLoading;
 
 	private Room() {}
+
 	
+	public static boolean isLoading() {
+		return isLoading;
+	}
 	
 	public static void revertRoom() {
 		changeRoom(prevRoom);
 	}
 	public static void changeRoom(String newRoomName) {
+		isLoading = true;
 		prevRoom = curRoom;
 		curRoom = newRoomName;
 		
@@ -80,10 +85,11 @@ public class Room {
 		resourceList = newResourceList;
 		
 		// Delete all Objects in Room
-		//Updatable.transition();
+		Updatable.transition();
 		
 		// Set New Room
 		instantiateRoom(newRoomName);
+		isLoading = false;
 	}
 	
 	

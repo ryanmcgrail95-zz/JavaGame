@@ -134,7 +134,7 @@ public class mat4 extends mat {
 	
 	public float[] mult(float[] other) {
 		float[] newA = new float[4];
-			
+
 		vec4 row;
 		for(int r = 0; r < 4; r++) {
 			row = getRow(r);

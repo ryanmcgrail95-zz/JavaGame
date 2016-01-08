@@ -1,11 +1,27 @@
 package functions;
 
 public class ArrayMath {
-	public static float[] mult(float[] mat, float[] vec) {
-		float[] outVec = {0,0,0,0};
-		for(int i = 0; i < 4; i++)
-			for(int ii = 0; ii < 4; ii++)
-				outVec[i] += mat[4*i+ii]*vec[ii];
+	public static float[] multMV(float[] mat, float[] vec) {
+		float[] outVec = {0, 0, 0, 0};
+			multMV(mat, vec, outVec);
+		return outVec;
+	}
+	public static void multMV(float[] mat, float[] vec, float[] dst) {
+		for(int r = 0; r < 3; r++)
+			for(int c = 0; c < 4; c++)
+				dst[r] += mat[4*r+c]*vec[c];
+	}
+	public static float[] multMM(float[] mat1, float[] mat2) {
+		float[] outVec = {
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0};
+
+		for(int r = 0; r < 4; r++)
+			for(int c = 0; c < 4; c++)
+				for(int i = 0; i < 4; i++)
+					outVec[4*r+c] += mat1[4*c+i]*mat2[4*r+i];		
 		return outVec;
 	}
 	
@@ -100,5 +116,20 @@ public class ArrayMath {
 		dst[0] = a[1]*b[2] - a[2]*b[1];		
 		dst[1] = a[2]*b[0] - a[0]*b[2];
 		dst[2] = a[0]*b[1] - a[1]*b[0];
+	}
+	public static void println(float[] a) {
+		int i = a.length;
+		if(i <= 4) {
+			for(float n : a)
+				System.out.print(n + " ");
+			System.out.println();
+		}
+		else {
+			for(int n = 0; n < 4; n++) {
+				for(int k = 0; k < 4; k++)
+					System.out.print(a[4*n+k] + " ");
+				System.out.println();
+			}
+		}			
 	}
 }

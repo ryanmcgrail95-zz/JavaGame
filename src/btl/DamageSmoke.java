@@ -1,15 +1,9 @@
 package btl;
 
-import io.Keyboard;
-import object.primitive.Drawable;
 import time.Delta;
 import functions.Math2D;
 import functions.MathExt;
-import gfx.G2D;
-import gfx.GL;
-import gfx.GT;
 import gfx.MultiTexture;
-import gfx.RGBA;
 
 public class DamageSmoke extends SimpleParticle {
 	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/smoke.png",7,1);	

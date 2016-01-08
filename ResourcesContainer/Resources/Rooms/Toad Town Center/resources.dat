@@ -1,5 +1,9 @@
 // Resources
-Model: Battle-Pleasant_Path_1.obj
+Model: Pleasant_Path_3.obj
 	scale: 390
 	rotation: 90 0 0
-Character: mario
+Character: mario luigi
+Text: intro {
+	Hello! Welcome to the Paper Mario Director's Cut Demo.
+	Enjoy exploring Toad Town!
+}

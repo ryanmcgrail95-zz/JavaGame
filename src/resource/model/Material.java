@@ -46,4 +46,9 @@ public class Material {
 	public void disable() {GL.unbind();}
 	public String getName() {return name;}
 	public Texture getTexture() {return tex;}
+
+	public void destroy() {
+		ambient = diffuse = specular = null;
+		tex.destroy(GL.getGL());
+	}
 }

@@ -22,18 +22,22 @@ public class ModelRenderer extends Drawable {
 		y = z = 0;
 		z = 1;
 		
-		GOGL.clear(RGBA.YELLOW);
-		GOGL.getMainCamera().setProjection(x,y,z,toX,toY,toZ);
+		GL.clear(RGBA.YELLOW);
+		GL.getMainCamera().setProjection(x,y,z,toX,toY,toZ);
 		
-		GOGL.transformClear();
-		GOGL.transformTranslation(0,0,0);
+		GT.transformClear();
+		GT.transformTranslation(0,0,0);
 		
-			GOGL.transformRotationZ(GOGL.getTime());
+			GT.transformRotationZ(GL.getTime());
 
-			GOGL.transformScale(2);
-			GOGL.transformRotationX(90);
+			GT.transformScale(2);
+			GT.transformRotationX(-90);
+			
+			GL.enableCulling();
+			GL.enableShader("Model");
 			mod.draw();
-		GOGL.transformClear();
+			GL.disableShaders();
+		GT.transformClear();
 	}
 
 	@Override

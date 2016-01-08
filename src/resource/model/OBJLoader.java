@@ -47,10 +47,14 @@ public final class OBJLoader {
 					curMaterial.setDiffuse(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
 				else if(type.equals("map_Kd")) {
 					String n = lineExt.chompWord();
+					
+					System.out.println(n);
 					BufferedImage i = ImageLoader.load(curDirectory+n);
 					curMaterial.setTexture(GL.createTexture(i, false));
 				}
 			}
+			
+			r.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -154,6 +158,7 @@ public final class OBJLoader {
 			mod.attachMaterials(matsArray);
 
 			mats.clear();
+			r.close();
 		} catch (IOException e) {
 		}
 	}

@@ -7,7 +7,7 @@ import gfx.MultiTexture;
 
 public class DamageSpark extends SimpleParticle {
 	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/spark.png",4,1,true);
-	private float dDir, index;
+	private float index;
 	private float distance, speed, weight;
 	
 	public DamageSpark(float x, float y, float z, float direction, float weight, float disWeight, float spdWeight, float sizeWeight) {

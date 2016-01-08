@@ -155,6 +155,8 @@ public class TextureController {
         load("Resources/Images/bg.png", "texPicross", M_NORMAL);
         load("Resources/Images/loop.png", "loop", M_NORMAL);
         
+        load("Resources/Images/Battle/dodgeStar.png", "texDodgeStar", M_BGALPHA);
+        
         //Load Particles
         load("Resources/Images/Particles/dust.gif", "texDust", M_BGALPHA);
         

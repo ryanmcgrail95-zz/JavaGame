@@ -157,6 +157,15 @@ public abstract class vec {
 		return vecList.size();
 	}
 	
+	public String toString() {
+		String outStr = "(";
+		
+		outStr += array[0];
+		for(int i = 1; i < SIZE; i++)
+			outStr += ", " + array[i];
+		
+		return outStr + ")";
+	}
 	
 	public void x(float x) {set(0,x);}
 	public void y(float y) {set(1,y);}

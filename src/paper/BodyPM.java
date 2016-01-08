@@ -22,7 +22,9 @@ public class BodyPM implements AnimationsPM {
 
 	private float 
 		xScale = 1,
-		yScale = 1;
+		yScale = 1,
+		xySpd = 0,
+		zVel = 0;
 	private byte 
 		SC_CENTER = 0,
 		SC_DOWN = 1,
@@ -72,11 +74,41 @@ public class BodyPM implements AnimationsPM {
 	
 	private float calcImageSpeed() {
 		switch(animation) {
+			case S_RUN:
+			case S_RUN_UP:
+				return imageSpeed*xySpd/3;
+		
 			case S_JUMP_LAND_HURT:
 			case S_JUMP_FALL:
 				return imageSpeed*.35f;
 			default:	return imageSpeed;
 		}
+	}
+
+	public float getFrame() {
+		/*if(myChar.getName() != "mario" || animation != S_RUN)
+			return imageIndex;
+		else*/
+		
+		float frameDis = MathExt.wrapDiff(imageIndex, 0,4,imageNumber),
+			maxDis = 4.6f,
+			index;
+
+		if(Math.abs(frameDis) > maxDis)
+			index = 0;
+		else
+			index = (float) (4 + Math.signum(frameDis)* (Math.abs(frameDis)) );
+				
+		return MathExt.wrap(0,index,imageNumber);
+	}
+	private float calcStepZ() {
+		float frameDis = MathExt.wrapDis(imageIndex, 0,4,imageNumber),
+			maxDis = 4.5f, upHeight = 3;
+
+		if(frameDis > maxDis)
+			return 0;
+		else
+			return (float) Math.pow((maxDis-frameDis)/maxDis,2) * upHeight;
 	}
 	
 	public void animateModel() {
@@ -92,7 +124,8 @@ public class BodyPM implements AnimationsPM {
 		            //new Dust(x()+Math2D.calcLenX(5,direction+180),y()+Math2D.calcLenY(5,direction+180),z(), 0, true);
 		        }
 			
-			float toUpZ = Math.abs(Math2D.calcLenY(2,imageIndex*30));
+			float frames = 4,
+				toUpZ = calcStepZ();
 			stepZ = MathExt.to(stepZ, toUpZ, 1.5f);
 		}
 		else {
@@ -143,7 +176,7 @@ public class BodyPM implements AnimationsPM {
 		else if(scaleDirection == SC_UP)
 			GT.transformScale(xScale,yScale,1);
 		
-		sprite.draw(dX,dY, dW, -dH, imageIndex);
+		sprite.draw(dX,dY, dW, -dH, getFrame());
 		
 		if(mySpike != null)
 			mySpike.draw();
@@ -176,7 +209,6 @@ public class BodyPM implements AnimationsPM {
 		myWings = null;
 		mySpike = null;
 		myZap = null;
-		//Wings & Spikes?
 	}
 
 	public void shimmerSpike(float x, float tZ) {
@@ -215,5 +247,10 @@ public class BodyPM implements AnimationsPM {
 		if(myChar.getHasSpike())
 			mySpike = new SpikePM(myChar.getSpriteHeight(), myChar.getHeight());
 		myZap = new ZapPM(myChar.getSpriteHeight());
+	}
+
+	public void setSpeed(float xySpd, float zVel) {
+		this.xySpd = xySpd;
+		this.zVel = zVel;
 	}
 }

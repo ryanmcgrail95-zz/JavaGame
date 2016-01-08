@@ -1,7 +1,7 @@
 // Objects
 Player {
 	character: mario
-	position: 0 0 0
+	position: 0 0 117
 }
 
-Floor ( -128 -128 128 128 0 )
+//Floor ( -128 -128 128 128 0 )

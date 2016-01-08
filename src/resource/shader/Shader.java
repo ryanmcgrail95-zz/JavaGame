@@ -121,6 +121,7 @@ public class Shader {
 		addShader(gl, "Gaussian");
 		addShader(gl, "Rainbow");
 		addShader(gl, "Metal");
+		addShader(gl, "Model");
 		addShader(gl, "PageCurl");
 		/*addShader(gl, "Galaxy");
 		addShader(gl, "Grayscale");

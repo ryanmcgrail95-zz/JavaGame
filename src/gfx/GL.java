@@ -98,10 +98,23 @@ public class GL {
 	protected static mat4 modelMatrix = new mat4();
 	
 	
+	public static void print(String str) {
+		System.out.print(str);
+	}
 	public static void println(String str) {
 		//ErrorPopup.open(str, false);
-		//System.out.println(str);
+		System.out.println(str);
 	}
+	
+	
+	public static void stM(String name) {
+		//print(name + "(" + checkError() + " -- ");
+	}	
+	public static void eM() {
+		//println(checkError() + ")");
+	}
+	
+	
 	
 	public static void start3D(GameController gameController) {
 		
@@ -200,7 +213,8 @@ public class GL {
             	
             	time.check();
 
-            	Updatable.updateAll();
+            	//if(!Room.isLoading())
+            		Updatable.updateAll();
             	
             	gl = glautodrawable.getGL().getGL2();
             	            	
@@ -327,7 +341,9 @@ public class GL {
 		
 	private static void setProjection() {
 		
-		float camSpeed = 5;		
+			//stM("setPerspective");
+		
+		float camSpeed = 5;
 		Sound.updateListener(currentCamera);
 		
         // Change to projection matrix.
@@ -343,9 +359,13 @@ public class GL {
         // Change back to model view matrix.
         gl.glMatrixMode(gl.GL_MODELVIEW);
         gl.glLoadIdentity();
+			
+        	//eM();
 	}
 	
-	public static void repaint() {canv.display();}
+	public static void repaint() {
+		canv.display();
+	}
 	
 	public static GLCanvas getCanvas() {return canv;}
 
@@ -527,11 +547,15 @@ public class GL {
 	public static void setColori(int r, int g, int b, int a) {setColorf(r/255f, g/255f, b/255f, a/255f);}
 	public static void setColorf(float r, float g, float b) {setColorf(r,g,b,1);}
 	public static void setColorf(float r, float g, float b, float a) {
+			//stM("setColorf");
+
 		drawingColor.setf(r,g,b,a);
 		
 		gl.glDisable(GL2.GL_COLOR_MATERIAL);
 		gl.glColor4f(r,g,b,a);
 		passShaderVec4("uColor",drawingColor.RGBAf());
+		
+			//eM();
 	}
 	
 	public static void setLightColori(int r, int g, int b) {setLightColor(r/255f, g/255f, b/255f);}
@@ -980,17 +1004,18 @@ public class GL {
     // Once activated, it will be applied to anything that you draw from here on
     // until you call the dontUseShader(GL) function.
     public static void enableShader(String shaderName) {
-    	
+    		//stM("enableShader");
     	shaderProgram = Shader.getShader(shaderName).getProgram();
 	    
 	    gl.glUseProgram(shaderProgram);
-		gl.glUniform2iv(gl.glGetUniformLocation(shaderProgram, "iResolution"), 1, resolutionArray, 0);			
+		gl.glUniform2iv(gl.glGetUniformLocation(shaderProgram, "iResolution"), 1, resolutionArray, 0);
     	gl.glUniform1f(gl.glGetUniformLocation(shaderProgram, "iGlobalTime"), getTime()/50f);        
     	
     	gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "tex0"), 0);
     	gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "tex1"), 1);
     	
     	passShaderVec4("uColor",drawingColor.RGBAf());
+    		//eM();
     }
     
     public static float getTime() {return time.get();}
@@ -1043,9 +1068,13 @@ public class GL {
     }
 
     public static void disableShaders() {
-        gl.glUseProgram(shaderProgram = 0);
+    		//stM("disableShaders");
+		
+    	gl.glUseProgram(shaderProgram = 0);
         bind(0,1);
         bind(0,0);
+        
+        	//eM();
     }
     
     public static void enableShaderGaussian(float blurRadius) {
@@ -1324,10 +1353,20 @@ public class GL {
 	
 	
 
-	public static void checkError() {
-		/*int error = gl.glGetError();
-		if(error != 0)
-			ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);*/
+	public static String checkError() {
+		String errors = "";
+		
+		if(gl == null)
+			return "";
+		
+		int error = gl.glGetError();
+		//while((error = gl.glGetError()) != 0) {
+			errors += error; // + ", ";
+		//}
+		//if(error != 0)
+		//	ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);*/
+				
+		return errors;
 	}
 	
 	public static void forceColor(RGBA color) 	{enableFog(-1000,-1000,color);}
@@ -1519,9 +1558,14 @@ public class GL {
 
 	public static void iniPMBattle() {
         Sound.iniLoad();
+        
+        //Model m = new Model("PleasantPath3.obj");
+        //Model m = new Model("Peachs_Castle_1.obj");
+        //m.load();
 
-        Room.changeRoom("Battle");
-        //Room.changeRoom("Toad Town Center");
+        //new ModelRenderer(m);
+        //Room.changeRoom("Battle");
+        Room.changeRoom("Toad Town Center");
 	}
 	public static void iniPMRoom() {
         Sound.iniLoad();

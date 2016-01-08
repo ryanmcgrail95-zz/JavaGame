@@ -203,4 +203,20 @@ public class MathExt {
 	public static float to(float start, float to, float spd) {
 		return start + Delta.convert((to - start)/spd);
 	}
+	public static float wrapDis(float value, float start, float target, float end) {
+		return Math.abs(wrapDiff(value, start, target, end));
+	}
+	public static float wrapDiff(float value, float start, float target, float end) {
+		float disBefore, disAfter;
+		if(value < target) {
+			disBefore = - ((value-start) + (end-target));
+			disAfter = target - value;
+		}
+		else {
+			disBefore = - (value - target);
+			disAfter = (end-value) + (target-start);
+		}
+		
+		return (Math.abs(disBefore) < Math.abs(disAfter)) ? disBefore : disAfter;
+	}
 }

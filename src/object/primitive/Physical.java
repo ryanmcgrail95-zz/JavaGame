@@ -71,7 +71,13 @@ public abstract class Physical extends Positionable {
 				
 		super.updatePosition();
 		
-		addZVelocity(-GRAVITY_ACCEL);
+		float zVel = getZVelocity(),
+			gravAcc = GRAVITY_ACCEL;
+		
+		if(Math.abs(zVel) < 1)
+			gravAcc *= .05 + .95*Math.abs(zVel);
+		
+		addZVelocity(-gravAcc);
 	}
 
 	
@@ -87,8 +93,8 @@ public abstract class Physical extends Positionable {
 		
 		public void didCollideFloor(float floorZ) {
 			boolean isItem = (type == T_ITEM);
-			    
-			this.floorZ = floorZ;
+			
+			this.floorZ = MathExt.to(this.floorZ, floorZ, 5);
 			inAir = false;
 			
 			setZ(floorZ);

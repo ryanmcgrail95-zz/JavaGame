@@ -117,7 +117,7 @@ public class ModelCreator {
 	}
 
 	
-	public void add3DModelCylinder(float x, float y, float z, float r, float h, int numPts) {
+	public void add3DModelCylinder(float x, float y, float z, float r, float h, int numPts, boolean caps) {
 		float dir, xx,yy, pX=0,pY=0, nX, nY;
 		for(int i = 0; i <= numPts; i++) {
 			dir = 1f*i/numPts*360;

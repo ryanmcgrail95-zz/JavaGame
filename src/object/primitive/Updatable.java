@@ -1,13 +1,8 @@
 package object.primitive;
 
-import gfx.Camera;
-import io.IO;
-import io.Keyboard;
+import collision.C3D;
 import io.Mouse;
 import resource.sound.Sound;
-import time.Delta;
-import time.Timer;
-import cont.TextureController;
 import datatypes.lists.CleanList;
 
 public abstract class Updatable {
@@ -49,17 +44,17 @@ public abstract class Updatable {
 		public static void updateAll() {			
 			Mouse.update();
 			Sound.update();			
+			C3D.reset();
 			
-			for(Updatable u : updateList) {				
+			for(Updatable u : updateList)
 				if(u.doUpdates)
 					u.update();
-			}
 						
 			Sound.clean();
 		}
 
 		public static int getNumber() {
-			return updateList.size();
+			return instanceList.size();
 		}
 		
 		protected void disableUpdates() {

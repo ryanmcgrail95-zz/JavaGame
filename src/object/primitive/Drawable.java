@@ -203,6 +203,7 @@ public abstract class Drawable extends Updatable {
 						break;
 					}
 				}
+				onscreenHoverList.broke();
 				
 				GL.allowLighting(true);
 				GL.unforceColor();

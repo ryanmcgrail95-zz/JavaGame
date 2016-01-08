@@ -364,7 +364,7 @@ public class Camera extends Updatable {
 	public void project() {
 		switch(projType) {
 			case PR_PERSPECTIVE:		fbo.setPerspective(GL.gl);		break;
-			case PR_ORTHOGRAPHIC:		fbo.setOrtho(GL.gl);				break;
+			case PR_ORTHOGRAPHIC:		fbo.setOrtho(GL.gl);			break;
 			case PR_ORTHOPERSPECTIVE:	fbo.setOrthoPerspective(GL.gl);	break;
 		}
 	}

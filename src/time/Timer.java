@@ -12,8 +12,6 @@ public class Timer extends Updatable {
 	private float time, maxTime;
 	private boolean isAutomatic;
 	
-	
-	
 	// CONSTRUCTORS
 		public Timer(float time, float timeMax) {
 			super();

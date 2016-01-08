@@ -233,7 +233,7 @@ public class Test {
 	}
 	
 	public static void main(String[] args) {		
-		float[] pt = {0,0,10}, 
+		float[] pt = {100,0,10}, 
 				dir = {0,0,-1};
 		float[] pt1 = {-10,-5,0},
 				pt2 = {10,-5,0},
@@ -241,7 +241,8 @@ public class Test {
 		float[][] ray = {pt, dir},
 				triangle = {pt3, pt1, pt2};
 		
-		System.out.println(C3D.raycastTriangle(ray, triangle));
+		System.out.println(C3D.raycastTriangle(0,0,10, 0,0,-1, 
+			-10,-5,-1,10,-5,0,0,10,0));
 		
 		if(true)
 			return;

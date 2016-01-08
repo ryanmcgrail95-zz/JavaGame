@@ -32,6 +32,8 @@ public class FileExt {
 			while((line = reader.readLine()) != null)
 				str += line+"\n";
 			
+			reader.close();
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

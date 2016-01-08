@@ -27,14 +27,19 @@ public abstract class SimpleParticle extends Particle {
 	public abstract float getAlpha();
 	public abstract int getFrame();
 	
-	public void add() {}
-	public void draw() {
+	public void destroy() {
+		super.destroy();
+		sprite = null;
+	}
+	
+	public final void add() {}
+	public final void draw() {
 		GL.setAlpha(getAlpha());
 		
 		GT.transformClear();
 			GT.transformTranslation(dX,dY,dZ);
 			GT.transformPaper();			
-			GT.transformRotationZ(getDirection());
+			GT.transformRotationZ(180+getDirection());
 			sprite.draw(-size/2,-size/2,size,size, getFrame());
 		GT.transformClear();
 		

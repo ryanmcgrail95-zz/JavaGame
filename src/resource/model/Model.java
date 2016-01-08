@@ -1,33 +1,21 @@
 package resource.model;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import resource.Resource;
-
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.GL2;
-import com.jogamp.opengl.GL3;
-import com.jogamp.opengl.GL4;
-import com.jogamp.opengl.util.texture.Texture;
-
 import datatypes.mat4;
-import datatypes.vec4;
 import datatypes.lists.CleanList;
-import fl.FileExt;
+import functions.ArrayMath;
 import gfx.GL;
 import gfx.RGBA;
 
 public class Model extends Resource {
-	
-	private static Model instance;
-	
+		
 	private float[][] pointList;
 	private float[][] normalList;
 	private float[][] uvList;
@@ -37,7 +25,7 @@ public class Model extends Resource {
 	private int vertexBuffer;
 	private Material[] materials;
 	
-	private mat4 preMatrix = new mat4();
+	private float[] preMatrix;
 	
 	private static Map<String, Model> modelMap = new HashMap<String, Model>();
 	
@@ -88,13 +76,15 @@ public class Model extends Resource {
 	
 	public Model(String fileName) {
 		super(fileName, Resource.R_MODEL);
-		instance = this;
 		modelMap.put(removeType(fileName),this);
+		
+		preMatrix = mat4.createIdentityArray();
 	}
 	public Model() {
 		super("", Resource.R_MODEL);
-		instance = this;
 		modelMap.put(removeType(""),this);
+		
+		preMatrix = mat4.createIdentityArray();
 	}
 	
 	public void create(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<int[]> vertexList) {
@@ -102,7 +92,6 @@ public class Model extends Resource {
 		setAll(pointList, normalList, uvList, new ArrayList<Integer>(), vertexList);
 		
 		hasColor = false;
-		vertexBuffer = createAndFillVertexBuffer();
 		
 		modList.add(this);
 	}
@@ -112,9 +101,7 @@ public class Model extends Resource {
 		setAll(pointList,normalList,uvList,colorList,vertexList);
 		
 		hasColor = colorList.size() > 0;
-		
-		vertexBuffer = createAndFillVertexBuffer();
-		
+				
 		modList.add(this);
 	}
 	
@@ -145,6 +132,8 @@ public class Model extends Resource {
 	
 	public void destroy() {
 		
+		modList.remove();
+		
 		// Delete Arrays
 		// Delete Material
 		
@@ -163,6 +152,10 @@ public class Model extends Resource {
 
 		
 		// Empty Vertex Buffer
+		
+		// Delete Materials
+		for(Material m : materials)
+			m.destroy();
 	}
 	
 	public void draw() {
@@ -213,19 +206,17 @@ public class Model extends Resource {
 	
 	
 	public void drawFast() {
-		
-		
 		GL2 gl = GL.getGL2();
 		
 		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBuffer);
 		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		//gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
 		
-		gl.glVertexPointer( 3, GL2.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 0 );
-		gl.glNormalPointer( GL2.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 5 * Buffers.SIZEOF_FLOAT );
-		gl.glColorPointer(3, GL2.GL_FLOAT, 11 * Buffers.SIZEOF_FLOAT, 8 * Buffers.SIZEOF_FLOAT );
+		gl.glVertexPointer( 3, GL2.GL_FLOAT, 12 * Buffers.SIZEOF_FLOAT, 0 );
+		gl.glNormalPointer( GL2.GL_FLOAT, 12 * Buffers.SIZEOF_FLOAT, 5 * Buffers.SIZEOF_FLOAT );
+		gl.glColorPointer(4, GL2.GL_FLOAT, 12 * Buffers.SIZEOF_FLOAT, 8 * Buffers.SIZEOF_FLOAT );
 
 	
 		// Draw the buffer
@@ -238,20 +229,10 @@ public class Model extends Resource {
 		gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
 		
 		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		//gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
 		gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 	}
-	
-	
-	public float[] mult(float[] mat, float[] vec) {
-		float[] outVec = {0,0,0,0};
-		for(int i = 0; i < 4; i++)
-			for(int ii = 0; ii < 4; ii++)
-				outVec[i] += mat[4*i+ii]*vec[ii];
-		return outVec;
-	}
-
 	
 	public void add() {
 		/*GL2 gl = GL.getGL2();
@@ -282,50 +263,45 @@ public class Model extends Resource {
 	}
 
 	
-	public void transform(mat4 transformMatrix) {
+	public void transform(float[] transformMatrix) {		
 		destroyTriangles();
 		if(pointList == null)
-			preMatrix.multe(transformMatrix);
-		else
+			preMatrix = ArrayMath.multMM(preMatrix, transformMatrix);
+		else {
+			float[] curVertex = new float[] {0,0,0,1};
+
 			for(float[] v : pointList) {
-				vec4 curVertex = new vec4(v[0],v[1],v[2],1);
-				curVertex.multe(transformMatrix);
+				curVertex[0] = v[0];
+				curVertex[1] = v[1];
+				curVertex[2] = v[2];
+				curVertex[3] = 1;
 				
-				v[0] = curVertex.x();
-				v[1] = curVertex.y();
-				v[2] = curVertex.z();
+				curVertex = ArrayMath.multMV(transformMatrix, curVertex);
 				
-				curVertex.destroy();
+				v[0] = curVertex[0];
+				v[1] = curVertex[1];
+				v[2] = curVertex[2];
 			}
+		}
 	}
 
 	public void translate(float tX, float tY, float tZ) {
-		mat4 tr = mat4.createTranslationMatrix(tX,tY,tZ);
-		transform(tr);
-		tr.destroy();
+		transform(mat4.createTranslationArray(tX,tY,tZ));
 	}
 	
 	public void rotateX(float rot) {
-		mat4 tr = mat4.createRotationXMatrix(rot);
-		transform(tr);
-		tr.destroy();
+		transform(mat4.createRotationXArray(rot));
 	}
 	public void rotateY(float rot) {
-		mat4 tr = mat4.createRotationYMatrix(rot);
-		transform(tr);
-		tr.destroy();
+		transform(mat4.createRotationYArray(rot));
 	}
 	public void rotateZ(float rot) {
-		mat4 tr = mat4.createRotationZMatrix(rot);
-		transform(tr);
-		tr.destroy();
+		transform(mat4.createRotationZArray(rot));
 	}
 	
 	public void scale(float scaleFactor) {scale(scaleFactor,scaleFactor,scaleFactor);}
 	public void scale(float sX, float sY, float sZ) {
-		mat4 tr = mat4.createScaleMatrix(sX,sY,sZ);
-		transform(tr);
-		tr.destroy();
+		transform(mat4.createScaleArray(sX,sY,sZ));
 	}
 	
 	public void flipNormals() {
@@ -351,16 +327,13 @@ public class Model extends Resource {
 		
 		GL2 gl = (GL2) GL.getGL();
 		
-		int error, n = 0;
-		while((error = gl.glGetError()) != 0);
-		
 	    // create vertex buffer object if needed
         gl.glGenBuffers(1, bufferInd, 0 );
  
         // create vertex buffer data store without initial copy
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, bufferInd[0] );
         gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                          vertexNum * ( 3 * 3 + 2 ) * Buffers.SIZEOF_FLOAT, // # vertices * # of #s in each datatype * float size * 4 datatypes
+                          vertexNum * ( 3 * 2 + 2 + 4 ) * Buffers.SIZEOF_FLOAT, // # vertices * # of #s in each datatype * float size * 4 datatypes
                           null,
                           GL2.GL_DYNAMIC_DRAW );
         	 
@@ -374,7 +347,7 @@ public class Model extends Resource {
 	    int i = 0, k = 0;
 	    for(k = 0; k < vertexNum; k++) {
 	    	v = vertexList[k];
-	    	
+	    		    	
 	    	if(v[0] == -1)
 	    		continue;
 	    	
@@ -401,15 +374,16 @@ public class Model extends Resource {
 	    	// Add Color
 	    	if(hasColor)
 	    		RGBA.convertInt2RGBA(colorList[v[3]],color);
-	    	for(i = 0; i < 3; i++)
+	    	for(i = 0; i < 4; i++)
 	    		bytebuffer.putFloat(color[i]/255f);
 	    	//floatbuffer.put(, 0, 3); i += 3;
 	    	//floatbuffer.put(normalList[(int) v[2]], 0, 3); i += 3;
 	    }	    
-	    
+
 	    bytebuffer.position(0);	    
 	    gl.glUnmapBuffer( GL2.GL_ARRAY_BUFFER );
 
+	    
 	    return bufferInd[0];
 	}
 	
@@ -450,21 +424,22 @@ public class Model extends Resource {
 
 	public void load(String fileName) {
 		if(fileName != "") {
-			OBJLoader.loadInto(fileName, this);	
-			
 			// Necessary for Fixing Model
 			scale(2f);
 			scale(1,-1,-1);
+
+			OBJLoader.loadInto(fileName, this);
+
 			flipNormals();
 		}
 		
-		preMatrix.println();
 		transform(preMatrix);
-		preMatrix.destroy();
 		preMatrix = null;
 		
 		mirrorUVVertically();
 		
+		vertexBuffer = createAndFillVertexBuffer();
+
 		//this.scale(390);
 		//this.rotateY(90);
 	}
@@ -487,9 +462,6 @@ public class Model extends Resource {
 	}
 
 
-	public static Model get() {
-		return instance;
-	}
 	public static Model get(String name) {
 		return modelMap.get(name);
 	}

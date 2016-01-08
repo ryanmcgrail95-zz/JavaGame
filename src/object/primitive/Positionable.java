@@ -60,6 +60,9 @@ public abstract class Positionable extends Drawable {
 	public void setPos(float x, float y, float z) {
 		position.set(x,y,z);
 	}
+	public void setPos(Positionable other) {
+		position.set(other.getX(),other.getY(),other.getZ());
+	}
 	public vec3 getPos() 	{return position;}
 	
 	
@@ -127,8 +130,10 @@ public abstract class Positionable extends Drawable {
 		return GL.getCamera().calcParaDistance(x(),y());
 	}
 
-	public float calcDis(Positionable other) {return calcPtDis(other.x(), other.y());}
+	public float calcDis2D(Positionable other) {return calcPtDis(other.x(), other.y());}
+	public float calcDis3D(Positionable other) {return calcPtDis(other.x(), other.y(), other.z());}
 	public float calcPtDis(float pX, float pY) {return Math2D.calcPtDis(x(),y(), pX,pY);}
+	public float calcPtDis(float pX, float pY, float pZ) {return Math3D.calcPtDis(x(),y(),z(), pX,pY,pZ);}
 	public float calcLineDis(float x1, float y1, float x2, float y2, boolean segment) {return Math2D.calcLineDis(x(), y(), x1, y1, x2, y2, true);}
 	
 	public float calcDir(Positionable other) {return calcPtDir(other.x(), other.y());}

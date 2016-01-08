@@ -115,6 +115,7 @@ public abstract class BattleActor extends Positionable {
 		
 	
 	public void destroy() {
+		isDestroyed = true;				
 		super.destroy();
 		myBody.destroy();
 			myBody = null;
@@ -122,11 +123,11 @@ public abstract class BattleActor extends Positionable {
 			currentAttack = null;
 			zPreviouses = null;
 			target = null;
-		isDestroyed = true;				
 		parent = null;
 	}
 	
 	public void dieDestroy() {
+		isDestroyed = true;
 		super.destroy();
 		myBody.destroy();
 			myBody = null;
@@ -134,7 +135,6 @@ public abstract class BattleActor extends Positionable {
 			currentAttack = null;
 			zPreviouses = null;
 			target = null;
-		isDestroyed = true;
 				
 		parent.remove(this);
 		parent.continueDeathAnimations();
@@ -535,7 +535,7 @@ public abstract class BattleActor extends Positionable {
 	}
 	public void createDodgeBurst() {		
 		float sD = 90 + getSign()*60;
-		new DodgeStar(getX(),getTopZ(),sD);
+		new DodgeStar(getX(),getY(),getTopZ(),sD);
 	}
 	
 	public void setAnimation(byte type) {

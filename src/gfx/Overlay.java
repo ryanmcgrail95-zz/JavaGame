@@ -7,6 +7,7 @@ import object.actor.Player;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
 import paper.CharacterPM;
+import paper.PlayerPM;
 import phone.SmartPhone;
 import resource.model.Model;
 import resource.sound.Sound;
@@ -101,6 +102,10 @@ public class Overlay {
 					"FBOs: " + FBO.getNumber(),
 					//"RGBAs: " + RGBA.getNumber(),
 					"Characters: " + CharacterPM.getNumber()
+				);
+				
+				drawStrings(0, 320,
+					PlayerPM.getInstance().getPos().toString()
 				);
 				
 				drawUpdatables(300,0);
