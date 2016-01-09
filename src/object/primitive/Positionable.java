@@ -106,7 +106,7 @@ public abstract class Positionable extends Drawable {
 	public void updatePosition() {
 		positionPrevious.set(position);
 		directionPrevious = direction;
-		
+				
 		position.adde( Delta.convert(velocity) );
 	}
 	

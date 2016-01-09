@@ -12,7 +12,17 @@ public class Background {
 	private static float bgX = -280, bgW, bgH;
 	
 	public static void addPerpendicularMotion(float x) {
-		bgX += .5f*x;
+		bgX += .5f*x * bgW/640;
+		if(bgX < 0)
+			bgX += bgW;
+		else if(bgX >= bgW)
+			bgX -= bgW;
+	}
+	public static void changeResolution(float oldW, float newW) {
+		bgW = newW;
+		
+		bgX = bgX/oldW*newW;
+		
 		if(bgX < 0)
 			bgX += bgW;
 		else if(bgX >= bgW)

@@ -380,14 +380,19 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 			if(isSpinning && spinTimer % 5 == 0)
 				d3d_instance_create(x+lengthdir_x(5,direction+180),y+lengthdir_y(5,direction+180),z,objSmoke);*/
 		
+		float addAmt = 0;
+		
 		if(inAir)
-			myBody.addIndex(.35f*IMAGE_SPEED);
+			addAmt = .35f*IMAGE_SPEED;
 		else {
 			if(isMoving)
-				myBody.addIndex(getXYSpeed()/maxSpeed*IMAGE_SPEED);
+				addAmt = getXYSpeed()/maxSpeed*IMAGE_SPEED;
 			else
 				myBody.setIndex(0);
 		}
+		
+		myBody.addIndex( Delta.convert(addAmt) );
+		
 		myBody.setSpeed(getXYSpeed(),getZVelocity());
 		
 		myBody.animateModel();

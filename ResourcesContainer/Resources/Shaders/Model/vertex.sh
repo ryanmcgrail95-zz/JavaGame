@@ -1,11 +1,13 @@
-uniform mat4 uMVPMatrix;
 attribute vec4 vPosition;
+attribute vec4 iColor;
+
 varying vec4 vColor;
+varying vec3 vNormal;
+
 void main() {
-	gl_PointSize = 8.0;
 	gl_Position = ftransform();
-
 	gl_TexCoord[0] = gl_MultiTexCoord0;
-
-	vColor = vPosition;
+	
+	vColor = iColor;
+	vNormal = gl_Normal/length(gl_Normal);
 }

@@ -1,13 +1,18 @@
 package resource.model;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import resource.Resource;
+
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.util.texture.Texture;
+
 import datatypes.mat4;
 import datatypes.lists.CleanList;
 import functions.ArrayMath;
@@ -16,14 +21,25 @@ import gfx.RGBA;
 
 public class Model extends Resource {
 		
+	private final static int
+		SIZE_F = Buffers.SIZEOF_FLOAT,
+		SIZE_I = Buffers.SIZEOF_INT,
+
+		POS_SIZE = 3 * SIZE_F,		POS_OFFSET = 0,
+		UV_SIZE = 2 * SIZE_F, 		UV_OFFSET = POS_OFFSET + POS_SIZE,
+		NORM_SIZE = 3 * SIZE_F,		NORM_OFFSET = UV_OFFSET + UV_SIZE,
+		COL_SIZE = 4 * SIZE_F,		COL_OFFSET = NORM_OFFSET + NORM_SIZE,
+		
+		TOT_SIZE = POS_SIZE+UV_SIZE+NORM_SIZE+COL_SIZE;
+	
 	private float[][] pointList;
 	private float[][] normalList;
 	private float[][] uvList;
 	private int[][] vertexList;
 	private int[] colorList;
 	private int vertexNum;
-	private int vertexBuffer;
 	private Material[] materials;
+	private Submodel[] submodelList;
 	
 	private float[] preMatrix;
 	
@@ -72,6 +88,67 @@ public class Model extends Resource {
 		/*MOD_CASTLE = OBJLoader.load("Model/output").fix();
 			MOD_CASTLE.mirrorUVVertically();*/
 	}
+	
+	
+	private class Submodel {
+		private int vertexBuffer, subVertexNum;
+		private Material mat;
+		
+		
+		public Submodel(int vertexBuffer, int subVertexNum, Material mat) {
+			this.vertexBuffer = vertexBuffer;
+			this.subVertexNum = subVertexNum;
+			this.mat = mat;
+		}
+
+		public void destroy(GL2 gl) {
+			gl.glDeleteBuffers(1, new int[] {vertexBuffer}, 0);
+		}
+		
+		public void draw() {
+			
+			if(mat != null)
+				mat.enable();
+			
+			GL2 gl = GL.getGL2();
+			
+			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBuffer);
+			
+			gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+			gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+			gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
+			//gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+					
+			gl.glVertexPointer( 3, GL2.GL_FLOAT, TOT_SIZE, POS_OFFSET);
+			gl.glTexCoordPointer(2, GL2.GL_FLOAT, TOT_SIZE, UV_OFFSET);
+			gl.glNormalPointer( GL2.GL_FLOAT, TOT_SIZE, NORM_OFFSET);
+			//gl.glColorPointer(4, GL2.GL_FLOAT, TOT_SIZE, COL_OFFSET);
+			
+			int colorAttrib = gl.glGetAttribLocation(GL.getShaderProgram(), "iColor");
+			gl.glVertexAttribPointer(colorAttrib, 4, GL2.GL_FLOAT,false, TOT_SIZE, COL_OFFSET);
+			gl.glEnableVertexAttribArray(colorAttrib);
+		
+			// Draw the buffer
+			gl.glPolygonMode( GL2.GL_FRONT, GL2.GL_FILL );
+			gl.glDrawArrays(modelType, 0, subVertexNum);
+			
+			// Unbind the buffer
+
+			// Disable the different kinds of data 
+			gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
+			
+			gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+			gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+			gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
+			//gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+			gl.glDisableVertexAttribArray(colorAttrib);
+
+		
+			if(mat != null)
+				mat.disable();
+		}
+	}
+	
 	
 	
 	public Model(String fileName) {
@@ -148,8 +225,9 @@ public class Model extends Resource {
 		
 		// Delete GL Vertex Index/Buffer
 		GL2 gl = GL.getGL2();
-		gl.glDeleteBuffers(1, new int[] {vertexBuffer}, 0);
 
+		for(Submodel s : submodelList)
+			s.destroy(gl);
 		
 		// Empty Vertex Buffer
 		
@@ -206,32 +284,8 @@ public class Model extends Resource {
 	
 	
 	public void drawFast() {
-		GL2 gl = GL.getGL2();
-		
-		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vertexBuffer);
-		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
-		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-		
-		gl.glVertexPointer( 3, GL2.GL_FLOAT, 12 * Buffers.SIZEOF_FLOAT, 0 );
-		gl.glNormalPointer( GL2.GL_FLOAT, 12 * Buffers.SIZEOF_FLOAT, 5 * Buffers.SIZEOF_FLOAT );
-		gl.glColorPointer(4, GL2.GL_FLOAT, 12 * Buffers.SIZEOF_FLOAT, 8 * Buffers.SIZEOF_FLOAT );
-
-	
-		// Draw the buffer
-		gl.glPolygonMode( GL2.GL_FRONT, GL2.GL_FILL );
-		gl.glDrawArrays(modelType, 0, vertexNum);
-		
-		// Unbind the buffer
-
-		// Disable the different kinds of data 
-		gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
-		
-		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
-		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+		for(Submodel s : submodelList)
+			s.draw();
 	}
 	
 	public void add() {
@@ -322,35 +376,78 @@ public class Model extends Resource {
 	
 	// Allow Model to Be Created this way in first place
 	
-	protected int createAndFillVertexBuffer() {
-		int[] bufferInd = new int[1];    
+	protected void createAndFillVertexBuffer() {
+		int numBuffers;
+		if(materials == null)
+			numBuffers = 1;
+		else
+			numBuffers = materials.length;
+		
+		int[] bufferInd = new int[numBuffers],
+			bufferSizes = new int[numBuffers];
 		
 		GL2 gl = (GL2) GL.getGL();
 		
+		
 	    // create vertex buffer object if needed
-        gl.glGenBuffers(1, bufferInd, 0 );
+        gl.glGenBuffers(numBuffers, bufferInd, 0 );
  
+        // Get Size of Each Buffer
+        int curBuff = 0;
+        for(int[] v : vertexList)
+        	if(v[0] == -1)
+        		curBuff = v[1];
+        	else
+        		bufferSizes[curBuff]++;
+        
+        
+        for(int i = 0; i < numBuffers; i++)
+        	System.out.println(i + ": " + bufferSizes[i]);
+        
+        
         // create vertex buffer data store without initial copy
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, bufferInd[0] );
-        gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                          vertexNum * ( 3 * 2 + 2 + 4 ) * Buffers.SIZEOF_FLOAT, // # vertices * # of #s in each datatype * float size * 4 datatypes
-                          null,
-                          GL2.GL_DYNAMIC_DRAW );
-        	 
+        for(int i = 0; i < numBuffers; i++) {
+        	gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, bufferInd[i]);
+        	gl.glBufferData(GL2.GL_ARRAY_BUFFER, bufferSizes[i]*TOT_SIZE, null, GL2.GL_DYNAMIC_DRAW );
+        }
+        
 	    // map the buffer and write vertex and color data directly into it
-	    gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[0] );
+        curBuff = 0;
+        
+	    gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[curBuff] );
 	    ByteBuffer bytebuffer = gl.glMapBuffer( GL2.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
-	    //FloatBuffer floatbuffer = bytebuffer.order( ByteOrder.nativeOrder() ).asFloatBuffer();
-	 	    
+	    
+	    int[] lastPositions = new int[numBuffers];
+	    for(int i : lastPositions)
+	    	i = 0;
+	    
+	    System.out.println("SIZE: " + TOT_SIZE);
+	 	    	    
 	    float[] array;
 	    int[] v, color = {0,0,0,0};
-	    int i = 0, k = 0;
+	    int i = 0, k = 0, t = 0;
 	    for(k = 0; k < vertexNum; k++) {
 	    	v = vertexList[k];
-	    		    	
-	    	if(v[0] == -1)
-	    		continue;
 	    	
+	    	if(v[0] == -1) {
+	    	    System.out.println(curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
+
+	    		curBuff = v[1];
+	    		bytebuffer.position(0);
+	    		
+	    	    gl.glUnmapBuffer(GL2.GL_ARRAY_BUFFER);
+	    	    gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[curBuff]);
+	    	    bytebuffer = gl.glMapBuffer( GL2.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
+	    	    	    	    
+	    	    bytebuffer.position(lastPositions[curBuff]);
+	    	    
+	    	    System.out.println("\t" + curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
+
+	    	    continue;
+	    	}
+	    	
+    	    System.out.println("\t\t" + curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
+	    		    	
 	    	// Add Point
 	    	array = pointList[v[0]];
 	    	for(i = 0; i < 3; i++)
@@ -376,15 +473,21 @@ public class Model extends Resource {
 	    		RGBA.convertInt2RGBA(colorList[v[3]],color);
 	    	for(i = 0; i < 4; i++)
 	    		bytebuffer.putFloat(color[i]/255f);
-	    	//floatbuffer.put(, 0, 3); i += 3;
-	    	//floatbuffer.put(normalList[(int) v[2]], 0, 3); i += 3;
-	    }	    
+	    	
+	    	lastPositions[curBuff] += TOT_SIZE;
+	    }   
 
 	    bytebuffer.position(0);	    
-	    gl.glUnmapBuffer( GL2.GL_ARRAY_BUFFER );
-
+	    gl.glUnmapBuffer(GL2.GL_ARRAY_BUFFER);
 	    
-	    return bufferInd[0];
+	    
+	    submodelList = new Submodel[numBuffers];
+	    if(materials != null) {
+	    	for(int n = 0; n < numBuffers; n++)
+	    		submodelList[n] = new Submodel(bufferInd[n], bufferSizes[n], materials[n]);
+	    }
+	    else
+	    	submodelList[0] = new Submodel(bufferInd[0], bufferSizes[0], null);
 	}
 	
 	public int getVertexNumber() {
@@ -438,7 +541,7 @@ public class Model extends Resource {
 		
 		mirrorUVVertically();
 		
-		vertexBuffer = createAndFillVertexBuffer();
+		createAndFillVertexBuffer();
 
 		//this.scale(390);
 		//this.rotateY(90);

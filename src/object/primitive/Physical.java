@@ -3,6 +3,7 @@ import datatypes.vec3;
 import datatypes.lists.CleanList;
 import object.environment.FloorBlock;
 import resource.model.Model;
+import time.Delta;
 import functions.FastMath;
 import functions.Math2D;
 import functions.MathExt;
@@ -18,7 +19,7 @@ public abstract class Physical extends Positionable {
 		
 	protected boolean inAir;
 	protected FloorBlock curFloor = null;
-	protected float floorZ = 0;
+	protected float floorZ = 0, toFloorZ = 0;
 	//TYPE VARIABLES
 	protected final static byte T_NONE = -1, T_ITEM = 0, T_PLAYER = 1;
 	protected byte type = T_NONE;
@@ -63,6 +64,8 @@ public abstract class Physical extends Positionable {
 		
 		updatePosition();
 		collideAll();
+		
+		floorZ = MathExt.to(floorZ, toFloorZ, 5);
 	}
 	
 	public void updatePosition() {
@@ -77,7 +80,7 @@ public abstract class Physical extends Positionable {
 		if(Math.abs(zVel) < 1)
 			gravAcc *= .05 + .95*Math.abs(zVel);
 		
-		addZVelocity(-gravAcc);
+		addZVelocity( -gravAcc );
 	}
 
 	
@@ -94,7 +97,7 @@ public abstract class Physical extends Positionable {
 		public void didCollideFloor(float floorZ) {
 			boolean isItem = (type == T_ITEM);
 			
-			this.floorZ = MathExt.to(this.floorZ, floorZ, 5);
+			this.toFloorZ = floorZ;
 			inAir = false;
 			
 			setZ(floorZ);
@@ -113,7 +116,7 @@ public abstract class Physical extends Positionable {
 		public abstract void land();
 		
 		protected boolean collideSize(Physical p) {
-			return (calcDis(p) <= size+p.size);
+			return (calcDis2D(p) <= size+p.size);
 		}
 		
 		protected boolean collideModel(Model m) {

@@ -1,6 +1,7 @@
 package gfx;
 
 import io.Keyboard;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -8,9 +9,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.glu.*;
+
 import object.environment.Chest;
 import object.environment.Fern;
 import object.environment.Floor;
@@ -18,6 +21,7 @@ import object.environment.Heightmap;
 import object.environment.PineTree;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import paper.Background;
 import paper.PlayerPM;
 import phone.SmartPhone;
 import resource.model.Model;
@@ -29,8 +33,10 @@ import time.Delta;
 import time.Timer;
 import twoD.Player2D;
 import twoD.Terrain2D;
+
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+
 import cont.GameController;
 import cont.ImageLoader;
 import cont.Text;
@@ -279,7 +285,10 @@ public class GL {
 	}
 
 	public static void setResolution(int[] array) 	{setResolution(array[0],array[1]);}
-	public static void setResolution(int w, int h) {mainCamera.setResolution(SCREEN_WIDTH = w, SCREEN_HEIGHT = h);}
+	public static void setResolution(int w, int h) {
+		Background.changeResolution(SCREEN_WIDTH,w);
+		mainCamera.setResolution(SCREEN_WIDTH = w, SCREEN_HEIGHT = h);
+	}
 
 	public static void setViewport(float x, float y, float w, float h) {
 		y = WINDOW_HEIGHT-h-y;
@@ -1648,5 +1657,8 @@ public class GL {
 
 	public static void endPageCurl() {
 		curlTime = -1;
+	}
+	public static int getShaderProgram() {
+		return shaderProgram;
 	}
 }
