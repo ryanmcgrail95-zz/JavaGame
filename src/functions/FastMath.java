@@ -1,26 +1,26 @@
 package functions;
 
 public class FastMath {
-	private static final float RAD = (float) Math.PI / 180.0F;
+	private static final double RAD = (double) Math.PI / 180.0F;
 	
 	   private static final int SIN_BITS = 12;
 	   private static final int SIN_MASK = ~(-1 << SIN_BITS);
 	   private static final int SIN_COUNT = SIN_MASK + 1;
 	
-	   private static final float radFull = (float) (Math.PI * 2.0);
-	   private static final float degFull = (float) (360.0);
-	   private static final float radToIndex = SIN_COUNT / radFull;
-	   private static final float degToIndex = SIN_COUNT / degFull;
+	   private static final double radFull = (double) (Math.PI * 2.0);
+	   private static final double degFull = (double) (360.0);
+	   private static final double radToIndex = SIN_COUNT / radFull;
+	   private static final double degToIndex = SIN_COUNT / degFull;
 	
-	   private static final float[] sin = new float[SIN_COUNT];
-	   private static final float[] cos = new float[SIN_COUNT];
+	   private static final double[] sin = new double[SIN_COUNT];
+	   private static final double[] cos = new double[SIN_COUNT];
 
 	   static
 	   {
 	      for (int i = 0; i < SIN_COUNT; i++)
 	      {
-	         sin[i] = (float) Math.sin((float) (i + 0.5f) / SIN_COUNT * radFull);
-	         cos[i] = (float) Math.cos((float) (i + 0.5f) / SIN_COUNT * radFull);
+	         sin[i] = (double) Math.sin((double) (i + 0.5f) / SIN_COUNT * radFull);
+	         cos[i] = (double) Math.cos((double) (i + 0.5f) / SIN_COUNT * radFull);
 	      }
 	   }
 
@@ -30,18 +30,18 @@ public class FastMath {
 	    * SIN / COS (RAD)
 	    */
 
-	   public static final float sin(float rad) {
-	      return sin[(int) (rad * radToIndex) & SIN_MASK];
+	   public static final double sin(double d) {
+	      return sin[(int) (d * radToIndex) & SIN_MASK];
 	   }
 
-	   public static final float cos(float rad) {
+	   public static final double cos(double rad) {
 	      return cos[(int) (rad * radToIndex) & SIN_MASK];
 	   }
 	   
-	   public static final float sind(float deg) {
+	   public static final double sind(double deg) {
 		   return sin(deg*0.01745328f);
 	   }
-	   public static final float cosd(float deg) {
+	   public static final double cosd(double deg) {
 		   return cos(deg*0.01745328f);
 	   }
 
@@ -51,12 +51,12 @@ public class FastMath {
 	    * SIN / COS (DEG)
 	    */
 
-	   public static final float sinDeg(float deg)
+	   public static final double sinDeg(double deg)
 	   {
 	      return sin[(int) (deg * degToIndex) & SIN_MASK];
 	   }
 
-	   public static final float cosDeg(float deg)
+	   public static final double cosDeg(double deg)
 	   {
 	      return cos[(int) (deg * degToIndex) & SIN_MASK];
 	   }
@@ -67,14 +67,14 @@ public class FastMath {
 	    * SIN / COS (DEG - STRICT)
 	    */
 
-	   public static final float sinDegStrict(float deg)
+	   public static final double sinDegStrict(double deg)
 	   {
-	      return (float) Math.sin(deg * RAD);
+	      return (double) Math.sin(deg * RAD);
 	   }
 
-	   public static final float cosDegStrict(float deg)
+	   public static final double cosDegStrict(double deg)
 	   {
-	      return (float) Math.cos(deg * RAD);
+	      return (double) Math.cos(deg * RAD);
 	   }
 		
 	
@@ -83,27 +83,27 @@ public class FastMath {
 	*/
 		
 	   private static final int           SIZE                 = 1024;
-	    private static final float        STRETCH            = 3.14159f;
+	    private static final double        STRETCH            = 3.14159f;
 	    // Output will swing from -STRETCH to STRETCH (default: Math.PI)
 	    // Useful to change to 1 if you would normally do "atan2(y, x) / Math.PI"
 
 	    // Inverse of SIZE
 	    private static final int        EZIS            = -SIZE;
-	    private static final float[]    ATAN2_TABLE_PPY    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_PPX    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_PNY    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_PNX    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_NPY    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_NPX    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_NNY    = new float[SIZE + 1];
-	    private static final float[]    ATAN2_TABLE_NNX    = new float[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_PPY    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_PPX    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_PNY    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_PNX    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_NPY    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_NPX    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_NNY    = new double[SIZE + 1];
+	    private static final double[]    ATAN2_TABLE_NNX    = new double[SIZE + 1];
 
 	    static
 	    {
 	        for (int i = 0; i <= SIZE; i++)
 	        {
-	            float f = (float)i / SIZE;
-	            ATAN2_TABLE_PPY[i] = (float)(StrictMath.atan(f) * STRETCH / StrictMath.PI);
+	            double f = (double)i / SIZE;
+	            ATAN2_TABLE_PPY[i] = (double)(StrictMath.atan(f) * STRETCH / StrictMath.PI);
 	            ATAN2_TABLE_PPX[i] = STRETCH * 0.5f - ATAN2_TABLE_PPY[i];
 	            ATAN2_TABLE_PNY[i] = -ATAN2_TABLE_PPY[i];
 	            ATAN2_TABLE_PNX[i] = ATAN2_TABLE_PPY[i] - STRETCH * 0.5f;
@@ -118,7 +118,7 @@ public class FastMath {
 	     * ATAN2
 	     */
 
-	    public static final float atan2(float y, float x)
+	    public static final double atan2(double y, double x)
 	    {
 	        if (x >= 0)
 	        {
@@ -155,19 +155,19 @@ public class FastMath {
 	    }
 
 
-	public static float abs(float x) {
+	public static double abs(double x) {
 		return (x >= 0) ? x : -x;
 	}
 
-	public static float calcAngleDiff(float a1, float a2) {
+	public static double calcAngleDiff(double a1, double a2) {
 		return 180 - abs(abs(a1 - a2) - 180);
 	}
-	public static float calcAngleSubt(float a1, float a2) {
+	public static double calcAngleSubt(double a1, double a2) {
 		int s = (a1 >= a2) ? ((a1 - a2 > 180) ? -1 : 1) : ((a2 - a1 > 180) ? 1 : -1);
 		return s*(180 - abs(abs(a1 - a2) - 180));
 	}
 
-	public static float testAtan2(float y, float x) {
+	public static double testAtan2(double y, double x) {
 	    if (y >= 0)
 	        return (x >= 0 ? y/(x+y) : 1-x/(-x+y)); 
 	    else

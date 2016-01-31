@@ -306,57 +306,57 @@ public class mat4 extends mat {
 	public static mat4 createRotationZMatrix(float degrees) {return new mat4(createRotationZArray(degrees));}
 
 	public static float[] createTranslationArray(float x, float y, float z) {
-		return new float[] {
+		return setTemp16(
 			1, 0, 0, 0,
 			0, 1, 0, 0,
 			0, 0, 1, 0,
-			x, y, z, 1};
+			x, y, z, 1);
 	}
 	
 	public static float[] createScaleArray(float xS, float yS, float zS) {
-		return new float[] {
+		return setTemp16(
 			xS, 0, 0, 0,
 			0, yS, 0, 0,
 			0, 0, zS, 0,
-			0, 0, 0, 1};
+			0, 0, 0, 1);
 	}
 	
 	public static float[] createRotationXArray(float degrees) {		
 		float radians = degrees/180*3.14159f,
 			co = (float) Math.cos(radians),
 			si = (float) Math.sin(radians);
-		return new float[] {
+		return setTemp16(
 			1, 0, 0, 0,
 			0, co, si, 0,
 			0, -si, co, 0,
-			0, 0, 0, 1};
+			0, 0, 0, 1);
 	}
 	public static float[] createRotationYArray(float degrees) {		
 		float radians = degrees/180*3.14159f,
 			co = (float) Math.cos(radians),
 			si = (float) Math.sin(radians);
-		return new float[] {
+		return setTemp16(
 			co, 0, -si, 0,
 			0, 1, 0, 0,
 			si, 0, co, 0,
-			0, 0, 0, 1};
+			0, 0, 0, 1);
 	}
 	public static float[] createRotationZArray(float degrees) {		
 		float radians = degrees/180*3.14159f,
 			co = (float) Math.cos(radians),
 			si = (float) Math.sin(radians);
-		return new float[] {
+		return setTemp16(
 			co, si, 0, 0,
 			-si, co, 0, 0,
 			0, 0, 1, 0,
-			0, 0, 0, 1};
+			0, 0, 0, 1);
 	}
 
 	public static float[] createIdentityArray() {
 		return new float[] {
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1};
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1};
 	}
 }

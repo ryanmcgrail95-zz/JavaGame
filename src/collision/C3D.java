@@ -151,7 +151,12 @@ public final class C3D extends ArrayMath {
 			}
 		}
 
-		return new float[] {xMi,yMi, xMa,yMa};
+		tempArray4[0] = xMi;
+		tempArray4[1] = yMi;
+		tempArray4[2] = xMa;
+		tempArray4[3] = yMa;
+		
+		return tempArray4;
 	}
 
 
@@ -318,7 +323,15 @@ public final class C3D extends ArrayMath {
 			return false;
 		}*/
 		
-		public static boolean intersectPolygonsSplit(float[][][] poly) {
+		public static boolean intersectPolygonsSplit(float[] [][] poly, float x, float y, float z) {
+			for(float[][] tri : poly)
+				for(float[] vert : tri) {
+					vert[0] += x;
+					vert[1] += y;
+					vert[2] += z;
+				}
+
+			
 			float[] boundingBox = boundingBox(poly);
 			float xMi,yMi, xMa,yMa;
 			xMi = boundingBox[0];
@@ -327,10 +340,10 @@ public final class C3D extends ArrayMath {
 			yMa = boundingBox[3];
 			
 			int xiMi,yiMi, xiMa,yiMa;
-			xiMi = MathExt.contain(0, (int) ((xMi - modXMi)/modXBSi), modXNum);
-			yiMi = MathExt.contain(0, (int) ((yMi - modYMi)/modYBSi), modYNum);
-			xiMa = MathExt.contain(0, (int) ((xMa - modXMi)/modXBSi), modXNum);
-			yiMa = MathExt.contain(0, (int) ((yMa - modYMi)/modYBSi), modYNum);
+			xiMi = MathExt.contain(0, (int) ((xMi - modXMi)/modXBSi), modXNum-1);
+			yiMi = MathExt.contain(0, (int) ((yMi - modYMi)/modYBSi), modYNum-1);
+			xiMa = MathExt.contain(0, (int) ((xMa - modXMi)/modXBSi), modXNum-1);
+			yiMa = MathExt.contain(0, (int) ((yMa - modYMi)/modYBSi), modYNum-1);
 						
 			int[] tris;
 			
@@ -383,11 +396,27 @@ public final class C3D extends ArrayMath {
 											t1x3,t1y3,t1z3,
 											t2x1,t2y1,t2z1,
 											t2x2,t2y2,t2z2,
-											t2x3,t2y3,t2z3))
+											t2x3,t2y3,t2z3)) {
+										for(float[][] tri : poly)
+											for(float[] vert : tri) {
+												vert[0] -= x;
+												vert[1] -= y;
+												vert[2] -= z;
+											}
+
 										return true;
+									}
 								}
 					}
 				}
+			
+			for(float[][] tri : poly)
+				for(float[] vert : tri) {
+					vert[0] -= x;
+					vert[1] -= y;
+					vert[2] -= z;
+				}
+			
 			return false;
 		}
 		

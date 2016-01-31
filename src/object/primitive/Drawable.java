@@ -242,12 +242,12 @@ public abstract class Drawable extends Updatable {
 		
 		cam.project();
 		
-		CleanList<Drawable> drawList = cam.getDrawList();
+		/*CleanList<Drawable> drawList = cam.getDrawList();
 		if(drawList.size() > 0) {
 			for(Drawable d : drawList)
 				d.draw();
 			return;
-		}
+		}*/
 		
 		GL.allowLighting(true);
 		GL.enableLighting();
@@ -264,6 +264,7 @@ public abstract class Drawable extends Updatable {
 		}
 		GL.end();
 		GL.disableLightings();
+		
 		for(Drawable d : onscreenList)
 			d.draw();
 

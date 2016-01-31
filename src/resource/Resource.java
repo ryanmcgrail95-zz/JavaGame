@@ -9,6 +9,8 @@ public abstract class Resource {
 	private String name, fileName;
 	private byte type;
 	private long byteNum;
+	private boolean isLoaded = false;
+	
 	
 	public Resource(String fileName, byte type) {
 		this.name = removeType(fileName);
@@ -18,9 +20,14 @@ public abstract class Resource {
 	
 	public void load() {
 		load(fileName);
+		isLoaded = true;
 	}
 	
-	public String removeType(String fileName) {
+	public boolean isLoaded() {
+		return isLoaded;
+	}
+	
+	public static String removeType(String fileName) {
 		int pos = fileName.indexOf('.');
 		if(pos != -1)
 			return fileName.substring(0,pos);

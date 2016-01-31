@@ -15,8 +15,7 @@ import fl.FileExt;
 
 public class CharacterPM extends Resource implements Elemental {
 	private final static String BASE_DIRECTORY = "Resources/Images/Characters/";
-	private static Map<String, CharacterPM> map = new HashMap<String, CharacterPM>();
-	private int numReferences;
+	private static Map<String, CharacterPM> cMap = new HashMap<String, CharacterPM>();
 	
 	private int
 		maxHP = 2,
@@ -30,17 +29,22 @@ public class CharacterPM extends Resource implements Elemental {
 	
 	private boolean 
 		hasSpike,
-		hasWings;
+		hasWings,
+		hasShoe;
 
-	private WeightedRandomList<Attack> attackList = new WeightedRandomList<Attack>("Character");
+	private WeightedRandomList<Attack> attackList;
 	
 	private String name, directory;
 	//private byte element;
 	private SpriteMap spriteMap;
 	
-	public CharacterPM(String name) {
+	private CharacterPM(String name) {
 		super(name, Resource.R_CHARACTER);
 		this.name = name;
+		
+		this.attackList = new WeightedRandomList<Attack>("Character");
+		
+        cMap.put(name, this);
 	}
 	
 	private void loadStats() {
@@ -51,101 +55,92 @@ public class CharacterPM extends Resource implements Elemental {
 		float weight = 1;
 		
 		String fileName = directory + "stats.dat";
-		File f = FileExt.getFile(fileName);
+		StringExt fileText = new StringExt(FileExt.readFile2String(fileName));
+			
+		String line;
+		StringExt chomper = new StringExt();
 		
-		if(f == null)
-			return;
-		if(!f.exists())
-			return;
+		boolean inAttack = false;
 		
-		try {
-			BufferedReader buff = new BufferedReader(new FileReader(f));
+		while(!fileText.isEmpty()) {
+			chomper.set(line = fileText.munchLine());
+
+			String var, value;
+			var = chomper.munchWord();
+			value = chomper.munchLine();
+
+			var = var.replace(":", "");
+
+
+			byte bVal;
+			switch(var) {
+				case "attack":
+					inAttack = true; 
+					power = 1;
+					element = EL_NONE;
+					type = Attack.AT_JUMP;
+					weight = 1;
+					name = "NULL";	
+					break;
+				case "}":
+					if(inAttack) {
+						attackList.add(new Attack(name, power, type, element), weight);
+						inAttack = false;
+					}
+					break;
+					
+				case "maxHP":
+					maxHP = Integer.parseInt(value);
+					break;
 			
-			String line;
-			StringExt chomper = new StringExt();
+				case "element":
+					switch(value) {
+						case "none": bVal = EL_NONE;		break;
+						case "fire": bVal = EL_FIRE;		break;
+						case "ice": bVal = EL_ICE;			break;
+						case "icyfire": bVal = EL_ICYFIRE;	break;
+						default: bVal = EL_NONE;
+					}
+					element = bVal;
+					break;
 			
-			boolean inAttack = false;
-			
-			while((line = buff.readLine()) != null) {
-				chomper.set(line);
-				
-				String var, value;
-				var = chomper.chompWord();
-				value = chomper.chompWord();
-				
-				var = var.replace(":", "");
-				
-								
-				byte bVal;
-				switch(var) {
-					case "attack":
-						inAttack = true; 
-						power = 1;
-						element = EL_NONE;
-						type = Attack.AT_JUMP;
-						weight = 1;
-						name = "NULL";	
-						break;
-					case "}":
-						if(inAttack) {
-							attackList.add(new Attack(name, power, type, element), weight);
-							inAttack = false;
-						}
-						break;
-						
-					case "maxHP":
-						maxHP = Integer.parseInt(value);
-						break;
-				
-					case "element":
-						switch(value) {
-							case "none": bVal = EL_NONE;		break;
-							case "fire": bVal = EL_FIRE;		break;
-							case "ice": bVal = EL_ICE;			break;
-							case "icyfire": bVal = EL_ICYFIRE;	break;
-							default: bVal = EL_NONE;
-						}
-						element = bVal;
-						break;
-				
-					case "attackType":
-						switch(value) {
-							case "jump": bVal = Attack.AT_JUMP;		break;
-							case "hammer": bVal = Attack.AT_HAMMER;	break;
-							default: bVal = Attack.AT_JUMP;
-						}
-						type = bVal;
-						break;
+				case "attackType":
+					switch(value) {
+						case "jump": bVal = Attack.AT_JUMP;		break;
+						case "hammer": bVal = Attack.AT_HAMMER;	break;
+						default: bVal = Attack.AT_JUMP;
+					}
+					type = bVal;
+					break;
 
-					case "name":	name = value;	break;
+				case "name":	name = value;	break;
 
-					case "imageSpeed":	imageSpeed = Float.parseFloat(value);	break;
+				case "imageSpeed":	imageSpeed = Float.parseFloat(value);	break;
 
-					case "width":	width = Float.parseFloat(value);	break;
-					case "height":	height = Float.parseFloat(value);	break;
-					case "heightFraction":	heightFraction = Float.parseFloat(value);	break;
+				case "width":	width = Float.parseFloat(value);	break;
+				case "height":	height = Float.parseFloat(value);	break;
+				case "heightFraction":	heightFraction = Float.parseFloat(value);	break;
 
-					case "hasSpike":	hasSpike = Boolean.parseBoolean(value);	break;
-					case "hasWings":	hasWings = Boolean.parseBoolean(value);	break;
+				case "hasSpike":	hasSpike = Boolean.parseBoolean(value);	break;
+				case "hasWings":	hasWings = Boolean.parseBoolean(value);	break;
+				case "hasShoe":		hasShoe = Boolean.parseBoolean(value);	break;
 
-					case "attackStat":	power = Integer.parseInt(value);	break;		
-					case "defenseStat":	defense = Integer.parseInt(value);	break;
-				}
+				case "attackStat":	power = Integer.parseInt(value);	break;		
+				case "defenseStat":	defense = Integer.parseInt(value);	break;
 			}
-			
-			buff.close();
-		} catch (IOException e) {
 		}
 	}
 	
 	public static CharacterPM getCharacter(String name) {
 		CharacterPM retC;
-		if(map.containsKey(name))
-			retC = map.get(name);
-		else
+		if(cMap.containsKey(name)) {
+			System.out.println("Used character " + name + ".");
+			retC = cMap.get(name);
+		}
+		else {
+			System.out.println("Added character " + name + ".");
 			retC = new CharacterPM(name);
-		
-		retC.numReferences++;
+		}
 		
 		return retC;
 	}
@@ -155,13 +150,14 @@ public class CharacterPM extends Resource implements Elemental {
 	}
 
 	public SpriteMap getSpriteMap() {return spriteMap;}
-	public int getDefense() {return defense;}
+	public int getDefense() 		{return defense;}
 	public float getSpriteWidth() 	{return width;}
 	public float getSpriteHeight()	{return height;}
 	public float getHeight()		{return height*heightFraction;}
 
-	public boolean getHasWings() {return hasWings;}
-	public boolean getHasSpike() {return hasSpike;}
+	public boolean getHasWings() 	{return hasWings;}
+	public boolean getHasSpike() 	{return hasSpike;}
+	public boolean getHasShoe() 	{return hasShoe;}
 
 	public int getMaxHP() {
 		return maxHP;
@@ -172,27 +168,29 @@ public class CharacterPM extends Resource implements Elemental {
 	}
 
 	public static int getNumber() {
-		return map.size();
+		return cMap.size();
 	}
 
 	
 	@Override
 	public void load(String fileName) {
 		this.directory = BASE_DIRECTORY + fileName + "/";
-		
-		System.out.println(directory);
-		
 		this.spriteMap = SpriteMap.getSpriteMap(fileName);
 		
-		loadStats();
+		if(spriteMap == null)
+			throw new UnsupportedOperationException("Spritemap is null.");
 		
-        map.put(fileName, this);
+		loadStats();		
 	}
 
 	@Override
 	public void unload() {
-		map.remove(name);
+		cMap.remove(name);
+		
 		spriteMap.destroy();
-		attackList.clear();
+		attackList.destroy();
+
+		spriteMap = null;
+		attackList = null;
 	}
 }

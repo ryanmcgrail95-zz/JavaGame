@@ -89,6 +89,7 @@ public class TextureController {
 			return null;
 		
 		frames = getFrames(str);
+		str.close();
 		BufferedImage img;
 		
 		if(method == M_BGALPHA) {
@@ -117,11 +118,15 @@ public class TextureController {
 	public static ArrayList<BufferedImage> getFrames(InputStream gif) throws IOException {
 	    ArrayList<BufferedImage> frames = new ArrayList<BufferedImage>();
 	    ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
+	    ImageInputStream imgStr = ImageIO.createImageInputStream(gif);
 	    
-	    ir.setInput(ImageIO.createImageInputStream(gif));
+	    ir.setInput(imgStr);
 	    
 	    for(int i = 0; i < ir.getNumImages(true); i++)
 	        frames.add(addAlpha(ir.read(i)));
+	    
+	    ir.dispose();
+	    imgStr.close();
 	    
 	    return frames;
 	}

@@ -1,5 +1,6 @@
 package paper;
 
+import cont.TextureController;
 import obj.prt.Dust;
 import resource.sound.Sound;
 import time.Delta;
@@ -8,6 +9,7 @@ import functions.Math2D;
 import functions.MathExt;
 import gfx.GL;
 import gfx.GT;
+import gfx.RGBA;
 import gfx.TextureExt;
 
 public class BodyPM implements AnimationsPM {
@@ -17,9 +19,13 @@ public class BodyPM implements AnimationsPM {
 	private float imageIndex, imageSpeed = IMAGE_SPEED, imageNumber,
 		direction = 0,
 		flipDir = 1;
+	private float x, y, z;
 	private int animation;
 	private boolean autoFlip = true, isDestroyed, doStep, stepSound, autoIndex = true;
 
+	private float
+		floorZ = 0;
+	
 	private float 
 		xScale = 1,
 		yScale = 1,
@@ -33,7 +39,8 @@ public class BodyPM implements AnimationsPM {
 	
 	private WingsPM myWings;
 	private SpikePM mySpike;
-	private ZapPM myZap;
+	private ZapPM 	myZap;
+	private ShoePM 	myShoe;
 	
 	private float stepZ = 0;
 	
@@ -68,6 +75,7 @@ public class BodyPM implements AnimationsPM {
 	public void setAnimationJumpLandHurt() {setAnimation(S_JUMP_LAND_HURT);}
 	public void setAnimation(int type) {
 		animation = type;
+		
 		sprite = myChar.getSpriteMap().get(animation);
 		imageNumber = sprite.getImageNumber();
 	}
@@ -85,11 +93,7 @@ public class BodyPM implements AnimationsPM {
 		}
 	}
 
-	public float getFrame() {
-		/*if(myChar.getName() != "mario" || animation != S_RUN)
-			return imageIndex;
-		else*/
-		
+	public float getFrame() {	
 		float frameDis = MathExt.wrapDiff(imageIndex, 0,4,imageNumber),
 			maxDis = 4.6f,
 			index;
@@ -118,10 +122,11 @@ public class BodyPM implements AnimationsPM {
 		if(checkAnimation(S_RUN) || checkAnimation(S_RUN_UP)) {
 			
 			if(doStep)
-				if(imageIndex > 4 && imageIndex < 6 && !stepSound) {
-		        	Sound.play("Footstep");
+				if(imageIndex > 4 && imageIndex < 6 && !stepSound) {					
+		        	Sound.play("footstep");
 		            stepSound = true;
-		            //new Dust(x()+Math2D.calcLenX(5,direction+180),y()+Math2D.calcLenY(5,direction+180),z(), 0, true);
+		            
+		            new Dust(x+Math2D.calcLenX(5,direction+180),y+Math2D.calcLenY(5,direction+180),z+5, 0, true);
 		        }
 			
 			float frames = 4,
@@ -133,7 +138,7 @@ public class BodyPM implements AnimationsPM {
 		}
 		
 		if(autoFlip) {
-			float diff = FastMath.calcAngleSubt(GL.getCamera().getDirection(), direction);
+			float diff = (float) FastMath.calcAngleSubt(GL.getCamera().getDirection(), direction);
 			int flipSign = (int) Math.signum(diff);
 			
 			if(flipSign != 0)
@@ -148,6 +153,23 @@ public class BodyPM implements AnimationsPM {
 	public float getSpriteHeight() 	{return myChar.getSpriteHeight();}
 	public float getHeight() 		{return myChar.getHeight();}
 	
+	
+	public void drawShadow() {
+		GT.transformClear();
+		GT.transformTranslation(x, y, floorZ);
+		GT.transformPaper(flipDir);
+		
+		float maxDis = 128;
+		GT.transformScale((maxDis - (z-floorZ))/maxDis);
+
+		GL.forceColor(RGBA.BLACK);
+		float shH = getSpriteWidth()*.4f/2, shW = shH*1.5f;
+		GL.setAlpha(.8f);
+		GL.draw3DWall(-shW,.1f,shH,shW,.1f,-shH, TextureController.getTexture("texShadow"));
+		GL.unforceColor();
+		GL.setAlpha(1);
+	}
+	
 	public void draw() {
 				
 		if(isDestroyed)
@@ -158,13 +180,19 @@ public class BodyPM implements AnimationsPM {
 		dH = myChar.getSpriteHeight();
 		dX = -dW/2;
 		dY = dH;
-		
+
+		drawShadow();
+
+		GT.transformClear();
+		GT.transformTranslation(x, y, z-1);		
 		GT.transformPaper(flipDir);
 		
-		if(myWings != null)
+		if(myShoe != null)
+			GT.transformTranslation(0,myShoe.getExtraHeight(),0);
+		else if(myWings != null)
 			GT.transformTranslation(0,myWings.getExtraHeight(),0);
-		GT.transformTranslation(0,stepZ/32*dH,0);
-		
+		else
+			GT.transformTranslation(0,stepZ/32*dH,0);
 		
 		if(scaleDirection == SC_CENTER) {
 			GT.transformTranslation(0,dH/2,0);
@@ -175,7 +203,7 @@ public class BodyPM implements AnimationsPM {
 			GT.transformScale(xScale,yScale,1);
 		else if(scaleDirection == SC_UP)
 			GT.transformScale(xScale,yScale,1);
-		
+				
 		sprite.draw(dX,dY, dW, -dH, getFrame());
 		
 		if(mySpike != null)
@@ -184,6 +212,10 @@ public class BodyPM implements AnimationsPM {
 			myWings.draw();
 		if(myZap != null)
 			myZap.draw();
+		if(myShoe != null)
+			myShoe.draw(-flipDir);
+		
+		GT.transformClear();
 	}
 	
 	public float getExtraBaseHeight() {
@@ -197,9 +229,7 @@ public class BodyPM implements AnimationsPM {
 		return this.animation == animation;
 	}
 
-	public boolean hasSpike() {
-		return mySpike != null;
-	}
+	public boolean hasSpike() {return mySpike != null;}
 
 	public void destroy() {
 		isDestroyed = true;
@@ -247,10 +277,30 @@ public class BodyPM implements AnimationsPM {
 		if(myChar.getHasSpike())
 			mySpike = new SpikePM(myChar.getSpriteHeight(), myChar.getHeight());
 		myZap = new ZapPM(myChar.getSpriteHeight());
+		if(myChar.getHasShoe())
+			myShoe = new ShoePM(myChar.getSpriteHeight());
 	}
 
 	public void setSpeed(float xySpd, float zVel) {
 		this.xySpd = xySpd;
 		this.zVel = zVel;
+	}
+
+	public CharacterPM getCharacter() {
+		return myChar;
+	}
+
+	public String getCharacterName() {
+		return myChar.getName();
+	}
+
+	public void setPosition(float x, float y, float z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	
+	public void setFloorZ(float floorZ) {
+		this.floorZ = floorZ;
 	}
 }

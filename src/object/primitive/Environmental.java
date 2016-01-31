@@ -28,6 +28,13 @@ public abstract class Environmental extends Positionable {
 	}
 	
 
+	public Environmental(float x, float y, float z, boolean hoverable, boolean renderable) {
+		super(x,y,z,hoverable, renderable);		
+		name = "Environmental";
+		envList.add(this);
+	}
+
+
 	public void destroy() {
 		super.destroy();
 		envList.remove(this);

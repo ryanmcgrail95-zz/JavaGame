@@ -17,6 +17,8 @@ import functions.FastMath;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.RGBA;
+import script.PML;
+import script.Script;
 import time.Stopwatch;
 import brain.Idea;
 import brain.Name;
@@ -223,16 +225,23 @@ public class Test {
 			System.out.println(unconv(array,i));
 	}
 	
-	public static int conv(boolean value, int index) {
-		int v = value ? 1 : 0;
-		return (v) << index;
-	}
 	
-	public static int unconv(int value, int index) {
-		return (value >> index) & 1;
-	}
-	
-	public static void main(String[] args) {		
+	public static void main(String[] args) {	
+		StringExt str = new StringExt("hh_herehere");
+		System.out.println(str.replace("here", "herebutt"));
+		System.out.println(str);
+		if(true)
+			return;
+		
+		PML.ini();
+		
+		//Script.exec("##SCR() {$a = 5;#println(3 + 5^2, $a^2, 2^$a, $a, 1 + #min(#max(1 + 1,3), 3^2) + 2, 22, ($a = 4), $a + 1, $a += 1, -$a, $a); #return(#println(2));}");
+		Script.exec("##SCR() {$a = 5;#println(3 + 5^2, $a^2, 2^$a, $a, 1 + #min(#max(1 + 1,3), 3^2) + 2, 22, ($a = 4), $a + 1, $a += 1, -$a, $a); #return(2);}; #return(#SCR());");
+		//Script.exec("if(5 <= 25){#println(1);#println(2);#println(3);}else{#println(5);#println(6);}#println(9);");
+				
+		if(true)
+			return;
+		
 		float[] pt = {100,0,10}, 
 				dir = {0,0,-1};
 		float[] pt1 = {-10,-5,0},

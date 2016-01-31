@@ -1,14 +1,18 @@
 package gfx;
 
 
+import java.lang.management.ManagementFactory;
+
 import btl.BattleActor;
 import btl.BattleController;
 import object.actor.Player;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import paper.ActorPM;
 import paper.CharacterPM;
 import paper.PlayerPM;
 import phone.SmartPhone;
+import resource.Loadbar;
 import resource.model.Model;
 import resource.sound.Sound;
 import sts.Stat;
@@ -23,6 +27,7 @@ import datatypes.mat;
 import datatypes.vec;
 import datatypes.lists.CleanList;
 import io.Controller;
+import io.Keyboard;
 
 public class Overlay {
 	private static int timer = 0, secs = 0;
@@ -41,12 +46,7 @@ public class Overlay {
 			else { // if(!SmartPhone.isActive()){
 				//Controller.draw();
 				Messages.draw();
-				
-				/*if(Player.getInstance() != null) {
-					Player.getInstance().getInventory().draw();
-					Player.getInstance().getStat().draw();
-				}*/
-				
+								
 				BattleController inst = BattleController.getInstance();
 				if(inst != null) {
 					for(BattleActor b : inst.getEnemyActors()) {
@@ -71,7 +71,6 @@ public class Overlay {
 				}
 				//Stat.drawOverheads();
 				
-			
 				//GL.drawFBO(0,0, FireSprite.getFBO());
 				
 				timer++;
@@ -81,35 +80,40 @@ public class Overlay {
 				}
 
 				
-				float dX,dY;
-				dX = 0;
-				dY = 0;
-				drawStrings(dX,dY,
-					"FPS: " + (int) Delta.getFPS(),
-					"Drawable: " + Drawable.getNumber(),
-					"Updatable: " + Updatable.getNumber(),
-					"Timers: " + Timer.getNumber(),
-					"Textures: " + TextureController.getNumber(),
-					"TextureExts: " + TextureController.getNumberExt(),
-					"Models: " + Model.getNumber(),
-					"Cleanlists: " + CleanList.getNumber(),
-					"CleanList Loops: " + CleanList.getLoops(),
-					"CleanList Size: " + CleanList.totalSize(),
-					"Sounds: " + Sound.getBufferNumber(),
-					"Sounds (Playing): " + Sound.getSourceNumber(),
-					"Vectors: " + vec.getNumber(),
-					"Matrices: " + mat.getNumber(),
-					"FBOs: " + FBO.getNumber(),
-					//"RGBAs: " + RGBA.getNumber(),
-					"Characters: " + CharacterPM.getNumber()
-				);
-				
-				drawStrings(0, 320,
-					PlayerPM.getInstance().getPos().toString()
-				);
-				
-				drawUpdatables(300,0);
-				drawCleanLists(500,0);
+				if(Keyboard.checkDown('o')) {
+					float dX,dY;
+					dX = 0;
+					dY = 0;
+					drawStrings(dX,dY,
+						"FPS: " + (int) Delta.getFPS(),
+						"Drawable: " + Drawable.getNumber(),
+						"Updatable: " + Updatable.getNumber(),
+						"Timers: " + Timer.getNumber(),
+						"Textures: " + TextureController.getNumber(),
+						"TextureExts: " + TextureController.getNumberExt(),
+						"Models: " + Model.getNumber(),
+						"Cleanlists: " + CleanList.getNumber(),
+						"CleanList Loops: " + CleanList.getLoops(),
+						"CleanList Size: " + CleanList.totalSize(),
+						"Sounds: " + Sound.getBufferNumber(),
+						"Sounds (Playing): " + Sound.getSourceNumber(),
+						"Vectors: " + vec.getNumber(),
+						"Matrices: " + mat.getNumber(),
+						"FBOs: " + FBO.getNumber(),
+						//"RGBAs: " + RGBA.getNumber(),
+						"Characters: " + CharacterPM.getNumber()
+					);
+					
+					ActorPM pl = PlayerPM.getInstance();
+					
+					drawStrings(0, 320,
+						""+ pl.x() + ", " + pl.y() + ", " + pl.z(),
+						""+ pl.vX() + ", " + pl.vY() + ", " + pl.vZ()
+					);
+					
+					drawUpdatables(300,0);
+					drawCleanLists(500,0);
+				}
 			}
 		
 		TransitionController.draw();
@@ -123,13 +127,15 @@ public class Overlay {
 	}
 	
 	public static void drawUpdatables(float x, float y) {
-		for(Updatable u : Updatable.getList()) {
-			G2D.drawString(x,y, u.getClass().getName());
+		CleanList<Updatable> list = Updatable.getList();
+		for(Updatable u : list) {
+			G2D.drawString(x,y, u.getName());
 			y += 15;
 		}
 	}
 	public static void drawCleanLists(float x, float y) {
-		for(CleanList c : CleanList.getLists()) {
+		CleanList<CleanList> list = CleanList.getLists();
+		for(CleanList c : list) {
 			G2D.drawString(x,y, c.getName() + ": " + c.size());
 			y += 15;
 		}

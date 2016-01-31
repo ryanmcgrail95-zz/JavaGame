@@ -11,7 +11,8 @@ public class G3D extends GL {
 	
 	// Sphere-Drawing Functions
 		public static void draw3DSphere(float x, float y, float z, float r, int numPts) {draw3DSphere(x,y,z,r,null,numPts);}
-		public static void draw3DSphere(float x, float y, float z, float r, Texture tex, int numPts) {				
+		public static void draw3DSphere(float x, float y, float z, float r, Texture tex, int numPts) {draw3DSphere(x,y,z,r,r,tex,numPts);}
+		public static void draw3DSphere(float x, float y, float z, float hr, float vr, Texture tex, int numPts) {
 			if(numPts < 3)
 				return;
 			
@@ -34,7 +35,7 @@ public class G3D extends GL {
 						zN = Math3D.calcPolarZ(dir,zDir);
 						
 						gl.glTexCoord2d(i/(numPts-1), (d+ii)/(numPts-1));
-							gl.glVertex3f(x+xN*r,y+yN*r,z+zN*r);
+							gl.glVertex3f(x+xN*hr,y+yN*hr,z+zN*vr);
 					}
 				}
 				

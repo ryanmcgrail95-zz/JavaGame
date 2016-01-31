@@ -16,9 +16,12 @@ import object.primitive.Updatable;
 import paper.ActorPM;
 import paper.CharacterPM;
 import paper.PlayerPM;
+import resource.Loadbar;
 import resource.Resource;
 import resource.model.Model;
+import script.Script;
 import datatypes.StringExt;
+import datatypes.lists.CleanList;
 import de.jarnbjo.oggtools.Player;
 import fl.FileExt;
 import btl.BattleController;
@@ -36,6 +39,9 @@ public class Room {
 		return isLoading;
 	}
 	
+	public static void resetRoom() {
+		changeRoom(curRoom);
+	}
 	public static void revertRoom() {
 		changeRoom(prevRoom);
 	}
@@ -43,40 +49,62 @@ public class Room {
 		isLoading = true;
 		prevRoom = curRoom;
 		curRoom = newRoomName;
-		
+				
 				
 		List<Resource> newResourceList = new ArrayList<Resource>(),
 			unloadResourceList = new ArrayList<Resource>(),
 			loadResourceList = new ArrayList<Resource>();
 		
+		
+		
+		Updatable.transition();
+		
 		// Get New Resource List
 		getResourceList(newRoomName, newResourceList);
 		
+		boolean isInside;
 		
 		// Determine Unload List
-		for(Resource r : resourceList)
-			if(!newResourceList.contains(r))
+		for(Resource r : resourceList) {
+			isInside = false;
+			for(Resource rr : newResourceList)
+				if(r == rr || r.getFileName().equals(rr.getFileName())) {
+					isInside = true;
+					break;
+				}
+			if(!isInside)
 				unloadResourceList.add(r);
-		
-		// Determine Load List
-		for(Resource r : newResourceList)
-			if(!resourceList.contains(r))
-				loadResourceList.add(r);
-		
-		// Unload All Unnecessary Resources
-		/*System.out.println("Unloading");
-		for(Resource r : unloadResourceList) {
-			System.out.println("\t" + r.getName());
-			r.unload();
-		}*/
-		
-		// Load New Resources
-		System.out.println("Loading");
-		for(Resource r : loadResourceList) {
-			System.out.println("\t" + r.getName());
-			r.load();
 		}
 		
+		// Determine Load List
+		for(Resource r : newResourceList) {
+			isInside = false;
+			for(Resource rr : resourceList)
+				if(r == rr || r.getFileName().equals(rr.getFileName())) {
+					isInside = true;
+					break;
+				}
+			if(!isInside)
+				loadResourceList.add(r);
+		}
+
+		
+		
+		// Unload All Unnecessary Resources
+		Loadbar bar = new Loadbar(unloadResourceList.size() + loadResourceList.size());
+		for(Resource r : unloadResourceList) {
+			r.unload();
+			bar.step();
+		}
+		
+		
+		// Load New Resources
+		for(Resource r : loadResourceList) {
+			r.load();
+			bar.step();
+		}
+		
+		bar.destroy();
 		
 		// Clean Up Lists
 		resourceList.clear();
@@ -85,10 +113,12 @@ public class Room {
 		resourceList = newResourceList;
 		
 		// Delete all Objects in Room
-		Updatable.transition();
+		//Updatable.transition();
+		
 		
 		// Set New Room
-		instantiateRoom(newRoomName);
+		instantiateRoom(newRoomName);		
+		
 		isLoading = false;
 	}
 	
@@ -97,7 +127,9 @@ public class Room {
 	public static void getResourceList(String roomName, List<Resource> resources) {
 		String path = BASE_DIRECTORY + roomName + "/resources.dat";
 		
+		System.out.println("what0");
 		StringExt fileStr = new StringExt(FileExt.readFile2String(path));
+		
 		StringExt curLine = new StringExt();
 		
 		String[] words;
@@ -110,12 +142,12 @@ public class Room {
 		float rX, rY, rZ;
 
 		while(!fileStr.isEmpty()) {
-			curLine.set(fileStr.chompLine());
+			curLine.set(fileStr.munchLine());
 			
 			if(curLine.startsWith("//") || curLine.isWhiteSpace() || curLine.isEmpty())		
 				continue;
 			
-			curLine.chompWhiteSpace();
+			curLine.munchSpace();
 			words = curLine.split(' ');
 			wordNum = words.length;
 			
@@ -123,14 +155,14 @@ public class Room {
 				case "Model:":
 					curModels.clear();
 					for(int i = 1; i < wordNum; i++) {
-						curModel = new Model(words[i]);
+						curModel = Model.get(words[i]);
 						resources.add(curModel);
 						curModels.add(curModel);
 					}
 					break;
 				case "Character:":
 					for(int i = 1; i < wordNum; i++)
-						resources.add(new CharacterPM(words[i]));
+						resources.add(CharacterPM.getCharacter(words[i]));
 					break;
 					
 					
@@ -163,7 +195,10 @@ public class Room {
 	public static void instantiateRoom(String roomName) {
 		String path = BASE_DIRECTORY + roomName + "/layout.dat";
 		
-		StringExt fileStr = new StringExt(FileExt.readFile2String(path));
+		Script.exec(FileExt.readFile2String(path));
+		
+		/*if(true)
+			return;
 		StringExt curLine = new StringExt();
 				
 		String[] words;
@@ -254,7 +289,7 @@ public class Room {
 					
 				default:
 			}
-		}
+		}*/
 	}
 
 	private static float parseValue(String str, Map<String, Double> varMap) {

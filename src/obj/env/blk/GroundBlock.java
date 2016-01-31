@@ -2,24 +2,27 @@ package obj.env.blk;
 
 import functions.Math2D;
 import gfx.CubeMap;
-import gfx.GOGL;
-import gfx.Shape;
+import gfx.GL;
+import gfx.GT;
 
-import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+import com.jogamp.opengl.util.texture.Texture;
+
+import cont.TextureController;
 import object.primitive.Drawable;
 import object.primitive.Environmental;
 import object.primitive.Physical;
-import resource.sound.SoundController;
+import resource.sound.Sound;
 
 public class GroundBlock extends Environmental {	
 	private static List<GroundBlock> groundBlockList = new ArrayList<GroundBlock>();
 	private List<Blocklet> blockletList = new ArrayList<Blocklet>();
+	private CubeMap myCubeMap = CubeMap.getMap("cmGroundBlock1");
+	private final static Texture shadow = TextureController.getTexture("texBlockShadow");
 	
-	
-	private float x, y, z;
 	int sNum = 3;
 	
 	//Hammer
@@ -29,21 +32,17 @@ public class GroundBlock extends Environmental {
 	private boolean wasDestroyed = false;
 	private float destroyTimer = -1;
 	
-	private float size = 16;
+	private float size = 16, shSize = size*1.3f;
 	
 	
 	
 	public GroundBlock(float x, float y, float z) {
-		super();
+		super(x,y,z,false,false);
 		
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		
-		shape = Shape.createBlock("GBlock", -size,-size,size,size,size,-size, CubeMap.getMap("cmGroundBlock1"));
+		/*shape = Shape.createBlock("GBlock", -size,-size,size,size,size,-size, CubeMap.getMap("cmGroundBlock1"));
 		shape.addBlockShadow(0, 0, size, size);
 		
-		shape.setPosition(x, y, z+size);
+		shape.setPosition(x, y, z+size);*/
 		//shape.setShadowPosition(z+.3f);
 
 		
@@ -52,7 +51,6 @@ public class GroundBlock extends Environmental {
 	
 	private class Blocklet {
 		private float bX, bY, bZ, bSize, vel, dir, zVel;
-		private Shape shape;
 		private float bounceNum = 0;
 		private float alpha = 1;
 		
@@ -70,22 +68,25 @@ public class GroundBlock extends Environmental {
 			this.rotVel = 5;
 			this.bSize = size;
 			
-			shape = Shape.createBlock("Blocklet", -size,-size,size,size,size, -size, CubeMap.getMap("cmGroundBlocklet1"));
+			/*shape = Shape.createBlock("Blocklet", -size,-size,size,size,size, -size, CubeMap.getMap("cmGroundBlocklet1"));
 			shape.addBlockShadow(0, 0, 0, size);
-			shape.setShadowPosition(z+.3f);
+			shape.setShadowPosition(z+.3f);*/
 
 			blockletList.add(this);
 		}
-		
-		public void destroy() {			
-			shape.destroy();
+				
+		public void draw() {
+			GT.transformTranslation(bX, bY, bZ+bSize);
+				GT.transformRotation(rot, 0, dir);
+				GL.setAlpha(alpha);
+				GL.draw3DBlock(-bSize,-bSize,bSize,bSize,bSize,-bSize,myCubeMap.getLeft().getTexture());
+			GT.transformClear();
 		}
 		
-		public void update(float deltaT) {
+		public void update() {
 			bX += Math2D.calcLenX(vel, dir);
 			bY += Math2D.calcLenY(vel, dir);
-			
-			
+				
 			int MAX_T = 200, ALPH_T = 150;
 			
 			if(destroyTimer < MAX_T-ALPH_T)
@@ -93,19 +94,19 @@ public class GroundBlock extends Environmental {
 			else
 				alpha = (MAX_T-destroyTimer)/ALPH_T;
 			
-			if(bZ < z) {
+			if(bZ < z()) {
 				//.6
 				
 				float fr = .8f;
 				
 				zVel = (float) (fr*Math.sqrt(Math.abs(zVel)));
 				vel *= fr;
-				bZ = z;
+				bZ = z();
 				
 				bounceNum++;
 			}
-			if(bZ <= z && bounceNum >= 3) {//Math.abs(zVel) < .1) {
-				bZ = z;
+			if(bZ <= z() && bounceNum >= 3) {//Math.abs(zVel) < .1) {
+				bZ = z();
 				zVel = 0;
 				vel = 0;
 			}
@@ -114,12 +115,10 @@ public class GroundBlock extends Environmental {
 				bZ += zVel;
 				zVel -= Physical.getGravity()/2;
 			}
-			
-			shape.setPosition(bX, bY, bZ+bSize);
-			shape.setRotation(rot, 0, dir);
-			shape.setShadowPosition(z-size + .3f);
-			shape.setShadowPosition(0);
-			shape.setAlpha(alpha);
+		}
+
+		public int calcDepth() {
+			return (int) (100 * GL.getMainCamera().calcParaDistance(bX,bY));
 		}
 		
 		//if(destroyTimer > 149)
@@ -127,65 +126,33 @@ public class GroundBlock extends Environmental {
 	}
 	
 
+	public static void hammerAll(Physical other) {
+		for(GroundBlock g : groundBlockList)
+			if(g.collide(other))
+				g.activate();
+	}
 	
 	public boolean collide(Physical other) {
 		
 		if(wasDestroyed)
 			return false;
 		
-		//if(global.currentAction != "" || other.destroy || (z+24 < other.z || z > other.z+24))
+		//if(global.currentAction != "" || (z+24 < other.z || z > other.z+24))
 		//    exit;
 		
-		boolean didCollide = false, colTop, colBot, colLeft, colRight;
-		float oX, oY;
-		oX = other.getX();	oY = other.getY();
 
-		colTop = other.collideLine(x-13,y-16,x+13,y-16);
-		colBot = other.collideLine(x-13,y+16,x+13,y+16);
-		colLeft = other.collideLine(x-16,y-13,x-16,y+13);
-		colRight = other.collideLine(x+16,y-13,x+16,y+13);
+		return other.collideRectangle(x(),y(),size,size);
 		
-		didCollide = colTop || colBot || colLeft || colRight;
-		
-		
-		float s = 20;
-		
-		/*if(colTop) {
-			other.setY(y - s);
-			didCollide = true;
-		}
-		if(colLeft) {
-			other.setX(x - s);
-			didCollide = true;
-		}
-		if(colRight) {
-			other.setX(x + s);
-			didCollide = true;
-		}
-		if(colBot) {
-			other.setY(y + s);
-			didCollide = true;
-		}*/
-		
-		oX = other.getX();	oY = other.getY();
-		
-		//s = 23;
-		s -= 2;
-		if(oX > x-s && oX < x+s && oY < y+s && oY > y-s) {
-			didCollide = true;
-		    other.setX(oX + Math2D.calcLenX(3, Math2D.calcPtDir(x,y,oX,oY)));
-		    other.setY(oY + Math2D.calcLenY(3, Math2D.calcPtDir(x,y,oX,oY)));
-		}
-		
-		
-		if(didCollide) {
+		/*if(didCollide) {
 			if(wasDestroyed)
 				return false;
 			else
 				wasDestroyed = true;
-		}
-		
-		return didCollide;
+		}*/
+	}
+	
+	public void activate() {
+		wasDestroyed = true;
 	}
 	
 	
@@ -193,35 +160,31 @@ public class GroundBlock extends Environmental {
 		public void destroy() {
 			super.destroy();
 			
-			for(Blocklet b : blockletList)
-				b.destroy();
 			blockletList.clear();
 			
 			groundBlockList.remove(this);
 		}
 	
-		public void update(float deltaT) {			
+		public void update() {			
 			if(wasDestroyed) {
 				if(destroyTimer == -1) {	
-					SoundController.playSound("BlockCrumble");
-					shape.destroy();
+					Sound.play("blockCrumble");
 					
 					float bX, bY, bZ, s = (32/sNum)/2;
 					
 					for(int varZ = 0; varZ < sNum; varZ++)
 						for(int varY = 0; varY < sNum; varY++)
 							for(int varX = 0; varX < sNum; varX++) {
-								bX = x-16 + varX*32/sNum;
-								bY = y-16 + varY*32/sNum;
-								bZ = z + varZ*32/sNum;
+								bX = x()-16 + varX*32/sNum;
+								bY = y()-16 + varY*32/sNum;
+								bZ = z() + varZ*32/sNum;
 								
 								new Blocklet(bX+s,bY+s,bZ+s, s, (float) (Math.random()*360));
 							}
 				}
 					
 				for(Blocklet b : blockletList)
-					b.update(deltaT);
-				
+					b.update();
 				
 				destroyTimer += 2.5;
 				if(destroyTimer >= 200)
@@ -230,21 +193,33 @@ public class GroundBlock extends Environmental {
 			
 		}
 	
-		public boolean draw() {
-			super.draw();
-			
-			return true;
-		}
+		@Override
+		public void add() {}
 
-		public static boolean collideAll(Physical other) {
-			for(GroundBlock gb : groundBlockList)
-				if(gb.collide(other))
-					return true;
-			
-			return false;
+		@Override
+		public void draw() {
+			if(!wasDestroyed) {
+				transformTranslation();
+				GL.draw3DFloor(-shSize,-shSize,shSize,shSize,.1f, shadow);
+				GL.draw3DBlock(-size,-size,2*size,size,size,0, myCubeMap);
+				GT.transformClear();
+			}
+			else if(!blockletList.isEmpty()) {
+				sortBlocklets();
+				for(Blocklet b : blockletList)
+					b.draw();
+			}
 		}
 		
-		private float calcCamDis() {
-			return GOGL.calcPerpDistance(x,y) - size;
+		public void sortBlocklets() {
+			blockletList.sort(Comparators.DEPTH);
+		}
+		
+		public static class Comparators {
+			public final static Comparator<Blocklet> DEPTH = new Comparator<Blocklet>() {
+	            public int compare(Blocklet o1, Blocklet o2) {
+	                return (int) -(o1.calcDepth() - o2.calcDepth());
+	            }
+	        };
 		}
 }

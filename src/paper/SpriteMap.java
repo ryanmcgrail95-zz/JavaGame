@@ -12,7 +12,7 @@ import datatypes.StringExt;
 
 public final class SpriteMap implements AnimationsPM {
 	private final static String DIRECTORY = "Resources/Images/Characters/";
-	private static Map<String, SpriteMap> map = new HashMap<String, SpriteMap>();
+	private final static Map<String, SpriteMap> map = new HashMap<String, SpriteMap>();
 
 	private Map<Integer, TextureExt> texMap = new HashMap<Integer, TextureExt>();
 	private String name;
@@ -142,7 +142,9 @@ public final class SpriteMap implements AnimationsPM {
 			Set<Entry<Integer, TextureExt>> s = texMap.entrySet();
 			for(Entry<Integer, TextureExt> e : s)
 				e.getValue().destroy();
-			
 			texMap.clear();
+			
+			s.clear();
+			texMap = null;
 		}	
 }

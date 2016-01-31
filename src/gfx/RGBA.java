@@ -6,10 +6,11 @@ import java.util.Comparator;
 
 import datatypes.vec4;
 import obj.itm.Item;
+import functions.ArrayMath;
 import functions.Math2D;
 import functions.MathExt;
 
-public class RGBA{
+public class RGBA extends ArrayMath {
 	
 	public static final RGBA
 		RED = createf(1,0,0,1),
@@ -64,8 +65,8 @@ public class RGBA{
 		public float Bf() 		{return Bi()/255f;}
 		public float Af() 		{return Ai()/255f;}
 		
-		public float[] RGBAf()	{return new float[] {Rf(),Gf(),Bf(),Af()};}
-		public float[] RGBf() 	{return new float[] {Rf(),Gf(),Bf()};}
+		public float[] RGBAf()	{return setTemp4(Rf(),Gf(),Bf(),Af());}
+		public float[] RGBf() 	{return setTemp3(Rf(),Gf(),Bf());}
 
 	// Setting Colors
 		public void Ri(int r) 	{seti(r,Gi(),Bi(),Ai());}

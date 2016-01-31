@@ -5,6 +5,8 @@ import java.util.List;
 
 import collision.C3D;
 import datatypes.vec2;
+import datatypes.lists.CleanList;
+import dialog.Dialog;
 import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
@@ -13,8 +15,10 @@ import gfx.Camera;
 import gfx.GL;
 import gfx.GT;
 import gfx.RGBA;
+import obj.env.blk.GroundBlock;
 import object.primitive.Physical;
 import object.primitive.Positionable;
+import object.primitive.Updatable;
 import resource.model.Model;
 import resource.model.ModelCreator;
 import resource.sound.Sound;
@@ -27,12 +31,15 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		ST_NULL = 0, 
 		ST_ONGROUND = 1,
 		ST_INAIR = 2,
-		ST_TALKING = 3;
+		ST_TALKING = 3,
+		ST_SWITCH_OUT = 4, ST_SWITCH_IN = 5;
 	
 	private Model mod;
 	protected ActorPM followActor;
-
-	private float size = 16;
+	
+	// SWITCHING
+	private float swX, swY, swZ, swPerc = 0;
+	private String swChar;
 	
 	private static float 	SP_WALK = 1,
 							SP_RUN = 3;
@@ -55,14 +62,57 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		}
 	}
 	
+	public void switchCharacter(String newChar) {
+		this.swChar = newChar;
+		this.swX = x();
+		this.swY = y();
+		this.swZ = z();
+		
+		state = ST_SWITCH_OUT;
+	}
+	
+	public void updateState() {
+		switch(state) {
+			case ST_SWITCH_OUT:
+				swPerc += .15;
+				if(swPerc >= 1) {
+					swPerc = 1;
+					state = ST_SWITCH_IN;
+					setCharacter(swChar);
+				}
+				break;
+				
+			case ST_SWITCH_IN:
+				swPerc -= .15;
+				if(swPerc <= 0) {
+					swPerc = 0;
+					state = ST_ONGROUND;
+				}
+				break;
+		}
+		
+		PlayerPM p = PlayerPM.getInstance();
+		float v = swPerc, vF = 1 - v,
+			toX = p.x(),
+			toY = p.y(),
+			toZ = p.z();
+		myBody.setPosition(
+			x()*vF + v*toX,
+			y()*vF + v*toY,
+			z()*vF + v*toZ + Math2D.calcLenY(16, v*180));
+		myBody.setScale(vF);
+	}
 	
 		
 	public ActorPM(String name, float x, float y, float z) {
 		super(x, y, z);
+		
+		size = 16;
 
 		myBody = new BodyPM(name);
 			myBody.setAutoIndex(false);
-		setAnimationStill();
+			myBody.enableSteps();
+		//setAnimationStill();
 		
 		maxSpeed = SP_RUN;
 		
@@ -78,21 +128,32 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	public void update() {
 		super.update();
 		
-		if(followActor == null)
-			control();
-		else
-			follow();
+		if(canControl()) {
+			if(followActor == null)
+				control();
+			else
+				follow();
+		}
 		addInstant();
 		
 		modelUpdate();
-				
-		//Model.get("Pleasant_Path_3"
-		collideSplit();
+		updateState();
 		
-		mod.translate(-getXPrevious(),-getYPrevious(),-getZPrevious());
-		//mod.rotateZ(-getDirectionPrevious());
-		//mod.rotateZ(getDirection());
-		mod.translate(getX(), getY(), getZ());
+		collideSplit();		
+	}
+	
+	public void destroy() {
+		super.destroy();
+
+		myBody.destroy();
+		mod.destroy();
+		
+		instantList.clear();
+		
+		myBody = null;
+		mod = null;
+		instantList = null;
+		followActor = null;
 	}
 
 	
@@ -120,14 +181,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	@Override
 	public void draw() {
 		GL.setPerspective();
-		GT.transformClear();
-			transformTranslation();
-			
-			GL.setColor(RGBA.WHITE);
-			myBody.draw();
-		GT.transformClear();
-		
-		//mod.draw();
+		myBody.draw();
 	}
 
 	@Override
@@ -158,10 +212,16 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		move(isRunning ? SP_RUN : SP_WALK, moveDir, useCamera);
 	}
 
-	protected boolean move(boolean isRunning, ActorPM other) {
-		return move(isRunning, other.getX(), other.getY());
+	protected boolean move(boolean isRunning, ActorPM p) {
+		return move(isRunning, p, 0);
 	}
-
+	protected boolean move(boolean isRunning, ActorPM p, float radius) {
+		return move(isRunning, p, radius, true);
+	}
+	protected boolean move(boolean isRunning, ActorPM p, float radius, boolean stayOut) {
+		return move(isRunning, p.getX(), p.getY(), radius, stayOut);
+	}
+	
 	protected boolean move(boolean isRunning, float x, float y) {return move(isRunning, x, y, 0);}	
 	protected boolean move(boolean isRunning, float x, float y, float radius) {return move(isRunning, x, y, radius, true);}
 	protected boolean move(boolean isRunning, float x, float y, float radius, boolean stayOut) {
@@ -299,12 +359,69 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 			buffer = height/2, safety = height/4,
 			floorDis = C3D.raycastSplit(getX(),getY(),getZ()+buffer,0,0,-1, size/2);
 				
-		if(floorDis != -1 && floorDis < buffer) {
-			floorDis -= buffer;
-			didCollideFloor(z()-floorDis);
+		if(floorDis != -1) {
+			float newFloorZ = z()+buffer-floorDis;
+			
+			if(floorDis < buffer) {
+				floorDis -= buffer;
+				didCollideFloor(newFloorZ);
+			}
+
+			myBody.setFloorZ(newFloorZ);
 		}
 		
 		//COLLIDE WALL
+		if(C3D.intersectPolygonsSplit(myMod, x(),y(),z())) {
+			float dir, numDirs = 8, curDis, minDis, w = size/2;
+			float maxH = myBody.getHeight(), h, minH = 0, numHs = 3;
+			float xN,yN, oXN,oYN, dire = getDirection();
+			float[] triangleNormal = null;
+			for(float d = 0; d < 360; d += 360/numDirs) {
+				dir = dire + d;
+				
+				xN = Math2D.calcLenX(dir);
+				yN = Math2D.calcLenY(dir);
+				
+				minDis = w;
+				for(h = maxH; h > 2; h -= maxH/numHs) {
+					curDis = C3D.raycastSplit(x(),y(),z()+h, xN,yN,0, w);
+					if(curDis != -1)
+						if(curDis < minDis) {
+							minDis = curDis;
+							minH = h;
+							triangleNormal = C3D.getTriangleNormal();
+						}
+				}
+							
+				if(minDis < w) {
+					oXN = triangleNormal[0];
+					oYN = triangleNormal[1];
+					
+					if(Math.abs(FastMath.calcAngleDiff(Math2D.calcPtDir(0,0,oXN,oYN), dir)) < 90) {
+						oXN *= -1;
+						oYN *= -1;
+					}
+
+					float mD = C3D.raycastSplit(x(),y(),z()+minH, -oXN,-oYN,0, w);
+					
+					if(mD < w) {
+						float outDis = w-mD;
+						oXN = triangleNormal[0];
+						oYN = triangleNormal[1];
+						
+						x(x() + oXN*outDis);
+						y(y() + oYN*outDis);
+						
+						walkingAlongWall(oXN,oYN);
+						
+						if(!C3D.intersectPolygonsSplit(myMod,x(),y(),z()))
+							break; 
+					}
+				}
+			}
+		}
+		
+		/*
 		if(C3D.intersectPolygonsSplit(myMod)) {
 			float dir, numDirs = 8, curDis, minDis, w = size/2;
 			float maxH = myBody.getHeight(), h, numHs = 3;
@@ -349,6 +466,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 				}
 			}
 		}
+		 */
 		
 		
 		return false;
@@ -394,9 +512,12 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		myBody.addIndex( Delta.convert(addAmt) );
 		
 		myBody.setSpeed(getXYSpeed(),getZVelocity());
-		
-		myBody.animateModel();
+
+		myBody.setPosition(getX(), getY(), getZ());
 		myBody.setDirection(getDirection());
+
+		myBody.animateModel();
+		
 		
 		/*if(checkSpriteRun()) {
 	        if(imageIndex > 4 && imageIndex < 6 && !stepSound) {
@@ -419,6 +540,10 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		isMoving = false;
 	}
 	
+	public boolean canControl() {
+		return !Dialog.isActive() || state == ST_SWITCH_IN || state == ST_SWITCH_OUT;	// No Menus Open
+	}
+	
 	protected abstract void control();
 	private void follow() {
 		Instant i = followActor.getInstant();
@@ -428,6 +553,26 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		
 		if(calcDis3D(followActor) > 120)
 			setPos(followActor);
+	}
+	
+	protected final void hammer() {
+		CleanList<Updatable> list = Updatable.getList();
+		
+		float dis = size, dir, tempSize, tempX, tempY;
+		dir = getDirection();
+		tempSize = size;
+		tempX = x();
+		tempY = y();
+		
+		size = 8;
+		addX(Math2D.calcLenX(dis, dir));
+		addY(Math2D.calcLenY(dis, dir));
+		
+		GroundBlock.hammerAll(this);
+		
+		size = tempSize;
+		x(tempX);
+		y(tempY);
 	}
 
 	private void addInstant() {
@@ -441,4 +586,12 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	}
 
 	public void setCharacter(String name) {myBody.setCharacter(name);}
+
+	public String getCharacterName() {
+		return myBody.getCharacterName();
+	}
+
+	public SpriteMap getSpriteMap() {
+		return myBody.getCharacter().getSpriteMap();
+	}
 }

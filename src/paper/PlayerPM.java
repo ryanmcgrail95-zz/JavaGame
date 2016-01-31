@@ -1,8 +1,5 @@
 package paper;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import collision.C3D;
 import io.Controller;
 import io.IO;
@@ -15,12 +12,17 @@ import gfx.RGBA;
 public class PlayerPM extends ActorPM {
 	private static PlayerPM instance;
 	
-	private PlayerPM(float x, float y, float z) {
-		super("mario",x,y,z);
+	private PlayerPM(String type, float x, float y, float z) {
+		super(type,x,y,z);
 		instance = this;
 		PartnerPM.create("luigi", x, y, z);
 		
-		C3D.splitModel(Model.get("Pleasant_Path_3").getTriangles(), 10,10,48);
+		setSurviveTransition(true);
+	}
+	
+	public void destroy() {
+		super.destroy();
+		instance = null;
 	}
 		
 	@Override
@@ -35,23 +37,7 @@ public class PlayerPM extends ActorPM {
 		controlMove();
 		controlJump();		
 	}
-	
-	public void draw() {
-		super.draw();
 		
-		GL.setPerspective();
-		GL.setColor(RGBA.WHITE);
-		GT.transformClear();
-			GL.enableShader("Model");
-			
-			if(Keyboard.checkDown('t'))
-				Model.get("Pleasant_Path_3").draw();
-			else
-				Model.get("Pleasant_Path_3").drawFast();
-			GL.disableShaders();
-		GT.transformClear();
-	}
-	
 	private void controlMove() {
 		float moveDir = Controller.getDPadDir();
 		move(!Keyboard.checkDown('q'), moveDir, true);
@@ -60,6 +46,9 @@ public class PlayerPM extends ActorPM {
 			z(100);
 			setZVelocity(0);
 		}
+		
+		if(Keyboard.checkPressed('f'))
+			hammer();
 	}
 	private void controlJump() {
 		if(IO.getAButtonPressed())
@@ -71,12 +60,13 @@ public class PlayerPM extends ActorPM {
 	}
 
 	public static PlayerPM create() {
-		if(instance == null)	
-			new PlayerPM(0,0,0);
+		if(instance == null)
+			new PlayerPM("mario", 0,0,0);
 		return instance;
 	}
 	public static PlayerPM create(float x, float y, float z) {
 		create().setPos(x,y,z);
+		PartnerPM.create(x, y, z);
 		return instance;
 	}
 	public static PlayerPM getInstance() {

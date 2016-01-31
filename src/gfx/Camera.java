@@ -158,7 +158,7 @@ public class Camera extends Updatable {
 		return Math.abs(Math2D.calcProjDis(x-getX(), y-getY(), Math2D.calcLenX(1,camDir+90),Math2D.calcLenY(1,camDir+90)));
 	}
 	public float calcParaDistance(float x, float y) {
-		return Math2D.calcProjDis(x-getX(), y-getY(), FastMath.cosd(camDir),FastMath.sind(camDir));
+		return Math2D.calcProjDis(x-getX(), y-getY(), Math2D.calcLenX(camDir),Math2D.calcLenY(camDir));
 	}
 
 
@@ -231,7 +231,7 @@ public class Camera extends Updatable {
 		
 		prevPos2 = (vec3) this.pos.copy().sube(prevPos);
 		Background.addPerpendicularMotion(
-				Math2D.calcProjDis(prevPos2.x(),prevPos2.y(), FastMath.cosd(camDir+90),FastMath.sind(camDir+90)));
+				Math2D.calcProjDis(prevPos2.x(),prevPos2.y(), Math2D.calcLenX(camDir+90),Math2D.calcLenY(camDir+90)));
 		
 		if(pos != this.pos)
 			pos.destroy();

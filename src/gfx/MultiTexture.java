@@ -2,14 +2,25 @@ package gfx;
 
 import com.jogamp.opengl.util.texture.Texture;
 
+import functions.ArrayMath;
+
 public class MultiTexture extends Sprite {
 	private Texture tex;
 	private int xNum, yNum;
 	private float xSize, ySize;
 
-	public MultiTexture(String fileName, int xNum, int yNum, boolean grayscale) 	{set(GL.loadTexture(fileName,grayscale), xNum, yNum);}
-	public MultiTexture(String fileName, int xNum, int yNum) 	{set(GL.loadTexture(fileName), xNum, yNum);}
-	public MultiTexture(Texture tex, int xNum, int yNum) 		{set(tex, xNum,yNum);}
+	public MultiTexture(String fileName, int xNum, int yNum, boolean grayscale) 	{
+		super(fileName);
+		set(GL.loadTexture(fileName,grayscale), xNum, yNum);
+	}
+	public MultiTexture(String fileName, int xNum, int yNum) 	{
+		super(fileName);
+		set(GL.loadTexture(fileName), xNum, yNum);
+	}
+	public MultiTexture(Texture tex, int xNum, int yNum) 		{
+		super("---");
+		set(tex, xNum,yNum);
+	}
 	
 	private void set(Texture tex, int xNum, int yNum) {		
 		this.tex = tex;
@@ -32,7 +43,7 @@ public class MultiTexture extends Sprite {
 		x = xP*xSize;
 		y = yP*ySize;
 		
-		return new float[] {x,y,x+xSize,y+ySize};
+		return ArrayMath.setTemp4(x,y,x+xSize,y+ySize);
 	}
 	public int getImageNumber() {return xNum*yNum;}
 	public Texture getTexture(int frame) {return tex;}

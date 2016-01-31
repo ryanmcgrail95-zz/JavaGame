@@ -1,5 +1,6 @@
 package gfx;
 
+import collision.C3D;
 import object.primitive.Drawable;
 import resource.model.Model;
 
@@ -8,9 +9,11 @@ public class ModelRenderer extends Drawable {
 	private float dis = 10;
 	private Model mod;
 	
-	public ModelRenderer(Model mod) {
+	public ModelRenderer(String modelName) {
 		super(false,false);
-		this.mod = mod;
+		mod = Model.get(modelName);
+		
+		C3D.splitModel(mod.getTriangles(), 10,10,48);
 	}
 
 	@Override
@@ -22,7 +25,7 @@ public class ModelRenderer extends Drawable {
 		y = z = 0;
 		z = 1;
 		
-		GL.clear(RGBA.YELLOW);
+		/*GL.clear(RGBA.YELLOW);
 		GL.getMainCamera().setProjection(x,y,z,toX,toY,toZ);
 		
 		GT.transformClear();
@@ -37,12 +40,17 @@ public class ModelRenderer extends Drawable {
 			GL.enableShader("Model");
 			mod.draw();
 			GL.disableShaders();
+		GT.transformClear();*/
+		
+		GL.setPerspective();
+		GT.transformClear();
+			GL.enableShader("Model");
+			
+			mod.drawFast();
+			GL.disableShaders();
 		GT.transformClear();
 	}
 
 	@Override
-	public void add() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void add() {}
 }

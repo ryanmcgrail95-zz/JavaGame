@@ -22,42 +22,38 @@ public final class OBJLoader {
 		Material curMaterial = null;		
 		File f = FileExt.getFile(fileName);
 		String curDirectory = fileName.replace(f.getName(),"");
-				
-		try {
-			String line, type;
-			StringExt lineExt = new StringExt();
-			BufferedReader r = new BufferedReader(new InputStreamReader(FileExt.get(fileName)));
 						
-			while((line = r.readLine()) != null) {
-				lineExt.set(line);
-				
-							
-				type = lineExt.chompWord(); 
-
-				if(type.equals("newmtl")) {
-					String name = lineExt.get();
-					curMaterial = new Material(name);
-					mats.add(curMaterial);
-				}
-				else if(type.equals("Ka"))
-					curMaterial.setAmbient(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
-				else if(type.equals("Ks"))
-					curMaterial.setSpecular(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
-				else if(type.equals("Kd"))
-					curMaterial.setDiffuse(lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),1);
-				else if(type.equals("map_Kd")) {
-					String n = lineExt.chompWord();
+		String line, type;
+		StringExt lineExt = new StringExt(), fileText = new StringExt(FileExt.readFile2String(fileName));
 					
-					System.out.println(n);
-					BufferedImage i = ImageLoader.load(curDirectory+n);
+		while(!fileText.isEmpty()) {
+			lineExt.set(line = fileText.munchLine());
+			
+			type = lineExt.munchWord(); 
+
+			if(type.equals("newmtl")) {
+				String name = lineExt.get();
+				curMaterial = new Material(name);
+				mats.add(curMaterial);
+			}
+			else if(type.equals("Ka"))
+				curMaterial.setAmbient(lineExt.munchFloat(),lineExt.munchFloat(),lineExt.munchFloat(),1);
+			else if(type.equals("Ks"))
+				curMaterial.setSpecular(lineExt.munchFloat(),lineExt.munchFloat(),lineExt.munchFloat(),1);
+			else if(type.equals("Kd"))
+				curMaterial.setDiffuse(lineExt.munchFloat(),lineExt.munchFloat(),lineExt.munchFloat(),1);
+			else if(type.equals("map_Kd")) {
+				String n = curDirectory + lineExt.munchLine();
+				
+				System.out.println(n);
+				
+				try {
+					BufferedImage i = ImageLoader.load(n);
 					curMaterial.setTexture(GL.createTexture(i, false));
+				} catch(Exception e) {
+			
 				}
 			}
-			
-			r.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
@@ -80,86 +76,84 @@ public final class OBJLoader {
 		File f = FileExt.getFile(fileName);
 		String curDirectory = fileName.replace(f.getName(),"");
 		
-		try {
-			String line, type;
-			StringExt lineExt = new StringExt();
+		String line, type;
+		StringExt lineExt = new StringExt(), fileText = new StringExt(FileExt.readFile2String(fileName));
+		
+		Material[] matsArray = new Material[0];
+		
+		while(!fileText.isEmpty()) {
+			lineExt.set(line = fileText.munchLine());
+			//lineExt.println();
 			
-			BufferedReader r = new BufferedReader(new InputStreamReader(FileExt.get(fileName)));
-			Material[] matsArray = new Material[0];;
-			
-			while((line = r.readLine()) != null) {				
-				lineExt.set(line);
+			type = lineExt.munchWord(); 
+
+			if(type.equals("mtllib")) {
+				String matFile = curDirectory + lineExt.munchLine();
+				loadMaterials(matFile, mats, mod);
 				
-				type = lineExt.chompWord(); 
-
-				if(type.equals("mtllib")) {
-					loadMaterials(curDirectory + lineExt.get(), mats, mod);
-					
-					matsArray = new Material[mats.size()];
-					for(int i = 0; i < mats.size(); i++)
-						matsArray[i] = mats.get(i);
-				}
-				else if(type.equals("usemtl")) {
-					materialName = lineExt.get();
-										
-					int matPos = -1;
-					for(int i = 0; i < matsArray.length; i++)
-						if(matsArray[i].checkName(materialName)) {
-							matPos = i;
-							break;
-						}
-					
-					vertexList.add(new int[] {-1,matPos,-1,-1});
-				}
-				else if(type.equals("v")) {					
-					String n;
-					while((n = lineExt.chompWord()) != "")
-						vertexNums.add(Float.parseFloat(n));
-
-					pointList.add( new float[] {vertexNums.get(0),vertexNums.get(1),vertexNums.get(2),1} );
-
-					if(vertexNums.size() > 3) {
-						hasColor = true;
-						colorList.add( RGBA.convertRGBA2Int((int)(vertexNums.get(3)*255),(int)(vertexNums.get(4)*255),(int)(vertexNums.get(5)*255),255) );
+				matsArray = new Material[mats.size()];
+				for(int i = 0; i < mats.size(); i++)
+					matsArray[i] = mats.get(i);
+			}
+			else if(type.equals("usemtl")) {
+				materialName = lineExt.get();
+														
+				int matPos = -1;
+				for(int i = 0; i < matsArray.length; i++)
+					if(matsArray[i].checkName(materialName)) {
+						matPos = i;
+						break;
 					}
-					
-					vertexNums.clear();
+				
+				vertexList.add(new int[] {-1,matPos,-1,-1});
+			}
+			else if(type.equals("v")) {					
+				String n;
+				while((n = lineExt.munchNumber()) != "") {
+					vertexNums.add(Float.parseFloat(n));
 				}
-				else if(type.equals("vt"))
-					uvList.add( new float[] {lineExt.chompNumber(),lineExt.chompNumber()} );
-				else if(type.equals("vn"))
-					normalList.add( new float[] {lineExt.chompNumber(),lineExt.chompNumber(),lineExt.chompNumber(),0} );
-				else if(type.equals("f")) {
-					StringExt curSection;
-					String[] indices;
-					int[] face;
+
+				pointList.add( new float[] {vertexNums.get(0),vertexNums.get(1),vertexNums.get(2),1} );
+
+				if(vertexNums.size() > 3) {
+					hasColor = true;
+					colorList.add( RGBA.convertRGBA2Int((int)(vertexNums.get(3)*255),(int)(vertexNums.get(4)*255),(int)(vertexNums.get(5)*255),255) );
+				}
+				
+				vertexNums.clear();
+			}
+			else if(type.equals("vt"))
+				uvList.add( new float[] {lineExt.munchFloat(),lineExt.munchFloat()} );
+			else if(type.equals("vn"))
+				normalList.add( new float[] {lineExt.munchFloat(),lineExt.munchFloat(),lineExt.munchFloat(),0} );
+			else if(type.equals("f")) {
+				StringExt curSection;
+				String[] indices;
+				int[] face;
+				
+				for(int i = 0; i < 3; i++) {
+					curSection = new StringExt(lineExt.munchWord());
+											
+					indices = curSection.split('/');
+					face = new int[] {0,0,0,-1};
 					
-					for(int i = 0; i < 3; i++) {
-						curSection = new StringExt(lineExt.chompWord());
-												
-						indices = curSection.split('/');
-						face = new int[] {0,0,0,-1};
-						
-						if(hasColor) {
-							for(int k = 0; k < 3; k++)
-								face[k] = Integer.parseInt(indices[k])-1;
-							face[3] = face[0];
-						}
-						else
-							for(int k = 0; k < 3; k++)
-								face[k] = Integer.parseInt(indices[k])-1;
-						
-						vertexList.add(face);
+					if(hasColor) {
+						for(int k = 0; k < 3; k++)
+							face[k] = Integer.parseInt(indices[k])-1;
+						face[3] = face[0];
 					}
+					else
+						for(int k = 0; k < 3; k++)
+							face[k] = Integer.parseInt(indices[k])-1;
+					
+					vertexList.add(face);
 				}
 			}
-			
-			mod.create(Model.TRIANGLES, pointList, normalList, uvList, colorList, vertexList);
-			mod.attachMaterials(matsArray);
-
-			mats.clear();
-			r.close();
-		} catch (IOException e) {
 		}
+		
+		mod.create(Model.TRIANGLES, pointList, normalList, uvList, colorList, vertexList);
+		mod.attachMaterials(matsArray);
+
+		mats.clear();
 	}
 }

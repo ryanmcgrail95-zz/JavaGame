@@ -126,6 +126,7 @@ public abstract class Physical extends Positionable {
 		public boolean collideLine(float x1, float y1, float x2, float y2) {
 			boolean didCol;
 			float vX, vY, lineDis, segDis, curDir, wallDir, outDir;
+			float uX, uY;
 			
 			vX = getXVelocity();
 			vY = getYVelocity();
@@ -133,8 +134,14 @@ public abstract class Physical extends Positionable {
 			lineDis = Math2D.calcLineDis(x(), y(), x1, y1, x2, y2, false);
 			segDis = Math2D.calcLineDis(x(), y(), x1, y1, x2, y2, true);
 			
+			/*
+			uX = x()-10000*vX;
+			uY = y()-10000*vY;*/
+			uX = x();
+			uY = y();
+			
 			curDir = calcLineDir(x1,y1,x2,y2,false);
-			wallDir = Math2D.calcLineDir(x()-10000*vX,y()-10000*vY,x1,y1,x2,y2,false);
+			wallDir = Math2D.calcLineDir(uX,uY,x1,y1,x2,y2,false);
 			
 			//if(Math.abs(Math2D.calcAngDiff(wallDir,direction)) >= 90)
 			outDir = wallDir+180;
@@ -142,8 +149,10 @@ public abstract class Physical extends Positionable {
 			
 			didCol = (segDis <= size);
 			
-			if(didCol)
+			if(didCol) {
+				walkingAlongWall(x2-x1,y2-y1);
 				step(size-lineDis,outDir);
+			}
 			
 			return didCol;
 		}

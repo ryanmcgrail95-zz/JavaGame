@@ -1,8 +1,9 @@
 package datatypes;
 
 import datatypes.lists.CleanList;
+import functions.ArrayMath;
 
-public class mat {
+public class mat extends ArrayMath {
 	private static CleanList<mat> matList = new CleanList<mat>("Mat");
 	
 	public mat() {

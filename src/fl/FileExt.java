@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import javax.imageio.ImageIO;
 
@@ -24,15 +25,20 @@ public class FileExt {
 		return new File(fixNameGetFile(fileName));
 	}
 	
-	public static String readFile2String(String fileName) {
+	public static String readFile2String(String fileName) {		
 		String str = "", line;
+		
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(getFile(fileName)));
+			InputStream is = get(fileName);
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader reader = new BufferedReader(isr);
 			
 			while((line = reader.readLine()) != null)
 				str += line+"\n";
 			
 			reader.close();
+			isr.close();
+			is.close();
 			
 		} catch(Exception e) {
 			e.printStackTrace();

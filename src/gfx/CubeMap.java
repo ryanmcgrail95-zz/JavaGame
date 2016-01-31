@@ -31,8 +31,8 @@ public class CubeMap {
 	
 	public static void ini() {
 		TextureExt gb1, gb1s;
-		gb1 = TextureController.loadTexture("Resources/Images/Blocks/gb1E.bmp", "texGroundBlock1Front", TextureController.M_NORMAL);
-        gb1s =  TextureController.loadTexture("Resources/Images/Blocks/gb1S.bmp", "texGroundBlock1Side", TextureController.M_NORMAL);
+		gb1 = TextureController.loadExt("Resources/Images/Blocks/gb1E.bmp", TextureController.M_NORMAL);
+        gb1s =  TextureController.loadExt("Resources/Images/Blocks/gb1S.bmp", TextureController.M_NORMAL);
         
 		
 		new CubeMap("cmGroundBlock1", gb1s, gb1s, gb1s, gb1, gb1s, gb1s);

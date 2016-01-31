@@ -49,7 +49,7 @@ public class WingsPM implements AnimationsPM {
 		dY = dH;
 		
 		GT.transformTranslation(0,downH,-1);		
-		G2D.drawTexture(dX,dY, dW, -dH, wingTex.getFrame(imageIndex));
+		wingTex.draw(dX,dY, dW, -dH, imageIndex);
 		GT.transformTranslation(0,-downH,1);
 	}
 }

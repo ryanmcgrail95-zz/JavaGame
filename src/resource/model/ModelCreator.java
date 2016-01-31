@@ -98,14 +98,14 @@ public class ModelCreator {
 	
 	public Model endModel() {
 		
-		String outText = 
+		/*String outText = 
 				"Created model:\n"
 				+ "type: " + modelType + "\n"
 				+ "# vertices: " + vertexList.size() +"\n"
 				+ "# points: " + pointList.size() +"\n"
 				+ "# normals: " + normalList.size() +"\n"
 				+ "# colors: " + colorList.size() +"\n";
-		System.out.println(outText);				
+		System.out.println(outText);*/
 		
 		Model mod = new Model();
 			mod.create(modelType,pointList,normalList,uvList,colorList,vertexList);

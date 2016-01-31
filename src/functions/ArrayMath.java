@@ -1,10 +1,47 @@
 package functions;
 
 public class ArrayMath {
+	
+	public static float[]
+		tempArray3 = new float[3];
+	public static float[] 
+		tempArray4 = new float[4],
+		tempMath4 = new float[4];
+	public static float[] 
+		tempArray16 = new float[16],
+		tempOut16 = new float[16],
+		tempMath16 = new float[16];
+	
+	public static float[] set(float[] array, float... values) {
+		int len = array.length;
+		for(int i = 0; i < len; i++)
+			array[i] = values[i];
+		return array;
+	}
+	public static float[] fill(float[] array, float values) {
+		int aLen = array.length;
+		for(int i = 0; i < aLen; i++) {
+			array[i] = values;
+			//vi = (vi + 1) % vLen;
+		}
+		return array;
+	}
+	
+	
+	public static float[] setTemp3(float a, float b, float c) {
+		return set(tempArray3,a,b,c);
+	}
+	public static float[] setTemp4(float a, float b, float c, float d) {
+		return set(tempArray4,a,b,c,d);
+	}
+	public static float[] setTemp16(float... values) {
+		return set(tempArray16, values);
+	}
+	
 	public static float[] multMV(float[] mat, float[] vec) {
-		float[] outVec = {0, 0, 0, 0};
-			multMV(mat, vec, outVec);
-		return outVec;
+		fill(tempMath4, 0);
+		multMV(mat, vec, tempMath4);
+		return set(tempArray4, tempMath4);
 	}
 	public static void multMV(float[] mat, float[] vec, float[] dst) {
 		for(int r = 0; r < 3; r++)
@@ -12,17 +49,13 @@ public class ArrayMath {
 				dst[r] += mat[4*r+c]*vec[c];
 	}
 	public static float[] multMM(float[] mat1, float[] mat2) {
-		float[] outVec = {
-			0,0,0,0,
-			0,0,0,0,
-			0,0,0,0,
-			0,0,0,0};
-
+		fill(tempMath16, 0);
+		
 		for(int r = 0; r < 4; r++)
 			for(int c = 0; c < 4; c++)
 				for(int i = 0; i < 4; i++)
-					outVec[4*r+c] += mat1[4*c+i]*mat2[4*r+i];		
-		return outVec;
+					tempMath16[4*r+c] += mat1[4*c+i]*mat2[4*r+i];		
+		return set(tempOut16, tempMath16);
 	}
 	
 	public static float[] copy(float[] src) {
@@ -110,6 +143,20 @@ public class ArrayMath {
 			cross(a,b,out);
 		return out;
 	}
+	
+	public static float[] transpose(float[] a) {
+		float[] out = new float[16];
+		
+		for(int r = 0; r < 4; r++)
+			for(int c = 0; c < 4; c++)
+				out[4*r+c] = a[4*c+r];
+
+		for(int r = 0; r < 16; r++)
+			a[r] = out[r];
+
+		return a;
+	}
+	
 	public static void cross(float[] a, float[] b, float[] dst) {
 		if(a.length != 3 || b.length != 3 || dst.length != 3)
 			throw new UnsupportedOperationException();

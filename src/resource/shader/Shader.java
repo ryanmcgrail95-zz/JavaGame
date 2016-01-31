@@ -21,8 +21,8 @@ public class Shader {
 	
 	public Shader(GL2 gl, String name) {
 		
-		vertexShader = loadShader(gl, gl.GL_VERTEX_SHADER, loadShaderText("Resources/Shaders/" + name + "/vertex.sh"));
-		fragmentShader = loadShader(gl, gl.GL_FRAGMENT_SHADER, loadShaderText("Resources/Shaders/" + name + "/frag.sh"));
+		vertexShader = loadShader(gl, gl.GL_VERTEX_SHADER, FileExt.readFile2String("Resources/Shaders/" + name + "/vertex.sh"));
+		fragmentShader = loadShader(gl, gl.GL_FRAGMENT_SHADER, FileExt.readFile2String("Resources/Shaders/" + name + "/frag.sh"));
 
         mProgram = gl.glCreateProgram();
 
@@ -58,34 +58,7 @@ public class Shader {
         }
 	}
 	
-	
-	private static String loadShaderText(String fileName) {
-		InputStreamReader is = new InputStreamReader(FileExt.get(fileName));
-		BufferedReader br = new BufferedReader(is);
-		String shSource = "", line = "";
 		
-		try {
-			while ((line = br.readLine()) != null) {
-			    shSource += line + "\n";
-			}
-		} catch (IOException e) {
-			return "";
-		}
-		
-		System.out.println(fileName);
-		//System.out.println(shSource);
-		
-		try {
-			is.close();
-			//br.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return shSource;
-	}
-	
 	private int loadShader(GL2 gl, int type, String shaderCode) {
 		// Create a shader of the correct type
         int shader = gl.glCreateShader(type);

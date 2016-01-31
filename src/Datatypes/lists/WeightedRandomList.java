@@ -39,6 +39,11 @@ public class WeightedRandomList<K> extends CleanList<K> {
 		weightList.clear();
 	}
 	
+	public void destroy() {
+		super.destroy();
+		weightList.clear();
+	}
+	
 	public void add(K obj, float weight) {
 		add(obj);
 		weightList.add(weight);

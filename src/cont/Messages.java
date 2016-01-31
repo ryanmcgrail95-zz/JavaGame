@@ -9,8 +9,8 @@ import datatypes.PrintString;
 import datatypes.lists.CleanList;
 
 public class Messages {
-	private static CleanList<Message> messageList = new CleanList<Message>("Msgs");
-	private static PrintString actionString = new PrintString("");
+	private final static CleanList<Message> messageList = new CleanList<Message>("Msgs");
+	private final static PrintString actionString = new PrintString("");
 	
 	private static class Message {
 		private String text;

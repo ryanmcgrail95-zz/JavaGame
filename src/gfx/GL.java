@@ -29,6 +29,7 @@ import resource.shader.Shader;
 import resource.sound.Sound;
 import resource.sound.SoundBuffer;
 import rm.Room;
+import script.PML;
 import time.Delta;
 import time.Timer;
 import twoD.Player2D;
@@ -45,6 +46,7 @@ import datatypes.mat4;
 import datatypes.vec;
 import datatypes.vec3;
 import datatypes.vec4;
+import functions.ArrayMath;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
@@ -142,7 +144,10 @@ public class GL {
            			mainCamera.enableBG(true);
            		marioCamera = new Camera("marioCam", mainCamera);
            		
-        	TextureController.ini();                
+       		PML.ini();
+           		
+        	TextureController.ini();
+        	CubeMap.ini();
             	
         	Model.ini();
             	
@@ -187,6 +192,7 @@ public class GL {
             public void dispose( GLAutoDrawable glautodrawable ) {}
             public void display( GLAutoDrawable glautodrawable ) { 
             	
+            	            	
             	/*checkError();
             	
             	if(ErrorPopup.isOpen()) {
@@ -201,6 +207,11 @@ public class GL {
             		setResolution(320,218);
             	else if(Keyboard.checkPressed('3'))
             		setResolution(640,436);
+            	
+            	if(Keyboard.checkPressed('r')) {
+            		Room.resetRoom();
+            		return;
+            	}
             	
             	if(Keyboard.checkPressed('6'))
             		Delta.setTargetFPS(90);
@@ -228,7 +239,6 @@ public class GL {
             	
         		Drawable.display();           
             	Camera.renderAll();
-            	
             	
             	if(Keyboard.checkPressed('x'))
             		mainCamera.getFBO().saveScreenshot();
@@ -670,7 +680,7 @@ public class GL {
 	public static void drawRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,false);}
 	public static void fillRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,true);}
 	public static void fillRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,true);}
-	public static void rectangle(float x, float y, float w, float h, boolean fill) {rectangle(x,y,w,h,new float[] {0,0,1,1},fill);}
+	public static void rectangle(float x, float y, float w, float h, boolean fill) {rectangle(x,y,w,h,ArrayMath.setTemp4(0,0,1,1),fill);}
 	public static void rectangle(float x, float y, float w, float h, float[] bounds, boolean fill) {
 		gl.glBegin((fill ? GL2.GL_QUADS : GL2.GL_LINE_LOOP));
 			gl.glTexCoord2d(bounds[0], bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
@@ -751,7 +761,7 @@ public class GL {
 				draw3DWall(x1,y1,z1,x2,y2,z2,null);
 			}
 			public static void draw3DWall(float x1, float y1, float z1, float x2, float y2, float z2, Texture tex) {
-				draw3DWall(x1,y1,z1, x2,y2,z2, tex, new float[] {0,0,1,1});
+				draw3DWall(x1,y1,z1, x2,y2,z2, tex, ArrayMath.setTemp4(0,0,1,1));
 			}
 			public static void draw3DWall(float x1, float y1, float z1, float x2, float y2, float z2, MultiTexture tex, int frame) {
 				draw3DWall(x1,y1,z1, x2,y2,z2, tex.getTexture(), tex.getBounds(frame));				
@@ -1040,8 +1050,7 @@ public class GL {
     		gl.glUniformMatrix4fv(gl.glGetUniformLocation(shaderProgram, name), 1, doTranspose, mat, 0);
     }
     
-    public static void passShaderVec4(String name, vec4 vec) {passShaderVec4(name, vec.getArray());}
-    public static void passShaderVec4(String name, float a, float b, float c, float d) {passShaderVec4(name, new float[] {a,b,c,d});}
+    public static void passShaderVec4(String name, float a, float b, float c, float d) {passShaderVec4(name, ArrayMath.setTemp4(a,b,c,d));}
     public static void passShaderVec4(String name, float[] vec) {
     	if(shaderProgram != 0)
     		gl.glUniform4fv(gl.glGetUniformLocation(shaderProgram, name), 1, vec, 0);
@@ -1314,7 +1323,7 @@ public class GL {
 		gl.glDisable(GL2.GL_COLOR_MATERIAL);
 	}
 
-	public static void draw3DBlock(float x1, float y1, float z1, float x2, float y2, float z2) {draw3DBlock(x1,y1,z1,x2,y2,z2,null);}
+	public static void draw3DBlock(float x1, float y1, float z1, float x2, float y2, float z2) {draw3DBlock(x1,y1,z1,x2,y2,z2,(Texture) null);}
 	public static void draw3DBlock(float x1, float y1, float z1, float x2, float y2, float z2, Texture tex) {
 		draw3DWall(x1,y1,z1,x1,y2,z2,tex);
 		draw3DWall(x2,y1,z1,x2,y2,z2,tex);
@@ -1322,6 +1331,15 @@ public class GL {
 		draw3DWall(x2,y2,z1,x1,y2,z2,tex);
 		draw3DFloor(x1,y1,x2,y2,z1,tex);
 		draw3DFloor(x1,y1,x2,y2,z2,tex);
+	}
+	
+	public static void draw3DBlock(float x1, float y1, float z1, float x2, float y2, float z2, CubeMap cm) {
+		draw3DWall(x1,y1,z1,x1,y2,z2,cm.getLeft().getTexture());
+		draw3DWall(x2,y1,z1,x2,y2,z2,cm.getRight().getTexture());
+		draw3DWall(x1,y1,z1,x2,y1,z2,cm.getFront().getTexture());
+		draw3DWall(x2,y2,z1,x1,y2,z2,cm.getBack().getTexture());
+		draw3DFloor(x1,y1,x2,y2,z1,cm.getBottom().getTexture());
+		draw3DFloor(x1,y1,x2,y2,z2,cm.getTop().getTexture());
 	}
 
 	/*public static void add3DBlock(float x1, float y1, float z1, float x2, float y2, float z2) {
@@ -1555,10 +1573,6 @@ public class GL {
 	public static Camera getMarioCamera() {return marioCamera;}
 
 	
-	public static void iniModelRenderer(Model mod) {
-		new ModelRenderer(mod);
-	}
-	
 	public static void iniPage() {
         new PageTransition();
         //new Floor(-64,-64,64,64,0,null);
@@ -1566,7 +1580,7 @@ public class GL {
 	}
 
 	public static void iniPMBattle() {
-        Sound.iniLoad();
+		Sound.iniLoad();
         
         //Model m = new Model("PleasantPath3.obj");
         //Model m = new Model("Peachs_Castle_1.obj");
@@ -1574,6 +1588,7 @@ public class GL {
 
         //new ModelRenderer(m);
         //Room.changeRoom("Battle");
+        
         Room.changeRoom("Toad Town Center");
 	}
 	public static void iniPMRoom() {

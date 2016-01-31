@@ -1,7 +1,42 @@
 // Objects
-Player {
-	character: mario
-	position: 0 0 117
+
+&ModelRenderer("Pleasant_Path_3");
+
+&Player(0,0,117);
+
+&SpinningEyes {
+	$x = -285;
+	$y = 103;
+	$z = 117;
 }
+
+#createBoundary(
+	-467,-47,
+	-369,-47,
+	-369,-99,
+	-363,-150,
+	-333,-162,
+	-330,-194,
+	-287,-218,
+	-204,-250
+);
+
+&AirBlock {
+	$x = -240;
+	$y = 97;
+	$z = 117;
+}
+
+//&Switch {
+//	$x = -240;
+//	$y = 97;
+//	$z = 117;
+//}
+
+/*&GroundBlock {
+	$x = -240;
+	$y = 97;
+	$z = 117;
+}*/
 
 //Floor ( -128 -128 128 128 0 )

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import com.jcraft.oggdecoder.OggData;
 import com.jogamp.openal.AL;
 import com.jogamp.openal.ALException;
@@ -16,17 +17,23 @@ import com.jogamp.openal.util.ALut;
 import com.jogamp.openal.util.WAVData;
 import com.jogamp.openal.util.WAVLoader;
 import com.jogamp.opengl.util.texture.Texture;
+
 import cont.TextureController;
 import datatypes.vec3;
 import datatypes.lists.CleanList;
 import fl.FileExt;
 import functions.Array;
+import functions.ArrayMath;
 import gfx.Camera;
 
 public class Sound {
 	private static Map<String, SoundBuffer> bufferMap = new HashMap<String, SoundBuffer>();
     private static AL al = ALFactory.getAL();
 
+    private final static float[]
+    	velArray = {0,0,0},
+    	upArray = {0,0,1};
+    
     private static float listenerX, listenerY, listenerZ;
     
     private static SoundSource curMusic = null, newMusic = null;
@@ -53,7 +60,7 @@ public class Sound {
 
         //LOAD SOUNDS
 		//loadSound("button", "Resources/Sounds/FX/button.ogg",80);
-		//loadSound("blockCrumble", "Resources/Sounds/FX/blockCrumble.ogg");
+		loadSound("blockCrumble", "Resources/Sounds/FX/blockCrumble.ogg");
         loadSound("footstep", "Resources/Sounds/FX/footstep.ogg",.5f);
         loadSound("spin", "Resources/Sounds/FX/spin.ogg");
         loadSound("jump", "Resources/Sounds/FX/jump.ogg", 70);
@@ -198,7 +205,7 @@ public class Sound {
 	
 	
 	public static void updateListener(Camera camera) {
-		updateListener(camera.getPosition(), new float[] {0,0,0}, camera.getNormal(), new float[] {0,0,1});
+		updateListener(camera.getPosition(), velArray, camera.getNormal(), upArray);
 	}
 	public static void updateListener(double cX, double cY, double cZ, double vX, double vY, double vZ, double nDirX, double nDirY, double nDirZ, double nUpX, double nUpY, double nUpZ) {
 		// Position of the listener.
@@ -293,6 +300,9 @@ public class Sound {
 				    freq[0] = od.rate;
 	        		loop[0] = AL.AL_FALSE;
 	        	}
+	        	
+	        	buffStream.close();
+	        	inputStream.close();
 			} catch (Exception e) {
 			    throw new ALException(e);
 			}

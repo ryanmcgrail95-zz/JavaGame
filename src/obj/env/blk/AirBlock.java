@@ -1,15 +1,17 @@
 package obj.env.blk;
 
-import gfx.Shape;
+import com.jogamp.opengl.util.texture.Texture;
+
+import gfx.GL;
+import gfx.GT;
 import object.primitive.Environmental;
 import object.primitive.Physical;
 
 public class AirBlock extends Environmental {
-	private float w = 16, hitZ = 0, hitSpeed = 0, hitGravity = .25f;
+	private float w = 8, hitZ = 0, hitSpeed = 0, hitGravity = .25f;
 	
-	public AirBlock(float x, float y) {
-		super(x,y,z+8);
-		//shape = Shape.createBlock("ABlock", -w, -w, w, w, w, 0, null);
+	public AirBlock(float x, float y, float z) {
+		super(x,y,z+32, false,false);
 	}
 	
 	public void draw() {
@@ -24,9 +26,16 @@ public class AirBlock extends Environmental {
 		    hitZ = 0;
 		    hitSpeed = 0;
 		}
+		
+		transformTranslation();
+		GL.draw3DBlock(-w,-w,2*w,w,w,0, (Texture) null);
+		GT.transformClear();
 	}
 	
 	public boolean collide(Physical other) {
 		return false;
 	}
+
+	@Override
+	public void add() {}
 }

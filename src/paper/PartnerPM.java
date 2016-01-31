@@ -1,5 +1,6 @@
 package paper;
 
+import cont.Text;
 import io.Controller;
 import io.IO;
 import io.Keyboard;
@@ -10,10 +11,22 @@ import gfx.RGBA;
 
 public class PartnerPM extends ActorPM {
 	private static PartnerPM instance;
+	private boolean isActing = false;
 	
 	private PartnerPM(String type, float x, float y, float z) {
 		super(type,x,y,z);
 		followActor = PlayerPM.getInstance();
+		
+		setSurviveTransition(true);
+	}
+	
+	public void update() {
+		super.update();
+		
+		if(IO.checkPressed(IO.C_DOWN))
+			Text.createTextDialog("HELLO!\nline2\nline3\nline4\nUhoh");
+		if(IO.checkPressed(IO.C_RIGHT))
+			switchCharacter("mario");
 	}
 	
 	@Override
@@ -29,6 +42,12 @@ public class PartnerPM extends ActorPM {
 		create(type).setPos(x,y,z);
 		return instance;
 	}
+	
+	public static PartnerPM create(float x, float y, float z) {
+		create().setPos(x,y,z);
+		return instance;
+	}
+
 	public static PartnerPM getInstance() {
 		return instance;
 	}

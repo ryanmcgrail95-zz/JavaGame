@@ -17,7 +17,7 @@ public class TransitionController {
 	
 	
 
-	public static void update() {		
+	public static void update() {
 		float before, after;
 		before = trFrac.getFraction();
 

@@ -5,6 +5,10 @@ import com.jogamp.opengl.util.texture.Texture;
 public abstract class Sprite {
 	protected static final float[] DEFAULT_BOUNDS = {0,0,1,1};
 
+	public Sprite(String fileName) {
+		System.out.println("Loaded sprite,  " + fileName + ".");
+	}
+	
 	public int getWidth() {return getWidth(0);}
 	public int getWidth(float frame) {
 		float[] bounds = getBounds(frame);

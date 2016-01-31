@@ -34,12 +34,12 @@ public class TextureExt extends Sprite {
 	}
 	
 	public TextureExt(BufferedImage img) {
-		addFrame(img);
-		
+		super("---");
+		addFrame(img);		
 	    TextureController.add(this);
 	}	
 	public TextureExt(List<BufferedImage> imgs) {
-		
+		super("---");
 		for(BufferedImage i : imgs)
 			addFrame(i);
 		imageNumber = frameList.size();

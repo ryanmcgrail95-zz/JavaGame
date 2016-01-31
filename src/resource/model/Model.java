@@ -103,6 +103,11 @@ public class Model extends Resource {
 
 		public void destroy(GL2 gl) {
 			gl.glDeleteBuffers(1, new int[] {vertexBuffer}, 0);
+			
+			if(mat != null) {
+				mat.destroy();
+				mat = null;
+			}
 		}
 		
 		public void draw() {
@@ -151,14 +156,20 @@ public class Model extends Resource {
 	
 	
 	
-	public Model(String fileName) {
+	private Model(String fileName) {
 		super(fileName, Resource.R_MODEL);
+
+		System.out.println(fileName + "---------------------------------------------");
+
 		modelMap.put(removeType(fileName),this);
 		
 		preMatrix = mat4.createIdentityArray();
 	}
 	public Model() {
 		super("", Resource.R_MODEL);
+		
+		System.out.println("NEW MODEL---------------------------------------------");
+
 		modelMap.put(removeType(""),this);
 		
 		preMatrix = mat4.createIdentityArray();
@@ -207,9 +218,14 @@ public class Model extends Resource {
 			this.vertexList[i] = vertexList.get(i);
 	}
 	
+	public void unload() {
+		destroy();
+	}
+	
 	public void destroy() {
-		
-		modList.remove();
+		System.out.println("DESTROY MODEL---------------------------------------------");
+
+		modList.remove(this);
 		
 		// Delete Arrays
 		// Delete Material
@@ -222,18 +238,29 @@ public class Model extends Resource {
 			uvList[i] = null;
 		for(int i = 0; i < vertexList.length; i++)
 			vertexList[i] = null;
+		pointList = null;
+		normalList = null;
+		uvList = null;
+		vertexList = null;
+		colorList = null;
 		
 		// Delete GL Vertex Index/Buffer
 		GL2 gl = GL.getGL2();
 
 		for(Submodel s : submodelList)
 			s.destroy(gl);
+		submodelList = null;
 		
 		// Empty Vertex Buffer
 		
 		// Delete Materials
-		for(Material m : materials)
-			m.destroy();
+		if(materials != null) {
+			for(Material m : materials)
+				m.destroy();
+			materials = null;
+		}
+		
+		destroyTriangles();
 	}
 	
 	public void draw() {
@@ -340,7 +367,7 @@ public class Model extends Resource {
 	}
 
 	public void translate(float tX, float tY, float tZ) {
-		transform(mat4.createTranslationArray(tX,tY,tZ));
+		transform(ArrayMath.transpose(mat4.createTranslationArray(tX,tY,tZ)));
 	}
 	
 	public void rotateX(float rot) {
@@ -382,7 +409,7 @@ public class Model extends Resource {
 			numBuffers = 1;
 		else
 			numBuffers = materials.length;
-		
+				
 		int[] bufferInd = new int[numBuffers],
 			bufferSizes = new int[numBuffers];
 		
@@ -401,8 +428,8 @@ public class Model extends Resource {
         		bufferSizes[curBuff]++;
         
         
-        for(int i = 0; i < numBuffers; i++)
-        	System.out.println(i + ": " + bufferSizes[i]);
+        /*for(int i = 0; i < numBuffers; i++)
+        	System.out.println(i + ": " + bufferSizes[i]);*/
         
         
         // create vertex buffer data store without initial copy
@@ -421,7 +448,7 @@ public class Model extends Resource {
 	    for(int i : lastPositions)
 	    	i = 0;
 	    
-	    System.out.println("SIZE: " + TOT_SIZE);
+	    //System.out.println("SIZE: " + TOT_SIZE);
 	 	    	    
 	    float[] array;
 	    int[] v, color = {0,0,0,0};
@@ -430,7 +457,7 @@ public class Model extends Resource {
 	    	v = vertexList[k];
 	    	
 	    	if(v[0] == -1) {
-	    	    System.out.println(curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
+	    	    //System.out.println(curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
 
 	    		curBuff = v[1];
 	    		bytebuffer.position(0);
@@ -441,12 +468,12 @@ public class Model extends Resource {
 	    	    	    	    
 	    	    bytebuffer.position(lastPositions[curBuff]);
 	    	    
-	    	    System.out.println("\t" + curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
+	    	    //System.out.println("\t" + curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
 
 	    	    continue;
 	    	}
 	    	
-    	    System.out.println("\t\t" + curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
+    	    //System.out.println("\t\t" + curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
 	    		    	
 	    	// Add Point
 	    	array = pointList[v[0]];
@@ -530,7 +557,7 @@ public class Model extends Resource {
 			// Necessary for Fixing Model
 			scale(2f);
 			scale(1,-1,-1);
-
+			
 			OBJLoader.loadInto(fileName, this);
 
 			flipNormals();
@@ -542,13 +569,6 @@ public class Model extends Resource {
 		mirrorUVVertically();
 		
 		createAndFillVertexBuffer();
-
-		//this.scale(390);
-		//this.rotateY(90);
-	}
-
-	public void unload() {
-		destroy();
 	}
 	
 	public void destroyTriangles() {
@@ -566,6 +586,10 @@ public class Model extends Resource {
 
 
 	public static Model get(String name) {
-		return modelMap.get(name);
+		name = removeType(name);
+		if(modelMap.containsKey(name))
+			return modelMap.get(name);
+		else
+			return new Model(name + ".obj");
 	}
 }

@@ -49,6 +49,10 @@ public class Material {
 
 	public void destroy() {
 		ambient = diffuse = specular = null;
-		tex.destroy(GL.getGL());
+		name = null;
+		if(tex != null) {
+			tex.destroy(GL.getGL());
+			tex = null;
+		}
 	}
 }

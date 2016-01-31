@@ -5,6 +5,7 @@ import datatypes.StringExt;
 import io.Controller;
 import object.actor.Actor;
 import object.actor.Player;
+import object.primitive.Positionable;
 import time.Timer;
 import functions.Math2D;
 import functions.MathExt;
@@ -42,7 +43,7 @@ public final class Text {
 		
 		if(!fullString.isEmpty())		
 			for(int i = 0; i < 4; i++) {
-				line = fullString.chompLine();
+				line = fullString.munchLine();
 				nextStr += line + "\n";
 			}
 		textString.set(nextStr);
@@ -83,7 +84,7 @@ public final class Text {
 			boxY += shockStrength*MathExt.rnd(-1,1);
 		}
 		
-		GL.setColor(new RGBA(0,0,0,.8f));
+		GL.setColor(RGBA.createf(0,0,0,.8f));
 		GL.fillRectangle(boxX,boxY, 640-(2*r), 100);
 		
 		float s = 1.0f;
@@ -126,6 +127,11 @@ public final class Text {
 		return !textString.isNull();
 	}
 
+
+	public static void createTextDialog(String string) {
+		set(string);
+	}
+	
 	public static void talk(Actor a1, Actor a2, String string) {
 		
 		Camera cam = GL.getMainCamera();
@@ -149,7 +155,7 @@ public final class Text {
 		a2.taskMoveTo(cX-aX,cY-aY);
 		a2.taskFace(a1);
 
-		Text.set(string);
+		set(string);
 		
 		boolean above = true;
 		isBoxAbove = above;

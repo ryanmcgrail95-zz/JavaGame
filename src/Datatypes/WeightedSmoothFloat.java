@@ -1,6 +1,7 @@
 package datatypes;
 
 import functions.FastMath;
+import functions.Math2D;
 import functions.MathExt;
 
 public class WeightedSmoothFloat {
@@ -166,8 +167,8 @@ public class WeightedSmoothFloat {
 			
 			float
 				ang = 45,
-				co = FastMath.cosd(ang),
-				si = FastMath.sind(ang);
+				co = Math2D.calcLenX(ang),
+				si = Math2D.calcLenY(ang);
 			    
 			for(int i = 0; i < pointNum; i++) {
 				x = points[i][0];

@@ -2,6 +2,8 @@ width: 36
 height: 36
 heightFraction: .7
 
+//hasShoe: true
+
 maxHP: 10
 defenseStat: 0
 

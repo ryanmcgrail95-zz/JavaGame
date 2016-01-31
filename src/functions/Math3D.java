@@ -3,7 +3,7 @@ package functions;
 import datatypes.vec2;
 import datatypes.vec3;
 
-public final class Math3D {
+public final class Math3D extends ArrayMath {
 	
 	private Math3D() {}
 	
@@ -22,7 +22,7 @@ public final class Math3D {
 		dir = Math2D.calcPtDir(x1,y1, x2,y2);
 		dirZ = Math2D.calcPtDir(0,z1, Math2D.calcPtDis(x1,y1,x2,y2),z2);
 		
-		return new float[] {dis, dir, dirZ};
+		return setTemp3(dis, dir, dirZ);
 	}
 	
 	
