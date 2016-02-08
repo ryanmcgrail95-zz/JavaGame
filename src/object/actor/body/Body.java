@@ -1,7 +1,7 @@
 package object.actor.body;
 
-import datatypes.mat4;
-import datatypes.vec3;
+import ds.mat4;
+import ds.vec3;
 import obj.itm.Sword;
 import obj.prt.Dust;
 import resource.sound.Sound;

@@ -180,13 +180,13 @@ CodeCache: size=245760Kb used=6397Kb max_used=6409Kb free=239362Kb
 
 Compilation events (10 events):
 Event: 21.178 Thread 0x000000005483b000 nmethod 1686 0x0000000002915150 code [0x00000000029152a0, 0x0000000002915418]
-Event: 21.178 Thread 0x000000005483b000 1691       4       datatypes.vec::<init> (37 bytes)
+Event: 21.178 Thread 0x000000005483b000 1691       4       ds.vec::<init> (37 bytes)
 Event: 21.181 Thread 0x000000005483b000 nmethod 1691 0x0000000002914dd0 code [0x0000000002914f20, 0x0000000002915078]
 Event: 21.181 Thread 0x0000000054895800 1690       2       resource.model.Model::mult (73 bytes)
 Event: 21.181 Thread 0x0000000054895800 nmethod 1690 0x0000000002916410 code [0x0000000002916580, 0x00000000029168b0]
 Event: 21.181 Thread 0x0000000054895800 1694       3       jogamp.opengl.gl4.GL4bcImpl::glNormal3fv (101 bytes)
 Event: 21.183 Thread 0x0000000054895800 nmethod 1694 0x0000000002918e10 code [0x0000000002919120, 0x000000000291a898]
-Event: 21.183 Thread 0x0000000054895800 1698       3       datatypes.mat4::set (32 bytes)
+Event: 21.183 Thread 0x0000000054895800 1698       3       ds.mat4::set (32 bytes)
 Event: 21.184 Thread 0x0000000054895800 nmethod 1698 0x0000000002917a50 code [0x0000000002917c60, 0x00000000029186f8]
 Event: 21.184 Thread 0x0000000054895800 1696       3       jogamp.opengl.gl4.GL4bcImpl::glVertex3fv (101 bytes)
 
@@ -304,7 +304,7 @@ Event: 16.309 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action
 Event: 17.249 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002836dc4 method=java.lang.Math.round(F)I @ 36
 Event: 17.501 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000028d68bc method=java.io.BufferedReader.readLine(Z)Ljava/lang/String; @ 192
 Event: 20.384 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000284d16c method=functions.MathExt.contain(FFF)F @ 3
-Event: 20.398 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000028d32cc method=datatypes.lists.CleanList$ListIterator.hasNext()Z @ 6
+Event: 20.398 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000028d32cc method=ds.lst.CleanList$ListIterator.hasNext()Z @ 6
 Event: 21.055 Thread 0x000000005641f000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002893830 method=java.util.HashMap.clear()V @ 23
 Event: 21.101 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000023f4af8 method=gfx.GOGL.drawWaveform(FFFFIIIILresource/sound/SoundBuffer;Z)V @ 360
 Event: 21.172 Thread 0x0000000056492000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000285dae8 method=java.lang.StrictMath.floorOrCeil(DDDD)D @ 115

@@ -6,7 +6,7 @@ import java.util.List;
 import resource.sound.Sound;
 import time.Timer;
 import io.Mouse;
-import datatypes.vec2;
+import ds.vec2;
 import functions.MathExt;
 
 public abstract class PhoneApp {

@@ -3,6 +3,7 @@ package paper;
 import time.Delta;
 import gfx.GT;
 import gfx.G2D;
+import gfx.GL;
 import gfx.TextureExt;
 import cont.TextureController;
 
@@ -40,6 +41,8 @@ public class WingsPM implements AnimationsPM {
 	}
 	
 	public void draw() {
+		GL.start("draw()");
+		
 		animateModel();
 		
 		float dX, dY, dW, dH;
@@ -51,5 +54,7 @@ public class WingsPM implements AnimationsPM {
 		GT.transformTranslation(0,downH,-1);		
 		wingTex.draw(dX,dY, dW, -dH, imageIndex);
 		GT.transformTranslation(0,-downH,1);
+
+		GL.end("draw()");
 	}
 }

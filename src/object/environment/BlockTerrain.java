@@ -10,7 +10,7 @@ import resource.model.Model;
 import resource.model.ModelCreator;
 import cont.ImageLoader;
 import cont.TextureController;
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;

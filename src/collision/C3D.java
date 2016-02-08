@@ -7,11 +7,13 @@ import functions.ArrayMath;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
+import resource.model.Model;
 
 public final class C3D extends ArrayMath {
 	
 	private static float[] triangleNormal = new float[3];
 	
+	private static String splitName = "";
 	private static float[] splitModel;
 	private static int[][][] splitModelIndices;
 	
@@ -28,8 +30,15 @@ public final class C3D extends ArrayMath {
 	private C3D() {}
 	
 	
-	public static void splitModel(float[][][] polygon, int xNum, int yNum, float padding) {
+	public static void splitModel(Model m, int xNum, int yNum, float padding) {
+		if(splitName.equals(m.getFileName()))
+			return;
+		
+		splitName = m.getFileName();
+		
 		destroySplitModel();
+		
+		float[][][] polygon = m.getTriangles();
 		
 		splitModel = new float[polygon.length*13];
 		splitModelIndices = new int[xNum][yNum][];

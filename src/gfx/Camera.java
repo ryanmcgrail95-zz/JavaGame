@@ -3,8 +3,8 @@ package gfx;
 import java.util.ArrayList;
 import java.util.List;
 import com.jogamp.opengl.glu.GLU;
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
@@ -33,7 +33,7 @@ public class Camera extends Updatable {
 	private FBO fbo;
 	private float[] upNormal = {0,0,1};
 
-	
+	private float prevSmoothing = 0;
 	private float smoothOnceFrac;
 	
 	private vec3 pos = new vec3(), toPos = new vec3();
@@ -193,6 +193,8 @@ public class Camera extends Updatable {
 			this.pos.destroy();
 			this.toPos = toPos;
 			this.pos = pos;
+			
+			smoothing = prevSmoothing;
 		}
 		else if(smoothOnceFrac > -1) {
 			smoothOnceFrac += (1 - smoothOnceFrac)/smoothing;
@@ -337,6 +339,7 @@ public class Camera extends Updatable {
 		
 		fbo.detach(GL.gl);
 	}
+	
 	public void render(Drawable... obj) {
 		GL.setCamera(this);
     	fbo.attach(GL.gl,false);
@@ -380,5 +383,10 @@ public class Camera extends Updatable {
 	}
 	public void addDrawable(Drawable obj) {
 		drawList.add(obj);
+	}
+	
+	public void teleport() {
+		prevSmoothing = smoothing;
+		smoothing = 0;
 	}
 }

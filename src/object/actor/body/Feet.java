@@ -3,8 +3,8 @@ package object.actor.body;
 import java.util.ArrayList;
 import java.util.List;
 
-import datatypes.vec2;
-import datatypes.vec3;
+import ds.vec2;
+import ds.vec3;
 import time.Timer;
 import functions.Math2D;
 import functions.Math3D;

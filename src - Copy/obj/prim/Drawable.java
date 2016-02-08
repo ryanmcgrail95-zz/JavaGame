@@ -5,7 +5,7 @@ import gfx.Shape;
 
 import java.awt.Graphics2D;
 
-import Datatypes.SortedList;
+import ds.SortedList;
 import cont.IO;
 import cont.Messages;
 import obj.chr.Player;

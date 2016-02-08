@@ -13,6 +13,7 @@ import paper.CharacterPM;
 import paper.PlayerPM;
 import phone.SmartPhone;
 import resource.Loadbar;
+import resource.Resource;
 import resource.model.Model;
 import resource.sound.Sound;
 import sts.Stat;
@@ -23,11 +24,12 @@ import cont.Messages;
 import cont.Text;
 import cont.TextureController;
 import cont.TransitionController;
-import datatypes.mat;
-import datatypes.vec;
-import datatypes.lists.CleanList;
+import ds.mat;
+import ds.vec;
+import ds.lst.CleanList;
 import io.Controller;
 import io.Keyboard;
+import menu.Menu;
 
 public class Overlay {
 	private static int timer = 0, secs = 0;
@@ -37,6 +39,10 @@ public class Overlay {
 	private static MultiTexture hpBarTex = new MultiTexture("Resources/Images/hp1.png",27,1);
 	private static float starpointInd = 0;
 	
+	public static void ini() {
+		Menu.ini();
+	}
+	
 	public static void draw() {
 		if(isEnabled)
 			if(Text.isActive())
@@ -45,6 +51,8 @@ public class Overlay {
 				Window.drawAll();*/
 			else { // if(!SmartPhone.isActive()){
 				//Controller.draw();
+				//Menu.drawAll();
+				
 				Messages.draw();
 								
 				BattleController inst = BattleController.getInstance();
@@ -106,13 +114,15 @@ public class Overlay {
 					
 					ActorPM pl = PlayerPM.getInstance();
 					
-					drawStrings(0, 320,
-						""+ pl.x() + ", " + pl.y() + ", " + pl.z(),
-						""+ pl.vX() + ", " + pl.vY() + ", " + pl.vZ()
-					);
+					if(pl != null)
+						drawStrings(0, 320,
+							""+ pl.x() + ", " + pl.y() + ", " + pl.z(),
+							""+ pl.vX() + ", " + pl.vY() + ", " + pl.vZ()
+						);
 					
-					drawUpdatables(300,0);
+					//drawUpdatables(300,0);
 					drawCleanLists(500,0);
+					drawResources(300,0);
 				}
 			}
 		
@@ -130,6 +140,13 @@ public class Overlay {
 		CleanList<Updatable> list = Updatable.getList();
 		for(Updatable u : list) {
 			G2D.drawString(x,y, u.getName());
+			y += 15;
+		}
+	}
+	public static void drawResources(float x, float y) {
+		CleanList<Resource> list = Resource.getList();
+		for(Resource u : list) {
+			G2D.drawString(x,y, u.getFileName() + ": " + u.getReferences());
 			y += 15;
 		}
 	}

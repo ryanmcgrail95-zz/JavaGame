@@ -182,13 +182,13 @@ Compilation events (10 events):
 Event: 24.216 Thread 0x000000005487b000 nmethod 1671 0x00000000026944d0 code [0x0000000002694620, 0x00000000026946d8]
 Event: 24.216 Thread 0x000000005487b000 1672       4       object.primitive.Positionable::y (8 bytes)
 Event: 24.217 Thread 0x000000005487b000 nmethod 1672 0x0000000002520550 code [0x00000000025206a0, 0x0000000002520758]
-Event: 24.231 Thread 0x000000005487b000 1685       4       datatypes.mat4::get (37 bytes)
+Event: 24.231 Thread 0x000000005487b000 1685       4       ds.mat4::get (37 bytes)
 Event: 24.233 Thread 0x000000005487b000 nmethod 1685 0x0000000002520090 code [0x00000000025201e0, 0x0000000002520358]
-Event: 24.236 Thread 0x000000005487b000 1688       4       datatypes.vec::<init> (37 bytes)
+Event: 24.236 Thread 0x000000005487b000 1688       4       ds.vec::<init> (37 bytes)
 Event: 24.240 Thread 0x000000005487b000 nmethod 1688 0x00000000026b7010 code [0x00000000026b7160, 0x00000000026b72b8]
 Event: 24.250 Thread 0x0000000054884800 nmethod 1668 0x00000000025cfed0 code [0x00000000025d0120, 0x00000000025d0e48]
 Event: 24.250 Thread 0x0000000054884800 1686       3       java.lang.StrictMath::floorOrCeil (128 bytes)
-Event: 24.250 Thread 0x000000005487b000 1697       4       datatypes.mat4::getCol (51 bytes)
+Event: 24.250 Thread 0x000000005487b000 1697       4       ds.mat4::getCol (51 bytes)
 
 GC Heap History (10 events):
 Event: 12.799 GC heap before
@@ -302,8 +302,8 @@ Event: 19.572 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action
 Event: 19.572 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000281d280 method=java.awt.image.ComponentColorModel.getAlpha(Ljava/lang/Object;)I @ 4
 Event: 19.572 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000280f448 method=java.awt.image.ComponentColorModel.extractComponent(Ljava/lang/Object;II)I @ 4
 Event: 20.871 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002848ac4 method=java.lang.Math.round(F)I @ 36
-Event: 20.913 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000029ecbd0 method=datatypes.lists.CleanList$ListIterator.hasNext()Z @ 39
-Event: 20.913 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000029ecf68 method=datatypes.lists.CleanList$ListIterator.checkNotDone()Z @ 21
+Event: 20.913 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000029ecbd0 method=ds.lst.CleanList$ListIterator.hasNext()Z @ 39
+Event: 20.913 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000029ecf68 method=ds.lst.CleanList$ListIterator.checkNotDone()Z @ 21
 Event: 21.116 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002a04efc method=java.io.BufferedReader.readLine(Z)Ljava/lang/String; @ 192
 Event: 24.014 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002619bd8 method=functions.MathExt.contain(FFF)F @ 3
 Event: 24.142 Thread 0x0000000056154000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002a16720 method=gfx.GOGL.drawWaveform(FFFFIIIILresource/sound/SoundBuffer;Z)V @ 360

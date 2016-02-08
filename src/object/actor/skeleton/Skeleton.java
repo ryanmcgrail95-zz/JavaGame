@@ -1,6 +1,6 @@
 package object.actor.skeleton;
 
-import datatypes.vec3;
+import ds.vec3;
 
 public class Skeleton {
 	Animation currentAnimation;

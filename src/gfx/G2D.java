@@ -6,10 +6,11 @@ import resource.font.Font;
 import resource.font.MergedFont;
 import resource.font.SplitFont;
 
+import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
-import datatypes.PrintString;
-import datatypes.StringExt;
+import ds.PrintString;
+import ds.StringExt2;
 
 public class G2D extends GL {
 	public static void drawTexture(float x, float y, Texture tex) 									{drawTexture(x,y,tex.getWidth(),tex.getHeight(),tex);}
@@ -218,7 +219,7 @@ public class G2D extends GL {
 	public static void drawStringCentered(float x, float y, float xS, float yS, String str) {
 		y -= getStringHeight(xS,yS,str)/2;
 					
-		StringExt all = new StringExt(str);
+		StringExt2 all = new StringExt2(str);
 		String line = all.chompLine();
 		
 		while(line != "") {
@@ -274,5 +275,35 @@ public class G2D extends GL {
 
 	public static String getCurrentFontName() {
 		return curFont.getName();
+	}
+
+	public static void rrectangle(float x, float y, float w, float h, float r) {
+		rrectangle(x,y,w,h, r, new float[] {0,0,1,1}, true);
+	}
+	public static void rrectangle(float x, float y, float w, float h, float r, float[] bounds, boolean fill) {
+		GL.rectangle(x, y, w, h, bounds, fill);
+/*		float 
+			bX1 = bounds[0],
+			bY1 = bounds[1],
+			bX2 = bounds[2],
+			bY2 = bounds[3],
+			bW = bX2-bX1,
+			bH = bY2-bY1;
+		
+		if(w*h != 0) {
+			if(fill) {
+				gl.glBegin(GL2.GL_QUADS);
+				gl.glTexCoord2d(bX1+bW/2,bY1+bH/2);	gl.glVertex3f(x+w/2, y+h/2, orthoLayer);
+			}
+			else
+				gl.glBegin(GL2.GL_LINE_LOOP);
+				
+	
+				gl.glTexCoord2d(bounds[0], bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
+				gl.glTexCoord2d(bounds[2], bounds[1]);	gl.glVertex3f(x+w, y, orthoLayer);
+				gl.glTexCoord2d(bounds[2], bounds[3]);	gl.glVertex3f(x+w, y+h, orthoLayer);
+				gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);		
+			gl.glEnd();
+		}*/
 	}
 }

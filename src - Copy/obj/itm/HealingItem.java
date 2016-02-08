@@ -1,6 +1,6 @@
 package obj.itm;
 
-import Datatypes.Inventory;
+import ds.Inventory;
 
 public class HealingItem extends Item {
 	public float healthBoost;

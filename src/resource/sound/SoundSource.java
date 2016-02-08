@@ -2,7 +2,7 @@ package resource.sound;
 
 import com.jogamp.openal.AL;
 
-import datatypes.vec3;
+import ds.vec3;
 import functions.Math2D;
 import functions.MathExt;
 
@@ -10,15 +10,18 @@ public class SoundSource {
 	private SoundBuffer parentBuffer;
 	private int[] sourceID = new int[1];
 	private int bufferID;
-	private float volumePercent = 1, fadeAmount = 1, volume, speed = 1;
+	private float volumePercent = 1, fadeAmount = 1, fadeToAmt = 1, volume, speed = 1;
 	private int doLoop;
-	private boolean isReversed = false;
+	private boolean isReversed = false, wasNeverPlayed = true;
 	
 	// EFFECTS
 	private static final byte FX_NONE = 0, FX_DIZZY = 1;
 	private byte effect = FX_NONE;
 	private float wobbleDir = 0, wobbleDirSpeedDir = 0, wobbleDirSpeedMax = 2 , wobbleSize = .15f;
 	
+	private boolean fadeIn;
+	private SoundBuffer newBuffer;
+
 	
 	private final static byte S_STOPPED = 0, S_PAUSED = 1, S_PLAYING = 2;
 	private byte playState = S_PAUSED;
@@ -57,7 +60,11 @@ public class SoundSource {
 	}
 	
 	public void setSoundBuffer(SoundBuffer blueprint) {
-		parentBuffer = blueprint;		
+		stop();
+		
+		wasNeverPlayed = true;
+		
+		parentBuffer = blueprint;
         setBuffer(blueprint);
         al().alSourcef (sourceID[0], AL.AL_PITCH,    1.0f);
         al().alSourcef (sourceID[0], AL.AL_GAIN,     fadeAmount*volumePercent*(volume = blueprint.getVolume()));
@@ -92,6 +99,7 @@ public class SoundSource {
 	
 	
 	public void play() 	{
+		wasNeverPlayed = false;
 		if(isPlaying())	return;
 		playState = S_PLAYING;
 		al().alSourcePlay(sourceID[0]);
@@ -129,7 +137,7 @@ public class SoundSource {
 		fadeAmount = MathExt.contain(0,value,1);
 		al().alSourcef(sourceID[0], AL.AL_GAIN, fadeAmount*volumePercent*volume);
 	}
-	public boolean fade(float toValue) {
+	private boolean fade(float toValue) {
 		toValue = MathExt.contain(0,toValue,1);
 		
 		float sign = Math.signum(toValue-fadeAmount);
@@ -182,6 +190,27 @@ public class SoundSource {
 			wobbleDirSpeedDir += 1;
 			wobbleDir += Math.abs(Math2D.calcLenY(wobbleDirSpeedMax,wobbleDirSpeedDir));
 		}
+		
+		fade(fadeToAmt);
+
+		System.out.println(this.getParentBuffer().getName() + ": " + fadeAmount + ", " + fadeToAmt);
+
+		if(fadeAmount < .01 && newBuffer != null) {
+			setBuffer(newBuffer);
+			
+			if(fadeIn) {
+				setFadeAmount(0);
+				fadeTo(1);
+			}
+			else {
+				setFadeAmount(1);
+				fadeTo(1);
+			}
+			
+			newBuffer = null;
+		}
+		
+
 		
 		setALSpeed();
 	}
@@ -244,5 +273,25 @@ public class SoundSource {
 	}
 	public void setLoop(boolean isLooping) {
 		al().alSourcei(sourceID[0], AL.AL_LOOPING, isLooping ? 1 : 0);
+	}
+	public float getFadeAmount() {
+		return fadeAmount;
+	}
+	public void fadeTo(float amt) {
+		System.out.println("FADETO: " + getParentBuffer().getName() + ", " + amt);
+		fadeToAmt = MathExt.contain(0,amt,1);
+	}
+	public boolean wasNeverPlayed() {
+		return wasNeverPlayed;
+	}
+
+	public void shift(SoundBuffer newMusic, boolean fadeOut, boolean fadeIn) {		
+		fadeTo(0);
+		
+		if(!fadeOut)
+			fadeAmount = 0;
+		
+		newBuffer = newMusic;
+		this.fadeIn = fadeIn;
 	}
 }

@@ -5,8 +5,8 @@ import gfx.GOGL;
 import java.util.ArrayList;
 import java.util.List;
 
-import datatypes.mat4;
-import datatypes.vec3;
+import ds.mat4;
+import ds.vec3;
 
 public class Bone {
 	private float len;

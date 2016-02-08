@@ -25,8 +25,8 @@ import com.jogamp.opengl.util.texture.Texture;
 
 import cont.Messages;
 import cont.TextureController;
-import datatypes.LinearGrid;
-import datatypes.vec3;
+import ds.LinearGrid;
+import ds.vec3;
 
 public abstract class Tree extends ResourceMine {
 	float zScale;

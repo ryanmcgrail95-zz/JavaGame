@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.util.Comparator;
 
-import datatypes.vec4;
+import ds.vec4;
 import obj.itm.Item;
 import functions.ArrayMath;
 import functions.Math2D;

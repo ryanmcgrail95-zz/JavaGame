@@ -1,5 +1,4 @@
 /Resources/
-/Reference/
 /Smithing/
 /animation/
 /brain/
@@ -7,7 +6,8 @@
 /collision/
 /com/
 /cont/
-/datatypes/
+/dialog/
+/ds/
 /fl/
 /functions/
 /games/
@@ -16,6 +16,7 @@
 /image/
 /interfaces/
 /io/
+/menu/
 /obj/
 /object/
 /org/
@@ -31,4 +32,3 @@
 /time/
 /twoD/
 /window/
-/dialog/

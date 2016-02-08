@@ -6,7 +6,7 @@ import gfx.GOGL;
 import java.util.ArrayList;
 import java.util.List;
 
-import datatypes.vec3;
+import ds.vec3;
 import object.primitive.Environmental;
 import object.primitive.Physical;
 

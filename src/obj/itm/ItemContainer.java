@@ -2,8 +2,8 @@ package obj.itm;
 
 import object.actor.Actor;
 import object.primitive.Positionable;
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 
 public class ItemContainer {
 	public static final byte S_VALUE = 0, S_NAME = 1;

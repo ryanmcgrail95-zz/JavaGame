@@ -11,9 +11,17 @@ public class ModelRenderer extends Drawable {
 	
 	public ModelRenderer(String modelName) {
 		super(false,false);
-		mod = Model.get(modelName);
+		mod = Model.get(modelName, true);
+		mod.addReference();
 		
-		C3D.splitModel(mod.getTriangles(), 10,10,48);
+		name = "ModelRenderer: " + modelName;
+		
+		C3D.splitModel(mod, 10,10,48);
+	}
+	
+	public void destroy() {
+		super.destroy();
+		mod.removeReference();
 	}
 
 	@Override
@@ -42,13 +50,17 @@ public class ModelRenderer extends Drawable {
 			GL.disableShaders();
 		GT.transformClear();*/
 		
+		start("ModelRenderer.draw()");
+		
 		GL.setPerspective();
 		GT.transformClear();
+		GL.resetColor();
 			GL.enableShader("Model");
 			
 			mod.drawFast();
 			GL.disableShaders();
 		GT.transformClear();
+		end("ModelRenderer.draw()");
 	}
 
 	@Override

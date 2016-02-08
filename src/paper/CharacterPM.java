@@ -9,9 +9,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import resource.Resource;
-import datatypes.StringExt;
-import datatypes.lists.WeightedRandomList;
+import ds.StringExt2;
+import ds.lst.WeightedRandomList;
 import fl.FileExt;
+import gfx.GL;
 
 public class CharacterPM extends Resource implements Elemental {
 	private final static String BASE_DIRECTORY = "Resources/Images/Characters/";
@@ -38,8 +39,8 @@ public class CharacterPM extends Resource implements Elemental {
 	//private byte element;
 	private SpriteMap spriteMap;
 	
-	private CharacterPM(String name) {
-		super(name, Resource.R_CHARACTER);
+	private CharacterPM(String name, boolean isTemporary) {
+		super(name, Resource.R_CHARACTER, isTemporary);
 		this.name = name;
 		
 		this.attackList = new WeightedRandomList<Attack>("Character");
@@ -55,10 +56,10 @@ public class CharacterPM extends Resource implements Elemental {
 		float weight = 1;
 		
 		String fileName = directory + "stats.dat";
-		StringExt fileText = new StringExt(FileExt.readFile2String(fileName));
+		StringExt2 fileText = new StringExt2(FileExt.readFile2String(fileName));
 			
 		String line;
-		StringExt chomper = new StringExt();
+		StringExt2 chomper = new StringExt2();
 		
 		boolean inAttack = false;
 		
@@ -131,16 +132,12 @@ public class CharacterPM extends Resource implements Elemental {
 		}
 	}
 	
-	public static CharacterPM getCharacter(String name) {
+	public static CharacterPM getCharacter(String name, boolean isTemporary) {
 		CharacterPM retC;
-		if(cMap.containsKey(name)) {
-			System.out.println("Used character " + name + ".");
+		if(cMap.containsKey(name))
 			retC = cMap.get(name);
-		}
-		else {
-			System.out.println("Added character " + name + ".");
-			retC = new CharacterPM(name);
-		}
+		else
+			retC = new CharacterPM(name, isTemporary);
 		
 		return retC;
 	}
@@ -174,6 +171,8 @@ public class CharacterPM extends Resource implements Elemental {
 	
 	@Override
 	public void load(String fileName) {
+		GL.println("LOADING CHARACTER " + fileName + "***************************");
+		
 		this.directory = BASE_DIRECTORY + fileName + "/";
 		this.spriteMap = SpriteMap.getSpriteMap(fileName);
 		
@@ -185,6 +184,8 @@ public class CharacterPM extends Resource implements Elemental {
 
 	@Override
 	public void unload() {
+		super.unload();
+		
 		cMap.remove(name);
 		
 		spriteMap.destroy();

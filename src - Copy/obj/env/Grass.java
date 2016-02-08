@@ -8,8 +8,8 @@ import obj.prim.Physical;
 import func.Math2D;
 import gfx.GOGL;
 import gfx.TextureExt;
-import Datatypes.LinearGrid;
-import Datatypes.vec3;
+import ds.LinearGrid;
+import ds.vec3;
 
 import com.jogamp.opengl.util.texture.Texture;
 

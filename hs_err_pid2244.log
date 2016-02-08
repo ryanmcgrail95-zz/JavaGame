@@ -162,7 +162,7 @@ CodeCache: size=245760Kb used=4987Kb max_used=4987Kb free=240772Kb
  compilation: enabled
 
 Compilation events (10 events):
-Event: 5.625 Thread 0x0000000054bf9000 1409       4       Datatypes.vec::get (21 bytes)
+Event: 5.625 Thread 0x0000000054bf9000 1409       4       ds.vec::get (21 bytes)
 Event: 5.626 Thread 0x0000000054bf9000 nmethod 1409 0x0000000002d7aad0 code [0x0000000002d7ac20, 0x0000000002d7acd8]
 Event: 5.626 Thread 0x0000000054c4f000 1405       3       jogamp.opengl.gl4.GL4bcImpl::glNormal3f (49 bytes)
 Event: 5.627 Thread 0x0000000054c4f000 nmethod 1405 0x0000000002d7fed0 code [0x0000000002d80120, 0x0000000002d80e48]

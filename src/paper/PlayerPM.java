@@ -17,7 +17,7 @@ public class PlayerPM extends ActorPM {
 		instance = this;
 		PartnerPM.create("luigi", x, y, z);
 		
-		setSurviveTransition(true);
+		//setSurviveTransition(true);
 	}
 	
 	public void destroy() {
@@ -67,6 +67,11 @@ public class PlayerPM extends ActorPM {
 	public static PlayerPM create(float x, float y, float z) {
 		create().setPos(x,y,z);
 		PartnerPM.create(x, y, z);
+
+		instance.floorZ = instance.toFloorZ = z;
+		instance.centerCamera(290, 90, -8.6f);		
+		GL.getMainCamera().teleport();
+
 		return instance;
 	}
 	public static PlayerPM getInstance() {

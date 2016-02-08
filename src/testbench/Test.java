@@ -10,8 +10,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import collision.C3D;
-import datatypes.StringExt;
-import datatypes.lists.CleanList;
+import ds.StringExt2;
+import ds.StringExtF;
+import ds.StringExt;
+import ds.StringF;
+import ds.mat4;
+import ds.lst.CleanList;
 import fl.FileExt;
 import functions.FastMath;
 import functions.Math2D;
@@ -37,7 +41,7 @@ public class Test {
 			BufferedWriter buffW = new BufferedWriter(new FileWriter(f2));
 			
 			String line;
-			StringExt lineExt = new StringExt(), wordExt = new StringExt();
+			StringExt2 lineExt = new StringExt2(), wordExt = new StringExt2();
 			String[] words, nums;
 			boolean isFace;
 			
@@ -127,7 +131,7 @@ public class Test {
 			BufferedWriter buffW = new BufferedWriter(new FileWriter(f2));
 			
 			String line;
-			StringExt lineExt = new StringExt(), wordExt = new StringExt();
+			StringExt2 lineExt = new StringExt2(), wordExt = new StringExt2();
 			String[] words, nums;
 			boolean isFace;
 			
@@ -199,6 +203,7 @@ public class Test {
 			
 			System.out.println(totFile);
 			
+			
 			buff.close();
 			buffW.close();
 		} catch (IOException e) {
@@ -226,17 +231,107 @@ public class Test {
 	}
 	
 	
-	public static void main(String[] args) {	
-		StringExt str = new StringExt("hh_herehere");
-		System.out.println(str.replace("here", "herebutt"));
-		System.out.println(str);
+	public static void main(String[] args) {
+		
+		Stopwatch m = new Stopwatch();
+		
+		StringExt2 se = new StringExt2();
+		StringExt sef = new StringExt("poop 5000");
+		
+		sef.munchWord();
+		System.out.println(sef.munchWord());
+		
 		if(true)
+			return;
+				
+		/* Erasing Completely
+		 * 		StringBuilder fastest, by creating new object
+		 * 
+		 * Deleting
+		 * 		String wins by far.
+		 * 
+		 * Creation
+		 * 		StringBuilder fastest
+		 * 
+		 * Appending
+		 * 		StringBuilder fastest
+		 *
+		 * ToString()
+		 * 		StringBuilder fastest 
+		 * 
+		 * Substring
+		 * 		String & StringBuilder Comparable
+		 *
+		 * Length
+		 * 		StringBuffer & StringBuilder Comparable
+		 *
+		 * IndexOf
+		 * 		StringBuilder
+		 *
+		 * Inserting
+		 * 		StringBuilder
+		 * 
+		 * Replacing
+		 * 		String
+		 */
+			
+		
+		double t0 = 0, t1 = 0, t2 = 0;
+		int n = 1000, ii;
+		
+		String a, b = "what a relief";
+		String w1 = "", w2 = "";
+		String a1[] = null, a2[] = null;
+		
+		for(int i = 0; i < n; i++) {		
+			se.set(b);
+			sef.set(b);
+			
+			se.munchChar();
+			sef.munchChar();
+						
+			m.start();
+			se.replace("what","re");
+			m.stop();	t1 += m.getMilli();
+							
+			m.start();
+			sef.replace("what","re");
+			m.stop();	t2 += m.getMilli();
+		}
+
+		w1 = se.toString();
+		w2 = sef.toString();
+		
+		System.out.println(w1.equals(w2));
+		System.out.println(w1 + ", " + w2);
+		System.out.println(t1 + ", " + t2);
+		//System.out.println(s2 + " " + sbf.toString() + sbi.toString());
+		
+		/*float[] arr = mat4.createIdentityArray();
+		arr = mat4.multMM(arr, mat4.createTranslationArray(5, 10, 2));
+		arr = mat4.multMM(arr, mat4.createRotationZArray(20));
+		//arr = mat4.multMM(arr, mat4.createScaleArray(3,3,3));
+		mat4.println(arr);*/
+		
+		/*if(true)
 			return;
 		
 		PML.ini();
 		
 		//Script.exec("##SCR() {$a = 5;#println(3 + 5^2, $a^2, 2^$a, $a, 1 + #min(#max(1 + 1,3), 3^2) + 2, 22, ($a = 4), $a + 1, $a += 1, -$a, $a); #return(#println(2));}");
-		Script.exec("##SCR() {$a = 5;#println(3 + 5^2, $a^2, 2^$a, $a, 1 + #min(#max(1 + 1,3), 3^2) + 2, 22, ($a = 4), $a + 1, $a += 1, -$a, $a); #return(2);}; #return(#SCR());");
+		Script.exec(
+			"##SCR() {"
+				+ "$a = 5;"
+				+ "#println(3 + 5^2, $a^2, 2^$a, $a, 1 + #min(#max(1 + 1,3), 3^2) + 2, 22, ($a = 4), $a + 1, $a += 1, -$a, $a);"
+				+ ""
+				+ "if(5 <= 25){"
+					+ "#println(5);"
+				+ "}"
+				+ ""
+				+ "#return(2);"
+			+ "};"
+			+ "#println(#SCR());"
+		);
 		//Script.exec("if(5 <= 25){#println(1);#println(2);#println(3);}else{#println(5);#println(6);}#println(9);");
 				
 		if(true)
@@ -256,8 +351,6 @@ public class Test {
 		if(true)
 			return;
 		
-		/*System.out.println(testV(ang1,ang2));
-		System.out.println(Math2D.calcAngDiff(ang1,ang2));*/
 		
 		int trialNum = 1000;
 		float[] times = new float[2];
@@ -290,7 +383,7 @@ public class Test {
 		}
 		
 		System.out.println(times[0]/trialNum);
-		System.out.println(times[1]/trialNum);
+		System.out.println(times[1]/trialNum);*/
 		
 		/*Idea.ini();
 		

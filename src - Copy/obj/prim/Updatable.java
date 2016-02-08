@@ -1,7 +1,7 @@
 package obj.prim;
 
 import time.Timer;
-import Datatypes.SortedList;
+import ds.SortedList;
 import Sounds.SoundController;
 import cont.IO;
 import cont.TextureController;

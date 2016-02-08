@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import object.primitive.Updatable;
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public class Playlist extends Updatable {
 	private SoundSource source;

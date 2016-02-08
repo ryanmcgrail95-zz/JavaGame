@@ -1,6 +1,6 @@
 package brain;
 
-import datatypes.StringExt;
+import ds.StringExt2;
 
 public class SentenceProcessor {
 	private String currentSentence;

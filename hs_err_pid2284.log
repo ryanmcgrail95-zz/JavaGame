@@ -166,13 +166,13 @@ CodeCache: size=245760Kb used=6423Kb max_used=6434Kb free=239336Kb
  compilation: enabled
 
 Compilation events (10 events):
-Event: 26.857 Thread 0x0000000054cda000 1741       3       datatypes.mat4::set (32 bytes)
+Event: 26.857 Thread 0x0000000054cda000 1741       3       ds.mat4::set (32 bytes)
 Event: 26.858 Thread 0x0000000054cda000 nmethod 1741 0x0000000002a84450 code [0x0000000002a84660, 0x0000000002a850f8]
-Event: 26.859 Thread 0x0000000054cda000 1742       3       datatypes.mat4::mult (56 bytes)
+Event: 26.859 Thread 0x0000000054cda000 1742       3       ds.mat4::mult (56 bytes)
 Event: 26.860 Thread 0x0000000054cda000 nmethod 1742 0x00000000029c6610 code [0x00000000029c6840, 0x00000000029c7288]
-Event: 26.860 Thread 0x0000000054cda000 1743       3       datatypes.mat4::array (46 bytes)
+Event: 26.860 Thread 0x0000000054cda000 1743       3       ds.mat4::array (46 bytes)
 Event: 26.861 Thread 0x0000000054cda000 nmethod 1743 0x00000000028fa2d0 code [0x00000000028fa460, 0x00000000028fa848]
-Event: 26.861 Thread 0x0000000054cbb800 1744       4       datatypes.vec::set (28 bytes)
+Event: 26.861 Thread 0x0000000054cbb800 1744       4       ds.vec::set (28 bytes)
 Event: 26.867 Thread 0x0000000054cbb800 nmethod 1744 0x0000000002ab4050 code [0x0000000002ab41a0, 0x0000000002ab4398]
 Event: 26.867 Thread 0x0000000054cda000 1745       3       gfx.RGBA::getArray (32 bytes)
 Event: 26.867 Thread 0x0000000054cda000 nmethod 1745 0x00000000028f9ed0 code [0x00000000028fa020, 0x00000000028fa230]
@@ -293,7 +293,7 @@ Event: 21.417 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action
 Event: 21.417 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002c18108 method=java.awt.image.ComponentColorModel.extractComponent(Ljava/lang/Object;II)I @ 4
 Event: 23.094 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002e1127c method=java.io.BufferedReader.readLine(Z)Ljava/lang/String; @ 192
 Event: 26.090 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002d8a018 method=functions.MathExt.contain(FFF)F @ 3
-Event: 26.097 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002e0dc8c method=datatypes.lists.CleanList$ListIterator.hasNext()Z @ 6
+Event: 26.097 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002e0dc8c method=ds.lst.CleanList$ListIterator.hasNext()Z @ 6
 Event: 26.828 Thread 0x0000000058f9d000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002da8ee8 method=java.lang.StrictMath.floorOrCeil(DDDD)D @ 115
 
 Internal exceptions (10 events):

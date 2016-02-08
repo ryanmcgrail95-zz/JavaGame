@@ -1,8 +1,12 @@
 // Objects
 
+#playMusic("pleasantIntro", "pleasantLoop", .1, TRUE, FALSE);
+
 &ModelRenderer("Pleasant_Path_3");
 
 &Player(0,0,117);
+
+&Enemy("mario", -200,103,117);
 
 &SpinningEyes {
 	$x = -285;
@@ -21,11 +25,8 @@
 	-204,-250
 );
 
-&AirBlock {
-	$x = -240;
-	$y = 97;
-	$z = 117;
-}
+&AirBlock(-240,97,117);
+&AirBlock(-220,97,117, FALSE);
 
 //&Switch {
 //	$x = -240;

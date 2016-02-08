@@ -3,7 +3,7 @@ package script;
 import java.util.HashMap;
 import java.util.Map;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public class Variable extends PML {
 	private static CleanList<Variable> tempList = new CleanList<Variable>("TempVars");

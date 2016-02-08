@@ -1,7 +1,7 @@
 package resource;
 
 import gfx.GL;
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public final class Loadbar {
 	private static CleanList<Loadbar> loadbars = new CleanList<Loadbar>("Loadbars");

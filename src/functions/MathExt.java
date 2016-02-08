@@ -1,5 +1,6 @@
 package functions;
 
+import gfx.GL;
 import time.Delta;
 
 public class MathExt {
@@ -166,11 +167,19 @@ public class MathExt {
 	public static float snap(float val, float grid) {return grid*Math.round(val/grid);}
 	
 	public static float wrap(float mi, float value, float ma) {
+		//GL.start("MathExt.wrap");
+		if(mi < ma)
+			return value;
+		else if(mi == ma)
+			return mi;
+		
 		float diff = ma - mi;
 		
 		while(value < mi)	value += diff;
 		while(value > ma)	value -= diff;
-		
+
+		//GL.end("MathExt.wrap()");
+
 		return value;
 	}
 	

@@ -1,2 +1,7 @@
 // Objects
-BattleController
+
+#playMusic("battleIntro", "battleLoop", .05, FALSE, FALSE);
+
+&BattleController();
+
+&ModelRenderer("Battle-Pleasant_Path_1_Flowerless");

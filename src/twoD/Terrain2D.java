@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import cont.ImageLoader;
-import datatypes.BitArray;
+import ds.BitArray;
 import object.actor.Player;
 import object.primitive.Collideable;
 import object.primitive.Drawable;

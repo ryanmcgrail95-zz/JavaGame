@@ -18,7 +18,11 @@ public class FileExt {
 	private FileExt() {}
 	
 	public static InputStream get(String fileName) {
-		return FileExt.class.getResourceAsStream(fixNameGet(fileName));
+		//System.out.println("Attempting: " + fileName);
+		InputStream output = FileExt.class.getResourceAsStream(fixNameGet(fileName));
+		//if(output == null)
+		//	throw new UnsupportedOperationException("File \"" + fileName + "\" doesn't exist!");
+		return output;
 	}
 	
 	public static File getFile(String fileName) {
@@ -26,7 +30,8 @@ public class FileExt {
 	}
 	
 	public static String readFile2String(String fileName) {		
-		String str = "", line;
+		String line;
+		StringBuilder sb = new StringBuilder();
 		
 		try {
 			InputStream is = get(fileName);
@@ -34,7 +39,7 @@ public class FileExt {
 			BufferedReader reader = new BufferedReader(isr);
 			
 			while((line = reader.readLine()) != null)
-				str += line+"\n";
+				sb.append(line+"\n");
 			
 			reader.close();
 			isr.close();
@@ -44,7 +49,7 @@ public class FileExt {
 			e.printStackTrace();
 		}
 		
-		return str;
+		return sb.toString();
 	}
 	
 	public static String fixSlashes(String fileName) {

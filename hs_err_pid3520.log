@@ -183,7 +183,7 @@ Event: 5.570 Thread 0x0000000054cdd000 nmethod 1429 0x0000000002ba4950 code [0x0
 Event: 5.574 Thread 0x0000000054cd7000 nmethod 1427 0x0000000002babfd0 code [0x0000000002bac1a0, 0x0000000002bac998]
 Event: 5.574 Thread 0x0000000054cd7000 1430       4       java.lang.StrictMath::floorOrCeil (128 bytes)
 Event: 5.575 Thread 0x0000000054cd7000 nmethod 1430 0x0000000002baaf50 code [0x0000000002bab0c0, 0x0000000002bab1d8]
-Event: 5.575 Thread 0x0000000054cd7000 1428       4       Datatypes.vec::get (21 bytes)
+Event: 5.575 Thread 0x0000000054cd7000 1428       4       ds.vec::get (21 bytes)
 Event: 5.575 Thread 0x0000000054cd7000 nmethod 1428 0x0000000002baab90 code [0x0000000002baace0, 0x0000000002baad98]
 
 GC Heap History (10 events):

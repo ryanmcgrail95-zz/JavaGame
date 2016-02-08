@@ -4,14 +4,18 @@ import cont.TextureController;
 import io.Keyboard;
 import functions.Math2D;
 import functions.MathExt;
+import gfx.Camera;
 import gfx.GL;
 import gfx.GT;
 import gfx.RGBA;
+import object.primitive.Drawable;
 import object.primitive.Positionable;
+import paper.ActorPM;
 import paper.AnimationsPM;
 import paper.Attack;
 import paper.BodyPM;
 import paper.CharacterPM;
+import paper.PartnerPM;
 import paper.PlayerPM;
 import paper.SpriteMap;
 import resource.sound.Sound;
@@ -21,17 +25,19 @@ import time.Delta;
 public abstract class BattleActor extends Positionable {
 	BattleController parent;
 	
-	private CharacterPM myChar;
+	public static BattleActor pl, pa;
+	
 	private BodyPM myBody;
 	private boolean hasAttacked = false, isDestroyed = false;
 		
-	private int hp;
+	private int hp, winTimer = -1;
 	
 	protected float originalX;
 	
 	private boolean
 		isInvincible = false,
-		isMetal = false;
+		isMetal = false,
+		mainRender = true;
 	
 	protected static int groundZ = 0;
 	
@@ -53,6 +59,7 @@ public abstract class BattleActor extends Positionable {
 		hopNumber = 0,
 		hopZ = 0,
 		
+		oriX0,
 		moveToX0 = -1000,
 		moveToZ0 = -1000;
 	
@@ -115,11 +122,15 @@ public abstract class BattleActor extends Positionable {
 		
 	
 	public void destroy() {
+		if(this == pl)
+			pl = null;
+		if(this == pa)
+			pa = null;
+		
 		isDestroyed = true;				
 		super.destroy();
 		myBody.destroy();
 			myBody = null;
-			myChar = null;
 			currentAttack = null;
 			zPreviouses = null;
 			target = null;
@@ -131,7 +142,6 @@ public abstract class BattleActor extends Positionable {
 		super.destroy();
 		myBody.destroy();
 			myBody = null;
-			myChar = null;
 			currentAttack = null;
 			zPreviouses = null;
 			target = null;
@@ -342,8 +352,10 @@ public abstract class BattleActor extends Positionable {
 		}
 		return false;
 	}
-	
 	private boolean jumpInPlace(boolean out) {
+		return jumpInPlace(1, out);
+	}
+	private boolean jumpInPlace(float speed, boolean out) {
 		if(!isJumping) {
 			Sound.play("jump");
 				
@@ -361,9 +373,9 @@ public abstract class BattleActor extends Positionable {
 		float prevJumpDir = jumpDir;
 		
 		if(out)
-			jumpDir += calcHopSpeed();
+			jumpDir += speed*calcHopSpeed();
 		else
-			jumpDir += calcJumpSpeed(true);
+			jumpDir += speed*calcJumpSpeed(true);
 		
 		float jumpH;
 		jumpH = jumpOutHeight;
@@ -387,7 +399,7 @@ public abstract class BattleActor extends Positionable {
 	
 	public BattleActor(String name, float x, boolean isPlayer, BattleController parent) {
 		super(x,0,0, false,false);
-		
+		oriX0 = x;
 		setSurviveTransition(true);
 		
 		this.name = name;
@@ -395,16 +407,23 @@ public abstract class BattleActor extends Positionable {
 		this.isPlayer = isPlayer;
 		this.parent = parent;		
 		
-		myChar = CharacterPM.getCharacter(name);
-			hp = myChar.getMaxHP();
-		myBody = new BodyPM(myChar);
+
+		myBody = new BodyPM(name);
+		hp = getCharacter().getMaxHP();
 
 		setAnimationStill();
 	}
 	
+	private CharacterPM getCharacter() {
+		return myBody.getCharacter();
+	}
+
 	@Override
 	public void update() {
+		start("BattleActor.update()");
+				
 		updateZPrevious();
+		myBody.setFloorZ(0);
 
 		super.update();
 		
@@ -426,6 +445,8 @@ public abstract class BattleActor extends Positionable {
 		if(!isDestroyed)		
 			if(getZ() <= groundZ)
 				setZ(groundZ);
+		
+		end("BattleActor.update()");
 	}
 	
 	private void updateZPrevious() {
@@ -493,7 +514,7 @@ public abstract class BattleActor extends Positionable {
 	}
 
 	public void attack() {
-		currentAttack = myChar.getRandomAttack();
+		currentAttack = getCharacter().getRandomAttack();
 	}
 
 	
@@ -752,24 +773,122 @@ public abstract class BattleActor extends Positionable {
 				break;
 				
 			case ST_WIN_START:
-				if(parent.checkTimer()) {
+    			pl.myBody.setFloorZ(-100);
+    			pa.myBody.setFloorZ(-100);
+
+				pl.mainRender = true;
+				pa.mainRender = true;				
+        		GL.getMarioCamera().render(pl, pa);
+				pl.mainRender = false;
+				pa.mainRender = false;				
+
+        		if(parent.checkTimer()) {
 					state = ST_WIN_JUMP_OUT;
+					winTimer = 0;
+					GL.getMarioCamera().enable(false);					
+
+					pl.myBody.setAlpha(.6f);
+					pa.myBody.setAlpha(.6f);
+					GL.getMainCamera().renderDrawable();
+					pl.myBody.setAlpha(1);
+					pa.myBody.setAlpha(1);
+					
+					GL.setOrtho();
 					GL.beginPageCurl();
-					parent.setTimer(1);
+					GL.setPerspective();
+					
+					Sound.lockMusic();
+					Sound.fadeMusic(0);
+					
 					Room.revertRoom();
-					PlayerPM.getInstance().setVisible(false);
-					PlayerPM.getInstance().setPos(x(), y(), z());
 				}
 				break;
 			case ST_WIN_JUMP_OUT:
-				if(parent.checkTimer()) {
-					//GL.getMainCamera().enable(false);
+				//winTimer--;
+				//if(parent.checkTimer()) {
+				//GL.getMainCamera().enable(false);
+				//}
+				pa.setAnimationJump();
+				pl.setAnimationJump();
+				
+				
+    			pl.myBody.setFloorZ(-100);
+    			pa.myBody.setFloorZ(-100);
+
+
+				pl.mainRender = true;
+				pa.mainRender = true;				
+        		GL.getMarioCamera().render(pl, pa);
+				pl.mainRender = false;
+				pa.mainRender = false;				
+
+        		
+        		Camera c = GL.getMainCamera();
+        		
+				ActorPM pll = PlayerPM.getInstance();
+				ActorPM pal = PartnerPM.getInstance();
+				
+				float dX;
+				dX = pl.x() - pa.x();
+				
+				if(pll != null) {
+					pl.x(pll.x());
+					pl.y(pll.y());
+					pl.z(pll.z());
+					
+					pa.x(pll.x() - dX);
+					pa.y(y());
+					pa.z(z());
+					pal.x(pa.x());
+					pal.y(pa.y());
+					pal.z(pa.z());
+					
+					pll.setVisible(false);
+					pll.setCanControl(false);
+					pal.setVisible(false);
+					pal.setCanControl(false);
+
+					
+					float r, tX, tY, tZ, toD, x,y,z;
+					r = 205;
+					tX = x();
+					tY = y();
+					tZ = z() + 17 + 9; //18
+					toD = 8.6f;
+										
+					x = tX;
+					y = tY - Math2D.calcLenX(r,toD);
+					z = tZ + Math2D.calcLenY(r,toD);
+					
+					c.setProjection(x,y,z,tX,tY,tZ);
+					c.teleport();
+					c.lock();
 				}
-				setAnimationJump();
-				if(jumpInPlace(true) && GL.getPageCurl() == 1) {
-					PlayerPM.getInstance().setVisible(true);
+				
+				if(winTimer == 0) {
+					//GL.getMainCamera().enable(false);
+					setVisible(true);
+					winTimer = 1;
+				}
+				if(winTimer == 1) {
+					pa.jumpInPlace(2, true);
+					if(pl.jumpInPlace(2,true))
+						winTimer = 2;
+				}
+				if(winTimer == 2) {
+					pll.setCanControl(true);
+					pll.setVisible(true);
+					pal.setCanControl(true);
+					pal.setVisible(true);
 					GL.endPageCurl();
-					BattleController.getInstance().destroy();
+					c.enable(true);
+					c.unlock();
+					c.smoothOnce(2f);
+										
+					pl.destroy();
+					pa.destroy();
+					
+					Sound.unlockMusic();
 				}
 				break;
 
@@ -830,7 +949,7 @@ public abstract class BattleActor extends Positionable {
 		return isPlayer ? 1 : -1;
 	}
 	private int calcDamage() {
-		return currentAttack.getAttack() - target.myChar.getDefense();
+		return currentAttack.getAttack() - target.getCharacter().getDefense();
 	}
 
 	public void damageHop() {
@@ -949,18 +1068,24 @@ public abstract class BattleActor extends Positionable {
 	@Override
 	public void draw() {
 		
-		boolean inMain, inMario, overCurl;
+		boolean inMain, inMario, overCurl, parentTimer;
 		inMain = GL.getCamera() == GL.getMainCamera();
 		inMario = GL.getCamera() == GL.getMarioCamera();
-		overCurl = GL.getPageCurl() > -1 && inMario;
-		
-		if(!(overCurl || inMain))
-			return;
+		overCurl = GL.getPageCurl() > -1 && inMario;		
+				
+		//if(!(overCurl || inMain))
+		//	return;
 		
 		if(isDestroyed)
 			return;
 		
 		GL.setPerspective();
+		
+		if(!mainRender) {
+			myBody.setFloorZ(0);
+			myBody.drawShadow(oriX0, y(), 0, 0);
+			return;
+		}
 		
 		float dXT, dZT;
 		
@@ -979,33 +1104,31 @@ public abstract class BattleActor extends Positionable {
 		if(hopZ != 0)
 			dZT += MathExt.rnd(4);
 		
-
+		myBody.setPosition(x() + dXT, y(), z() + dZT);
+		
 		GT.transformClear();
-			GT.transformTranslation(getX(),getY(),0);
-			GT.transformTranslation(dXT,0,0);
 			
-			if(GL.getCamera() == GL.getMainCamera()) {
+			/*if(GL.getCamera() == GL.getMainCamera()) {
 				GL.forceColor(RGBA.BLACK);
 				float shH = myBody.getSpriteWidth()*.4f/2, shW = shH*1.5f;
 				GL.setAlpha(.5f);
 				GL.draw3DFloor(-shW,-shH,shW,shH,.1f, TextureController.getTexture("texShadow"));
 				GL.unforceColor();
 				GL.setAlpha(1);
-			}
+			}*/
 
 			if(GL.getPageCurl() == -1 || inMario) {
-				GT.transformTranslation(0,0,getZ()+dZT);
-				
-				GT.transformRotationZ(deathAngle);
+				myBody.setRotation(deathFallAngle, 0, deathAngle);
 				//GL.transformPaper();
 	
-				GT.transformRotationX(deathFallAngle);
-	
+				
 				GL.setColor(RGBA.WHITE);
 				
 				if(canActionCommand() || (flashTimer != 0 && Math2D.calcLenY(flashTimer*4) > 0))
-					GL.forceColor(RGBA.WHITE);
-								
+					myBody.setForceColor(RGBA.WHITE);
+				else	
+					myBody.setForceColor(null);
+				
 				if(isInvincible)
 					GL.enableShaderRainbow();
 				else if(isMetal)
@@ -1049,7 +1172,7 @@ public abstract class BattleActor extends Positionable {
 	}
 
 	public int getHP() {return hp;}
-	public int getMaxHP() {return myChar.getMaxHP();}
+	public int getMaxHP() {return getCharacter().getMaxHP();}
 
 
 	public void gotoWinState() {

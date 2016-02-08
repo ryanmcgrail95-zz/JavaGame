@@ -14,7 +14,7 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
-import datatypes.vec2;
+import ds.vec2;
 
 public class GUIFrame extends GUIDrawable {
 	private FBO fbo;

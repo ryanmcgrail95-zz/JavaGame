@@ -1,7 +1,7 @@
 package obj.chr;
 
-import Datatypes.Inventory;
-import Datatypes.vec3;
+import ds.Inventory;
+import ds.vec3;
 import Sounds.SoundController;
 
 import com.jogamp.opengl.util.texture.Texture;

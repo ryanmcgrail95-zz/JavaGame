@@ -1,6 +1,6 @@
 package object.environment;
 
-import datatypes.vec3;
+import ds.vec3;
 import functions.MathExt;
 import gfx.GOGL;
 import resource.model.Model;

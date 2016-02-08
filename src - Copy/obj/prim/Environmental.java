@@ -3,7 +3,7 @@ package obj.prim;
 import java.util.ArrayList;
 import java.util.List;
 
-import Datatypes.SortedList;
+import ds.SortedList;
 
 public abstract class Environmental extends Drawable {
 	private static SortedList<Environmental> envList = new SortedList<Environmental>();

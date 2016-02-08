@@ -15,16 +15,21 @@ import gfx.RGBA;
 import gfx.TextureExt;
 import object.primitive.Drawable;
 import object.primitive.Updatable;
+import paper.ActorPM;
+import paper.PartnerPM;
+import paper.PlayerPM;
 import paper.SpriteMap;
 import resource.model.Model;
 import time.Delta;
 import time.Timer;
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public class BattleController extends Drawable {
 	private static BattleController instance;
 	private byte state, prevState;
 	private final byte ST_FIRSTSTRIKE = 0, ST_PLAYER = 1, ST_ENEMY = 2, ST_ENEMY_DEATHS = 3, ST_WON_BATTLE = 4;
+	
+	private Model mod;
 	
 	private Timer timer = new Timer(0,0);
 	
@@ -51,10 +56,19 @@ public class BattleController extends Drawable {
 	public BattleController() {
 		super(false,false);
 		
-		name = "BattleController";
+		name = "BattleController";	
 		
-		playerActors.add(new BattlePlayer("mario", PLAYER_X, this));
-		playerActors.add(new BattlePlayer("luigi", PLAYER_X - 28, this));
+		mod = Model.get("Battle-Pleasant_Path_1_Flowerless", true);
+		mod.addReference();
+		
+		ActorPM pl = PlayerPM.getInstance(), pa = PartnerPM.getInstance();
+		if(pl != null)
+			pl.destroy();
+		if(pa != null)
+			pa.destroy();
+		
+		playerActors.add(BattleActor.pl = new BattlePlayer("mario", PLAYER_X, this));
+		playerActors.add(BattleActor.pa = new BattlePlayer("luigi", PLAYER_X - 28, this));
 		enemyActors.add(new BattleEnemy("watt", 4, this));
 		//enemyActors.add(new BattleEnemy("geno", 36, this));
 		//enemyActors.add(new BattleEnemy("luigi", 72, this));
@@ -66,7 +80,6 @@ public class BattleController extends Drawable {
 		new BattleFlower(-110,row2Y,19, purple);
 		new BattleFlower(-42,row2Y,36, purple);
 		new BattleFlower(-20,row2Y,29, yellow);
-		
 		new BattleFlower(20,row1Y,22, purple);
 		new BattleFlower(48,row1Y,29, yellow);
 		new BattleFlower(87,row1Y,21, purple);
@@ -95,6 +108,8 @@ public class BattleController extends Drawable {
 		}
 	}
 	public void continueDeathAnimations() {
+		start("BattleController.continueDeathAnimations()");
+		
 		boolean isDead = false;
 		for(BattleActor b : enemyActors) {
 			if(b.getHP() == 0) {
@@ -116,22 +131,32 @@ public class BattleController extends Drawable {
 					playerActors.get(0).gotoWinState();
 				focusPlayer();
 			}
+
+		end("BattleController.continueDeathAnimations()");
 	}
 	
 	public void continueTurn() {
+		start("BattleController.continueTurn()");
+		
 		checkDead();
 		
 		if(state == ST_PLAYER)
 			continuePlayerTurn();
 		else if(state == ST_ENEMY)
 			continueEnemyTurn();
+		
+		end("BattleController.continueTurn()");
 	}
 		
 	private void startPlayerTurn() {
+		start("BattleController.startPlayerTurn()");
+		
 		state = ST_PLAYER;
 		for(BattleActor b : playerActors)
 			b.resetHasAttacked();
 		continuePlayerTurn();
+		
+		end("BattleController.startPlayerTurn()");
 	}
 	public void continuePlayerTurn() {	
 		//Run this after each player attacks.
@@ -182,8 +207,10 @@ public class BattleController extends Drawable {
 	
 	
 	public void destroy() {
-		for(BattleActor b : playerActors)
-			b.destroy();
+		mod.removeReference();
+		
+		//for(BattleActor b : playerActors)
+		//	b.destroy();
 		playerActors.destroy();
 		playerActors = null;
 		
@@ -204,10 +231,16 @@ public class BattleController extends Drawable {
 		timer.set(time);
 	}
 	public float getTimer() {
-		return timer.get();
+		if(timer != null)
+			return timer.get();
+		else
+			return 0;
 	}
 	public boolean checkTimer() {
 		return timer.checkOnce();
+	}
+	public boolean checkNextTimer() {
+		return (timer.get() - Delta.convert(1)) <= 0;
 	}
 	
 	public void endBattleWin() {
@@ -347,6 +380,7 @@ public class BattleController extends Drawable {
 		dir = MathExt.to(dir, toDir, dirSpd);
 		
 		float toX,toY,toZ, x,y,z, r, d;
+
 		toX = camX;
 		toY = 0;
 		toZ = camZ + zPos; //45?
@@ -367,7 +401,7 @@ public class BattleController extends Drawable {
 		
 		GL.setPerspective();
 		GL.setColor(RGBA.WHITE);
-			Model.get("Battle-Pleasant_Path_1_Flowerless").draw();
+			mod.draw();
 			
 		
 		if(Keyboard.checkDown('a')) {		

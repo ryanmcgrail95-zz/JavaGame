@@ -11,11 +11,11 @@ import java.util.List;
 import brain.Name;
 import cont.Messages;
 import cont.Text;
-import datatypes.StringExt;
-import datatypes.vec2;
-import datatypes.vec3;
-import datatypes.vec4;
-import datatypes.lists.CleanList;
+import ds.StringExt2;
+import ds.vec2;
+import ds.vec3;
+import ds.vec4;
+import ds.lst.CleanList;
 import interfaces.Useable;
 import io.Mouse;
 import obj.itm.Inventory;
@@ -718,7 +718,7 @@ public abstract class Actor extends Physical {
 		
 		String itemName, count;
 		String line;
-		StringExt lineExt = new StringExt();
+		StringExt2 lineExt = new StringExt2();
 		try {
 			while((line = str.readLine()) != null) {
 				lineExt.set(line);

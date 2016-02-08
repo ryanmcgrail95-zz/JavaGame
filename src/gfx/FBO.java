@@ -17,7 +17,7 @@ import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public class FBO {
 	
@@ -205,7 +205,7 @@ public class FBO {
 		} catch(IOException e) {
 		}
 	}
-
+	
 	public void saveScreenshot() {
 		save("Resources/Screenshots/" + System.currentTimeMillis() + ".png");
 	}

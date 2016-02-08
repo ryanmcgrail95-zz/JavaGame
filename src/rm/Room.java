@@ -19,18 +19,24 @@ import paper.PlayerPM;
 import resource.Loadbar;
 import resource.Resource;
 import resource.model.Model;
+import resource.sound.Sound;
 import script.Script;
-import datatypes.StringExt;
-import datatypes.lists.CleanList;
+import time.Stopwatch;
+import ds.StringExt2;
+import ds.lst.CleanList;
 import de.jarnbjo.oggtools.Player;
 import fl.FileExt;
+import gfx.GL;
 import btl.BattleController;
 
 public class Room {
 	private final static String BASE_DIRECTORY = "Resources/Rooms/";
-	private static String curRoom = "Toad Town Center", prevRoom;
+	private static String nextRoom = "", curRoom = "Toad Town Center", prevRoom;
 	private static List<Resource> resourceList = new ArrayList<Resource>();
-	private static boolean isLoading;
+	private static boolean isLoading, inBattle;
+	
+	private String prevMusic;
+	
 
 	private Room() {}
 
@@ -46,80 +52,7 @@ public class Room {
 		changeRoom(prevRoom);
 	}
 	public static void changeRoom(String newRoomName) {
-		isLoading = true;
-		prevRoom = curRoom;
-		curRoom = newRoomName;
-				
-				
-		List<Resource> newResourceList = new ArrayList<Resource>(),
-			unloadResourceList = new ArrayList<Resource>(),
-			loadResourceList = new ArrayList<Resource>();
-		
-		
-		
-		Updatable.transition();
-		
-		// Get New Resource List
-		getResourceList(newRoomName, newResourceList);
-		
-		boolean isInside;
-		
-		// Determine Unload List
-		for(Resource r : resourceList) {
-			isInside = false;
-			for(Resource rr : newResourceList)
-				if(r == rr || r.getFileName().equals(rr.getFileName())) {
-					isInside = true;
-					break;
-				}
-			if(!isInside)
-				unloadResourceList.add(r);
-		}
-		
-		// Determine Load List
-		for(Resource r : newResourceList) {
-			isInside = false;
-			for(Resource rr : resourceList)
-				if(r == rr || r.getFileName().equals(rr.getFileName())) {
-					isInside = true;
-					break;
-				}
-			if(!isInside)
-				loadResourceList.add(r);
-		}
-
-		
-		
-		// Unload All Unnecessary Resources
-		Loadbar bar = new Loadbar(unloadResourceList.size() + loadResourceList.size());
-		for(Resource r : unloadResourceList) {
-			r.unload();
-			bar.step();
-		}
-		
-		
-		// Load New Resources
-		for(Resource r : loadResourceList) {
-			r.load();
-			bar.step();
-		}
-		
-		bar.destroy();
-		
-		// Clean Up Lists
-		resourceList.clear();
-		unloadResourceList.clear();
-		loadResourceList.clear();
-		resourceList = newResourceList;
-		
-		// Delete all Objects in Room
-		//Updatable.transition();
-		
-		
-		// Set New Room
-		instantiateRoom(newRoomName);		
-		
-		isLoading = false;
+		nextRoom = newRoomName;
 	}
 	
 	
@@ -127,10 +60,8 @@ public class Room {
 	public static void getResourceList(String roomName, List<Resource> resources) {
 		String path = BASE_DIRECTORY + roomName + "/resources.dat";
 		
-		System.out.println("what0");
-		StringExt fileStr = new StringExt(FileExt.readFile2String(path));
-		
-		StringExt curLine = new StringExt();
+		StringExt2 fileStr = new StringExt2(FileExt.readFile2String(path));
+		StringExt2 curLine = new StringExt2();
 		
 		String[] words;
 		int wordNum;
@@ -140,29 +71,35 @@ public class Room {
 		
 		float scale;
 		float rX, rY, rZ;
+		
+		float specTime = 0;
 
 		while(!fileStr.isEmpty()) {
 			curLine.set(fileStr.munchLine());
+			curLine.munchSpace();
+
+			curLine.println();
 			
 			if(curLine.startsWith("//") || curLine.isWhiteSpace() || curLine.isEmpty())		
 				continue;
+
 			
-			curLine.munchSpace();
 			words = curLine.split(' ');
-			wordNum = words.length;
 			
+			wordNum = words.length;
+
 			switch(words[0]) {
 				case "Model:":
 					curModels.clear();
 					for(int i = 1; i < wordNum; i++) {
-						curModel = Model.get(words[i]);
+						curModel = Model.get(words[i], false);
 						resources.add(curModel);
 						curModels.add(curModel);
 					}
 					break;
 				case "Character:":
 					for(int i = 1; i < wordNum; i++)
-						resources.add(CharacterPM.getCharacter(words[i]));
+						resources.add(CharacterPM.getCharacter(words[i], false));
 					break;
 					
 					
@@ -189,12 +126,12 @@ public class Room {
 			}
 		}
 		
-		curModels.clear();
+		curModels.clear();		
 	}
 	
 	public static void instantiateRoom(String roomName) {
 		String path = BASE_DIRECTORY + roomName + "/layout.dat";
-		
+
 		Script.exec(FileExt.readFile2String(path));
 		
 		/*if(true)
@@ -294,5 +231,83 @@ public class Room {
 
 	private static float parseValue(String str, Map<String, Double> varMap) {
 		return Float.parseFloat(str);
+	}
+
+
+	public static void change() {
+		if(nextRoom == "")
+			return;
+			
+		isLoading = true;
+		prevRoom = curRoom;
+		curRoom = nextRoom;
+		nextRoom = "";
+				
+		List<Resource> newResourceList = new ArrayList<Resource>(),
+			unloadResourceList = new ArrayList<Resource>(),
+			loadResourceList = new ArrayList<Resource>();
+		
+				
+		Updatable.transition();
+		
+		// Get New Resource List
+		getResourceList(curRoom, newResourceList);
+		
+		boolean isInside;
+		
+		// Determine Unload List
+		for(Resource r : resourceList) {
+			isInside = false;
+			for(Resource rr : newResourceList)
+				if(r == rr || r.getFileName().equals(rr.getFileName())) {
+					isInside = true;
+					break;
+				}
+			if(!isInside)
+				unloadResourceList.add(r);
+		}
+		
+		// Determine Load List
+		for(Resource r : newResourceList) {
+			isInside = false;
+			for(Resource rr : resourceList)
+				if(r == rr || r.getFileName().equals(rr.getFileName())) {
+					isInside = true;
+					break;
+				}
+			if(!isInside)
+				loadResourceList.add(r);
+		}
+		
+		
+		// Unload All Unnecessary Resources
+		Loadbar bar = new Loadbar(unloadResourceList.size() + loadResourceList.size());
+		for(Resource r : unloadResourceList) {
+			r.unload();
+			bar.step();
+		}
+
+		
+		// Load New Resources
+		for(Resource r : loadResourceList) {
+			r.load();
+			bar.step();
+		}
+
+		bar.destroy();
+		
+		// Clean Up Lists
+		resourceList.clear();
+		unloadResourceList.clear();
+		loadResourceList.clear();
+		resourceList = newResourceList;
+		
+		// Delete all Objects in Room
+		Updatable.transition();
+		
+		// Set New Room
+		instantiateRoom(curRoom);		
+ 
+		isLoading = false;
 	}
 }

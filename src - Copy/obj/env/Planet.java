@@ -3,9 +3,9 @@ package obj.env;
 import func.Math2D;
 import gfx.GOGL;
 import obj.chr.Player;
-import Datatypes.mat4;
-import Datatypes.vec3;
-import Datatypes.vec4;
+import ds.mat4;
+import ds.vec3;
+import ds.vec4;
 
 public class Planet extends Heightmap {
 

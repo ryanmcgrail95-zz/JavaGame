@@ -8,16 +8,19 @@ import java.util.List;
 import java.util.Map;
 
 import resource.Resource;
+import time.Stopwatch;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
-import datatypes.mat4;
-import datatypes.lists.CleanList;
+import ds.mat;
+import ds.mat4;
+import ds.lst.CleanList;
 import functions.ArrayMath;
 import gfx.GL;
 import gfx.RGBA;
+import object.primitive.Drawable;
 
 public class Model extends Resource {
 		
@@ -41,11 +44,13 @@ public class Model extends Resource {
 	private Material[] materials;
 	private Submodel[] submodelList;
 	
-	private float[] preMatrix;
+	private float[] preMatrix = new float[16];
 	
 	private static Map<String, Model> modelMap = new HashMap<String, Model>();
 	
 	private float[][][] triangles;
+	
+	private String key;
 	
 	public final static int TRIANGLES = GL2.GL_TRIANGLES, QUADS = GL2.GL_QUADS;
 	private int modelType;
@@ -156,23 +161,23 @@ public class Model extends Resource {
 	
 	
 	
-	private Model(String fileName) {
-		super(fileName, Resource.R_MODEL);
+	private Model(String fileName, String key, boolean isTemporary) {
+		super(fileName, Resource.R_MODEL, isTemporary);
 
-		System.out.println(fileName + "---------------------------------------------");
+		//System.out.println(fileName + "---------------------------------------------");
 
-		modelMap.put(removeType(fileName),this);
+		modelMap.put(this.key = key,this);
 		
-		preMatrix = mat4.createIdentityArray();
+		mat4.createIdentityArray(preMatrix);
 	}
 	public Model() {
-		super("", Resource.R_MODEL);
+		super("", Resource.R_MODEL, true);
 		
-		System.out.println("NEW MODEL---------------------------------------------");
+		//System.out.println("NEW MODEL---------------------------------------------");
 
-		modelMap.put(removeType(""),this);
+		//modelMap.put(removeType(""),this);
 		
-		preMatrix = mat4.createIdentityArray();
+		mat4.createIdentityArray(preMatrix);
 	}
 	
 	public void create(int modelType, List<float[]> pointList, List<float[]> normalList, List<float[]> uvList, List<int[]> vertexList) {
@@ -219,13 +224,15 @@ public class Model extends Resource {
 	}
 	
 	public void unload() {
+		super.unload();
 		destroy();
 	}
 	
 	public void destroy() {
-		System.out.println("DESTROY MODEL---------------------------------------------");
+		System.out.println("**Destroyed model " + getFileName());
 
 		modList.remove(this);
+		modelMap.remove(key);
 		
 		// Delete Arrays
 		// Delete Material
@@ -247,8 +254,9 @@ public class Model extends Resource {
 		// Delete GL Vertex Index/Buffer
 		GL2 gl = GL.getGL2();
 
-		for(Submodel s : submodelList)
-			s.destroy(gl);
+		if(submodelList != null)
+			for(Submodel s : submodelList)
+				s.destroy(gl);
 		submodelList = null;
 		
 		// Empty Vertex Buffer
@@ -270,7 +278,7 @@ public class Model extends Resource {
 		int[] color = new int[4];
 		
 		Material curMat = null;
-		
+				
 		GL.disableTextures();
 		GL.enableBlending();
 		GL.enableInterpolation();
@@ -311,8 +319,13 @@ public class Model extends Resource {
 	
 	
 	public void drawFast() {
+		if(!this.isLoaded())
+			throw new UnsupportedOperationException("Model \"" + getFileName() + "\" is not loaded yet!");
+		
+		GL.start("Model[" + getFileName() + "].drawFast()");
 		for(Submodel s : submodelList)
-			s.draw();
+			s.draw();		
+		GL.end("Model.drawFast()");
 	}
 	
 	public void add() {
@@ -347,7 +360,7 @@ public class Model extends Resource {
 	public void transform(float[] transformMatrix) {		
 		destroyTriangles();
 		if(pointList == null)
-			preMatrix = ArrayMath.multMM(preMatrix, transformMatrix);
+			ArrayMath.multMM(preMatrix, transformMatrix, preMatrix);
 		else {
 			float[] curVertex = new float[] {0,0,0,1};
 
@@ -357,7 +370,7 @@ public class Model extends Resource {
 				curVertex[2] = v[2];
 				curVertex[3] = 1;
 				
-				curVertex = ArrayMath.multMV(transformMatrix, curVertex);
+				ArrayMath.multMV(transformMatrix, curVertex, curVertex);
 				
 				v[0] = curVertex[0];
 				v[1] = curVertex[1];
@@ -382,7 +395,9 @@ public class Model extends Resource {
 	
 	public void scale(float scaleFactor) {scale(scaleFactor,scaleFactor,scaleFactor);}
 	public void scale(float sX, float sY, float sZ) {
+		GL.start("Model["+this.getFileName()+"].scale()");
 		transform(mat4.createScaleArray(sX,sY,sZ));
+		GL.end("Model.scale()");
 	}
 	
 	public void flipNormals() {
@@ -403,7 +418,7 @@ public class Model extends Resource {
 	
 	// Allow Model to Be Created this way in first place
 	
-	protected void createAndFillVertexBuffer() {
+	protected void createAndFillVertexBuffer() {	    
 		int numBuffers;
 		if(materials == null)
 			numBuffers = 1;
@@ -553,13 +568,20 @@ public class Model extends Resource {
 
 
 	public void load(String fileName) {
+		if(getTemporary())
+			return;
+		
+		
+
+		
 		if(fileName != "") {
 			// Necessary for Fixing Model
 			scale(2f);
 			scale(1,-1,-1);
+
 			
 			OBJLoader.loadInto(fileName, this);
-
+			
 			flipNormals();
 		}
 		
@@ -567,6 +589,7 @@ public class Model extends Resource {
 		preMatrix = null;
 		
 		mirrorUVVertically();
+
 		
 		createAndFillVertexBuffer();
 	}
@@ -585,11 +608,11 @@ public class Model extends Resource {
 	}
 
 
-	public static Model get(String name) {
+	public static Model get(String name, boolean isTemporary) {
 		name = removeType(name);
 		if(modelMap.containsKey(name))
 			return modelMap.get(name);
 		else
-			return new Model(name + ".obj");
+			return new Model(name + ".obj", name, isTemporary);
 	}
 }

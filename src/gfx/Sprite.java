@@ -28,11 +28,17 @@ public abstract class Sprite {
 	}
 	
 	public void draw(float x, float y, float frame) {
+		GL.start("Sprite.draw(...)");
+		
 		Texture t = getTexture(frame);
 		G2D.drawTexture(x,y,t.getWidth(),t.getHeight(),t,getBounds(frame));
+
+		GL.end("Sprite.draw(...)");
 	}
 	public void draw(float x, float y, float w, float h, float frame) {
+		GL.start("Sprite.draw(...)");
 		G2D.drawTexture(x, y, w, h, getTexture(frame), getBounds(frame));
+		GL.end("Sprite.draw(...)");
 	}
 
 	public abstract int getImageNumber();

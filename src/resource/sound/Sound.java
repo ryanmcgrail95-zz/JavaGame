@@ -1,5 +1,6 @@
 package resource.sound;
 
+import java.awt.Component;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -19,8 +20,8 @@ import com.jogamp.openal.util.WAVLoader;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 import fl.FileExt;
 import functions.Array;
 import functions.ArrayMath;
@@ -37,11 +38,14 @@ public class Sound {
     private static float listenerX, listenerY, listenerZ;
     
     private static SoundSource curMusic = null, newMusic = null;
+    private static SoundBuffer afterMusic = null;
     private static CleanList<SoundSource> sourceList = new CleanList<SoundSource>("Snd Src");
 	private static List<SoundBuffer> bufferList = new ArrayList<SoundBuffer>();
 	private static List<String> musicList = new ArrayList<String>();
     private static Map<String, List<String>> playlistMap = new HashMap<String, List<String>>();
 	
+    private static boolean musicLock = false;
+    
 	public static void ini() {
 		boolean success = false;
 		
@@ -60,34 +64,38 @@ public class Sound {
 
         //LOAD SOUNDS
 		//loadSound("button", "Resources/Sounds/FX/button.ogg",80);
-		loadSound("blockCrumble", "Resources/Sounds/FX/blockCrumble.ogg");
-        loadSound("footstep", "Resources/Sounds/FX/footstep.ogg",.5f);
-        loadSound("spin", "Resources/Sounds/FX/spin.ogg");
-        loadSound("jump", "Resources/Sounds/FX/jump.ogg", 70);
-        loadSound("blipMale", "Resources/Sounds/FX/blipMale.ogg", 80);
+		loadSound("Resources/Sounds/FX/blockCrumble.ogg");
+        loadSound("Resources/Sounds/FX/footstep.ogg",.15f);
+        loadSound("Resources/Sounds/FX/spin.ogg");
+        loadSound("Resources/Sounds/FX/jump.ogg", 70);
+        loadSound("Resources/Sounds/FX/blipMale.ogg", 80);
 
-		loadSound("fireAttack", "Resources/Sounds/FX/fireAttack.ogg",90);
+		loadSound("Resources/Sounds/FX/fireAttack.ogg",90);
         
-		loadSound("enemyDie", "Resources/Sounds/FX/enemyDie.ogg",110);
+		loadSound("Resources/Sounds/FX/enemyDie.ogg",110);
 		
-		loadSound("dodge", "Resources/Sounds/FX/dodge.ogg",50);
-		loadSound("dodgeCrunch", "Resources/Sounds/FX/dodgeCrunch.ogg",80);
-		loadSound("attack", "Resources/Sounds/FX/attack.ogg",100);
+		loadSound("Resources/Sounds/FX/dodge.ogg",50);
+		loadSound("Resources/Sounds/FX/dodgeCrunch.ogg",80);
+		loadSound("Resources/Sounds/FX/attack.ogg",200);
 
 		//loadSound("ampTest", "Resources/Sounds/Music/ampTest.ogg", 1, true);
 		//loadSound("overworld", "Resources/Sounds/Music/overworld.ogg", .05f, true);
-		loadSound("ffOverworld", "Resources/Sounds/Music/ffOverworld.ogg", .05f, true);
+		//loadSound("Resources/Sounds/Music/ffOverworld.ogg", .05f, true);
 		//loadSound("ffOverworld", "Resources/Sounds/Music/ffOverworld.ogg", .05f, true);
 		//loadDirectory("Resources/Sounds/Music/Ace Attorney/", .05f);
-				
-		playMusic("ffOverworld");
 	}
 	
 	public static SoundBuffer get(String name) {
-		return bufferMap.get(name);
+		return get(name, .05f);
+	}
+	public static SoundBuffer get(String name, float volume) {
+		if(bufferMap.containsKey(name))
+			return bufferMap.get(name);
+		else
+			return loadTemp("Resources/Sounds/Music/" + name + ".ogg", volume);
 	}
 
-	private static void playMusic(String name) {playMusic(get(name));}
+	public static void playMusic(String name) {playMusic(get(name));}
 	private static void playMusic(SoundBuffer music) {
 		if(curMusic == null) {
 			curMusic = new SoundSource(music, true);
@@ -99,16 +107,88 @@ public class Sound {
 			newMusic = new SoundSource(music, true);
 	}
 
+	public static void playMusic(String intro, String music) {
+		playMusic(get(intro), get(music), false);
+	}
+	public static void playMusic(String intro, String music, boolean fade) {
+		playMusic(get(intro), get(music), fade);
+	}
+	private static void playMusic(SoundBuffer intro, SoundBuffer music, boolean fade) {
+		if(curMusic == null) {
+			curMusic = new SoundSource(intro, false);
+			if(fade)
+				curMusic.setFadeAmount(0);
+			if(!musicLock)
+				curMusic.play();
+			newMusic = null;
+			afterMusic = music;
+		}
+		else if(curMusic.getParentBuffer() != intro && curMusic.getParentBuffer() != music) {
+			
+			if(fade)
+				newMusic = new SoundSource(intro, false);
+			else {
+				curMusic.stop();
+				curMusic.destroy();
+				
+				curMusic = new SoundSource(intro, false);
+				if(!musicLock)
+					curMusic.play();
+			}
+			afterMusic = music;
+		}
+	}
+	
+	public static void playMusic(String intro, String music, float volume) {
+		playMusic(intro, music, volume, false, false);
+	}
+	public static void playMusic(String intro, String music, float volume, boolean fadeOut, boolean fadeIn) {
+		playMusic(get(intro, volume), get(music, volume), volume, fadeOut, fadeIn);
+	}
+	private static void playMusic(SoundBuffer intro, SoundBuffer music, float volume, boolean fadeOut, boolean fadeIn) {
+		if(curMusic == null) {
+			curMusic = new SoundSource(intro, false);
+			if(fadeIn)
+				curMusic.setFadeAmount(0);
+			if(!musicLock)
+				curMusic.play();
+			newMusic = null;
+			afterMusic = music;
+		}
+		else if(curMusic.getParentBuffer() != intro && curMusic.getParentBuffer() != music) {
+			newMusic = null;	
+			curMusic.shift(intro, fadeOut, fadeIn);
+			afterMusic = music;
+		}
+	}
+
 	public static void update() {
 		
 		
 		// UPDATE MUSIC
 		// If newMusic is not NULL, fade out current music then fade in new music.
 		// Otherwise, fade in new music;
+		
+		if(!musicLock)
+			if(curMusic.wasNeverPlayed())
+				curMusic.play();
+		
+		if(afterMusic != null) {
+			if(!curMusic.isALPlaying()) {
+				curMusic.destroy();
+				curMusic = new SoundSource(afterMusic, true);
+				curMusic.setFadeAmount(1);
+				if(!musicLock)
+					curMusic.play();
+				
+				afterMusic = null;
+			}
+		}
+		
 		if(newMusic != null) {
 			
-			curMusic.fade(0);
-			if(curMusic.getVolume() == 0) {
+			curMusic.fadeTo(0);
+			if(curMusic.getFadeAmount() <= .01) {
 				// Stop Old Music
 				curMusic.destroy();
 
@@ -117,11 +197,16 @@ public class Sound {
 				newMusic = null;
 
 				curMusic.setFadeAmount(0);
-				curMusic.play();
+				if(!musicLock)
+					curMusic.play();
+				curMusic.fadeTo(1);
 			}
 		}
-		else if(curMusic != null)
-			curMusic.fade(1);
+		
+		if(curMusic != null)
+			curMusic.update();
+		if(newMusic != null)
+			newMusic.update();
 	}
 	
 	
@@ -145,19 +230,21 @@ public class Sound {
 		}
 	}
 		
-	public static SoundBuffer loadSound(String name, String fileName) {return loadSound(name,fileName,1,false);}
-	public static SoundBuffer loadSound(String name, String fileName, float volume) {return loadSound(name,fileName,volume,false);}
-	public static SoundBuffer loadSound(String name, String fileName, boolean loop) {return loadSound(name,fileName,1,loop);}
-	public static SoundBuffer loadSound(String name, String fileName, float volume, boolean loop) {
-		SoundBuffer snd = SoundLoader.load(name, fileName);
+	public static SoundBuffer loadSound(String fileName) {return loadSound(fileName,1,false);}
+	public static SoundBuffer loadSound(String fileName, float volume) {return loadSound(fileName,volume,false);}
+	public static SoundBuffer loadTemp(String fileName, float volume) {return loadSound(fileName,volume,false,true);}
+	public static SoundBuffer loadSound(String fileName, boolean loop) {return loadSound(fileName,1,loop);}
+	public static SoundBuffer loadSound(String fileName, float volume, boolean loop) {return loadSound(fileName,volume,loop,false);}
+	public static SoundBuffer loadSound(String fileName, float volume, boolean loop, boolean isTemporary) {
+		SoundBuffer snd = new SoundBuffer(fileName, false);
 
 		snd.setVolume(volume);
 		
-		bufferMap.put(name, snd);
+		bufferMap.put(snd.getName(), snd);
 		bufferList.add(snd);
 		
 		if(loop)
-			musicList.add(name);
+			musicList.add(snd.getName());
 		
 		return snd;
 	}
@@ -171,13 +258,12 @@ public class Sound {
 		List<String> playlist = new ArrayList<String>();
 		SoundBuffer buff;
 		
-		String fName, fPath, name, suffix;
+		String fName, fPath, suffix;
 		// Find Album Cover
 		for(File file : fileList) {
 			fName = file.getName();
 			fPath = file.getPath();
 			suffix = FileExt.getSuffix(fName);
-			name = fName.replace("." + suffix,"");
 
 			if(suffix.equals("jpg")|| suffix.equals("png")) {
 				albumImg = TextureController.load(fPath, fName, TextureController.M_NORMAL).getFrame(0);
@@ -189,14 +275,12 @@ public class Sound {
 		for(File file : fileList) {
 			fName = file.getName();
 			fPath = FileExt.fixSlashes(file.getPath());
-			suffix = FileExt.getSuffix(fName);
-			name = fName.replace("." + suffix,"");
 			
 			if(suffix.equals("ogg") || suffix.equals("wav")) {
-				playlist.add(name);
-				buff = loadSound(name, fPath, volume, true);
+				buff = loadSound(fPath, volume, true);
 					buff.setAlbumName(albumName);
 					buff.setAlbumImage(albumImg);
+					playlist.add(buff.getName());
 			}
 		}
 		
@@ -266,8 +350,8 @@ public class Sound {
 	public static vec3 getListenerVelocity() {return new vec3(0,0,0);}
 	
 	
-	private static class SoundLoader {
-		public static SoundBuffer load(String name, String fileName) {
+	public static class Loader {
+		public static void loadInto(SoundBuffer s) {
 			ByteBuffer[] data = new ByteBuffer[1];
 		    int[] 	buffer = new int[1],
 		    		reverseBuffer = new int[1],
@@ -280,6 +364,12 @@ public class Sound {
 	        al.alGenBuffers(1, buffer, 0);
 	        al.alGenBuffers(1, reverseBuffer, 0);
 
+
+	        String name, fileName;
+	        name = s.getName();
+	        fileName = s.getFileName();
+
+	        
 	        InputStream inputStream = FileExt.get(fileName);
 	        BufferedInputStream buffStream = new BufferedInputStream(inputStream);
 	        
@@ -306,22 +396,21 @@ public class Sound {
 			} catch (Exception e) {
 			    throw new ALException(e);
 			}
-	        
+	        	        
 	        
 	        al.alBufferData(buffer[0], format[0], data[0], size[0], freq[0]);
 			reverseBuffer(format,data);
 			al.alBufferData(reverseBuffer[0], format[0], data[0], size[0], freq[0]);
 			reverseBuffer(format,data);
 	        	
-	        SoundBuffer buf = new SoundBuffer(name,fileName, buffer,reverseBuffer, format, data[0], size, freq);
+	        
+			s.setAll(buffer, reverseBuffer, format, data[0], size, freq);
 	        	        
 	        // Do another error check and return.
 	        if(al.alGetError() != AL.AL_NO_ERROR) {
 	            System.err.println("Failed to load " + fileName + ". Exiting program.");
 	            System.exit(2);
-	        }
-	        
-	        return buf;
+	        }	        
 		}
 	}
 	
@@ -381,4 +470,10 @@ public class Sound {
 	public static int getSourceNumber() {
 		return sourceList.size();
 	}
+	public static void fadeMusic(float frac) {
+		curMusic.fadeTo(frac);
+	}
+
+	public static void lockMusic() {musicLock = true;}
+	public static void unlockMusic() {musicLock = false;}
 }

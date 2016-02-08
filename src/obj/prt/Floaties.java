@@ -1,6 +1,6 @@
 package obj.prt;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import object.actor.Actor;
 import object.actor.Player;
 import functions.Math2D;

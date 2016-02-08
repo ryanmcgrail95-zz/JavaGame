@@ -8,6 +8,7 @@ import com.jogamp.opengl.util.texture.Texture;
 import functions.Math2D;
 import gfx.GT;
 import gfx.G2D;
+import gfx.GL;
 import gfx.TextureExt;
 import cont.TextureController;
 
@@ -35,6 +36,8 @@ public class ShoePM implements AnimationsPM {
 	}
 	
 	public void draw(float depth) {
+		GL.start("ShoePM.draw()");
+
 		animateModel();
 		float dW = size, dH = size,
 			dX = -dW/2, dY = dH;
@@ -42,6 +45,7 @@ public class ShoePM implements AnimationsPM {
 		GT.transformTranslation(0,-getInternalHeight(),-depth);
 		shoeTex.draw(dX,dY, dW, -dH, index);
 		GT.transformTranslation(0,getInternalHeight(),depth);
+		GL.end("ShoePM.draw()");
 	}
 }
 

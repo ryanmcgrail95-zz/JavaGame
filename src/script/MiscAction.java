@@ -4,16 +4,19 @@ import obj.env.blk.AirBlock;
 import obj.env.blk.GroundBlock;
 import object.primitive.Positionable;
 import paper.Boundary;
+import paper.EnemyPM;
 import paper.PlayerPM;
 import paper.SpinningEyes;
 import paper.Switch;
 import resource.model.Model;
+import resource.sound.Sound;
+import btl.BattleController;
 import functions.FastMath;
 import functions.MathExt;
 import gfx.ModelRenderer;
 
 public class MiscAction extends Action {
-	private final static int M_PRINTLN = 0, M_RETURN = 1, M_MIN = 2, M_ADD = 3, M_SUB = 4, M_MULT = 5, M_DIV = 6, M_POW = 7, M_MAX = 8, M_SET = 9, M_SINR = 10, M_SIND = 11, M_COSR = 12, M_COSD = 13, M_MEAN = 14, M_TASK_MOVE = 15, M_CREATE = 16, M_ACCESSVAR = 17, M_IF = 18, M_COMPARE = 19, M_CREATEBOUNDARY = 20;
+	private final static int M_PRINTLN = 0, M_RETURN = 1, M_MIN = 2, M_ADD = 3, M_SUB = 4, M_MULT = 5, M_DIV = 6, M_POW = 7, M_MAX = 8, M_SET = 9, M_SINR = 10, M_SIND = 11, M_COSR = 12, M_COSD = 13, M_MEAN = 14, M_TASK_MOVE = 15, M_CREATE = 16, M_ACCESSVAR = 17, M_IF = 18, M_COMPARE = 19, M_CREATEBOUNDARY = 20, M_PLAYMUSIC = 21;
 	private int miscType;
 	
 	public MiscAction(String name, boolean hasOutput, int type) {
@@ -27,6 +30,8 @@ public class MiscAction extends Action {
 		new MiscAction("max", true, M_MAX);
 		
 		new MiscAction("taskMove", false, M_TASK_MOVE);
+
+		new MiscAction("playMusic", false, M_PLAYMUSIC);
 
 		new MiscAction("add", true, M_ADD);
 		new MiscAction("sub", true, M_SUB);
@@ -177,11 +182,19 @@ public class MiscAction extends Action {
 										else
 											o = PlayerPM.create((float) parameters[1].getNumber(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber());
 										break;
+									case "Enemy":
+										o = new EnemyPM(parameters[1].getString(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber(), (float) parameters[4].getNumber());
 									case "SpinningEyes":	o = new SpinningEyes(0,0,0); 	break;
 									case "Switch":			o = new Switch(0,0,0); 			break;
 									case "GroundBlock":		o = new GroundBlock(0,0,0); 	break;
-									case "AirBlock":		o = new AirBlock(0,0,0); 		break;
+									case "AirBlock":
+										if(parameters.length == 4)
+											o = new AirBlock((float) parameters[1].getNumber(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber(), true);
+										else
+											o = new AirBlock((float) parameters[1].getNumber(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber(), parameters[4].getBoolean());
+										break;
 									case "ModelRenderer":	o = new ModelRenderer(parameters[1].getString());	break;
+									case "BattleController":	o = new BattleController();	break;
 									default:	throw new UnsupportedOperationException("The function create() was passed an invalid object, " + parameters[0] + ".");
 								}
 			
@@ -204,6 +217,23 @@ public class MiscAction extends Action {
 								
 								return output.set(new Boundary(pts));
 
+			case M_PLAYMUSIC:
+								int le = parameters.length;
+								if(le < 1 || le > 5)
+									throw new UnsupportedOperationException("The function playMusic() requires one, two, or three arguments.");
+				
+								switch(le) {
+									case 1: Sound.playMusic(parameters[0].getString()); 
+										break;
+									case 2: Sound.playMusic(parameters[0].getString(), parameters[1].getString());	
+										break;
+									case 3: Sound.playMusic(parameters[0].getString(), parameters[1].getString(), (float) parameters[2].getNumber());
+										break;
+									case 5: Sound.playMusic(parameters[0].getString(), parameters[1].getString(), (float) parameters[2].getNumber(), parameters[3].getBoolean(), parameters[4].getBoolean());
+										break;
+								}
+								return null;
+								
 			case M_COMPARE:		if(parameters.length != 3)
 									throw new UnsupportedOperationException("The function compare() requires one argument.");
 								

@@ -178,13 +178,13 @@ CodeCache: size=245760Kb used=5159Kb max_used=5171Kb free=240600Kb
  compilation: enabled
 
 Compilation events (10 events):
-Event: 4.078 Thread 0x0000000054dd4800 1459       3       datatypes.vec::z (6 bytes)
+Event: 4.078 Thread 0x0000000054dd4800 1459       3       ds.vec::z (6 bytes)
 Event: 4.078 Thread 0x0000000054dd4800 nmethod 1459 0x0000000002cc8990 code [0x0000000002cc8b20, 0x0000000002cc8e88]
 Event: 4.078 Thread 0x0000000054dd4800 1462       1       java.lang.ThreadLocal::getMap (5 bytes)
 Event: 4.078 Thread 0x0000000054dd4800 nmethod 1462 0x0000000002cc9050 code [0x0000000002cc91a0, 0x0000000002cc92b0]
 Event: 4.078 Thread 0x0000000054dd4800 1454       3       object.environment.Heightmap::getZ (20 bytes)
 Event: 4.078 Thread 0x0000000054dd4800 nmethod 1454 0x0000000002cc9350 code [0x0000000002cc94c0, 0x0000000002cc9668]
-Event: 4.078 Thread 0x0000000054dd4800 1453       3       datatypes.vec::get (27 bytes)
+Event: 4.078 Thread 0x0000000054dd4800 1453       3       ds.vec::get (27 bytes)
 Event: 4.078 Thread 0x0000000054dd4800 nmethod 1453 0x0000000002cc9750 code [0x0000000002cc98c0, 0x0000000002cc9b68]
 Event: 4.078 Thread 0x0000000054dd4800 1461       3       object.primitive.Updatable::disableUpdates (9 bytes)
 Event: 4.079 Thread 0x0000000054dd4800 nmethod 1461 0x0000000002cc9cd0 code [0x0000000002cc9e40, 0x0000000002cca068]

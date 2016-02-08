@@ -5,7 +5,7 @@ import gfx.RGBA;
 import java.util.ArrayList;
 import java.util.List;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import object.environment.BlockTerrain;
 import object.environment.Heightmap;
 import object.environment.Heightmap2;

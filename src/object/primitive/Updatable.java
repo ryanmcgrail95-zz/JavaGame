@@ -3,16 +3,20 @@ package object.primitive;
 import collision.C3D;
 import io.Mouse;
 import resource.sound.Sound;
-import datatypes.lists.CleanList;
+import time.Stopwatch;
+import ds.lst.CleanList;
+import gfx.GL;
 
-public abstract class Updatable {
+public abstract class Updatable extends Printable {
 	private static CleanList<Updatable> instanceList = new CleanList<Updatable>("Inst");
 	private static CleanList<Updatable> updateList = new CleanList<Updatable>("Upd");
 	protected boolean doUpdates;
 	protected String name = "";
 	
+	private static boolean timeUpdates = false;
+	
 	private boolean canSurviveTransition;
-
+	private boolean isDestroyed;
 
 	public Updatable() {
 		doUpdates = true;
@@ -30,27 +34,59 @@ public abstract class Updatable {
 	public abstract void update();
 	
 	public void destroy() {
-		instanceList.remove(this);
-		updateList.remove(this);
+		if(!isDestroyed) {
+			isDestroyed = true;
+			instanceList.remove(this);
+			updateList.remove(this);
+		}
+	}
+	
+	public boolean isDestroyed() {
+		return isDestroyed;
 	}
 
 		
 	//Global Functions
 		public static void transition() {
+			GL.start("Updatable.transition()");
+			
+			Drawable.printList();
+			
 			for(Updatable u : instanceList)
 				if(!u.canSurviveTransition)
 					u.destroy();
+			for(Updatable u : instanceList)
+				if(!u.canSurviveTransition)
+					u.destroy();
+			
+			Drawable.printList();
+
+			GL.end("Updatable.transition()");
 		}
-		public static void updateAll() {			
+		public static void updateAll() {
+			GL.start("Updatable.updateAll()");
+			
+			Stopwatch s = new Stopwatch();
+						
 			Mouse.update();
 			Sound.update();			
 			C3D.reset();
 			
 			for(Updatable u : updateList)
-				if(u.doUpdates)
+				if(u.doUpdates) {
+					if(timeUpdates)
+						s.start();
 					u.update();
+					
+					if(timeUpdates) {
+						s.stop();
+						System.out.println(u.getName() + ": " + s.getMilli());
+					}
+				}
 						
 			Sound.clean();
+
+			GL.end("Updatable.updateAll()");
 		}
 
 		public static int getNumber() {

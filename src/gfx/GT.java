@@ -2,8 +2,8 @@ package gfx;
 
 import com.jogamp.opengl.GL2;
 
-import datatypes.mat4;
-import datatypes.vec3;
+import ds.mat4;
+import ds.vec3;
 import functions.Math2D;
 
 public class GT extends GL {

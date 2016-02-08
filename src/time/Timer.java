@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import object.primitive.Updatable;
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import functions.Math2D;
 import functions.MathExt;
 

@@ -12,8 +12,8 @@ import gfx.TextureExt;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.Messages;
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 import object.actor.Actor;
 import object.actor.Player;
 import object.primitive.Drawable;

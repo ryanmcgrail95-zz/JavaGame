@@ -1,6 +1,6 @@
 package obj.itm;
 
-import Datatypes.Inventory;
+import ds.Inventory;
 
 public class ActionItem extends Item {
 	

@@ -17,10 +17,10 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
-import datatypes.LinearGrid;
-import datatypes.mat3;
-import datatypes.vec2;
-import datatypes.vec3;
+import ds.LinearGrid;
+import ds.mat3;
+import ds.vec2;
+import ds.vec3;
 
 public class Heightmap2 extends Drawable implements Collideable {
 	private static Heightmap2 instance;

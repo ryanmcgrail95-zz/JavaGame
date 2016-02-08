@@ -4,7 +4,7 @@ import gfx.G2D;
 import gfx.GL;
 import gfx.RGBA;
 import java.awt.image.BufferedImage;
-import datatypes.WeightedSmoothFloat;
+import ds.WeightedSmoothFloat;
 
 public class TransitionController {
 	private static byte T_NONE = -1, T_FADE = 0, T_IMAGE = 1;

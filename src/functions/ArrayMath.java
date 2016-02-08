@@ -40,13 +40,16 @@ public class ArrayMath {
 	
 	public static float[] multMV(float[] mat, float[] vec) {
 		fill(tempMath4, 0);
-		multMV(mat, vec, tempMath4);
-		return set(tempArray4, tempMath4);
-	}
-	public static void multMV(float[] mat, float[] vec, float[] dst) {
+
 		for(int r = 0; r < 3; r++)
 			for(int c = 0; c < 4; c++)
-				dst[r] += mat[4*r+c]*vec[c];
+				tempMath4[r] += mat[4*r+c]*vec[c];
+
+		
+		return set(tempArray4, tempMath4);
+	}
+	public static float[] multMV(float[] mat, float[] vec, float[] dst) {
+		return set(dst, multMV(mat, vec));
 	}
 	public static float[] multMM(float[] mat1, float[] mat2) {
 		fill(tempMath16, 0);
@@ -56,6 +59,9 @@ public class ArrayMath {
 				for(int i = 0; i < 4; i++)
 					tempMath16[4*r+c] += mat1[4*c+i]*mat2[4*r+i];		
 		return set(tempOut16, tempMath16);
+	}
+	public static float[] multMM(float[] mat1, float[] mat2, float[] dst) {
+		return set(dst, multMM(mat1, mat2));
 	}
 	
 	public static float[] copy(float[] src) {

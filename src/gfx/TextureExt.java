@@ -23,7 +23,7 @@ public class TextureExt extends Sprite {
 	
 	private List<Texture> frameList = new ArrayList<Texture>();
 	private int imageNumber = 0;
-	
+		
 	private static BufferedImage sprGlow; 
 	static {
 		try {
@@ -33,13 +33,13 @@ public class TextureExt extends Sprite {
 		}
 	}
 	
-	public TextureExt(BufferedImage img) {
-		super("---");
+	public TextureExt(BufferedImage img, String name) {
+		super(name);
 		addFrame(img);		
 	    TextureController.add(this);
 	}	
-	public TextureExt(List<BufferedImage> imgs) {
-		super("---");
+	public TextureExt(List<BufferedImage> imgs, String name) {
+		super(name);
 		for(BufferedImage i : imgs)
 			addFrame(i);
 		imageNumber = frameList.size();

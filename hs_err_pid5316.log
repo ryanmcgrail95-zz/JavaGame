@@ -180,9 +180,9 @@ CodeCache: size=245760Kb used=6197Kb max_used=6197Kb free=239562Kb
 
 Compilation events (10 events):
 Event: 24.240 Thread 0x0000000054cd4800 1723       3       gfx.GOGL::mult (69 bytes)
-Event: 24.240 Thread 0x0000000054ccb000 1726       4       datatypes.vec::<init> (37 bytes)
+Event: 24.240 Thread 0x0000000054ccb000 1726       4       ds.vec::<init> (37 bytes)
 Event: 24.243 Thread 0x0000000054ccb000 nmethod 1726 0x000000000299b910 code [0x000000000299ba60, 0x000000000299bbb8]
-Event: 24.243 Thread 0x0000000054ccb000 1730       4       datatypes.vec::<init> (22 bytes)
+Event: 24.243 Thread 0x0000000054ccb000 1730       4       ds.vec::<init> (22 bytes)
 Event: 24.249 Thread 0x0000000054ccb000 nmethod 1730 0x00000000029674d0 code [0x0000000002967620, 0x00000000029678b8]
 Event: 24.249 Thread 0x0000000054cd4800 nmethod 1723 0x00000000029f6c90 code [0x00000000029f6e20, 0x00000000029f71b0]
 Event: 24.249 Thread 0x0000000054cd4800 1725       2       resource.model.Model::mult (73 bytes)
@@ -303,8 +303,8 @@ Event: 19.698 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action
 Event: 19.698 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002afe100 method=java.awt.image.ComponentColorModel.getAlpha(Ljava/lang/Object;)I @ 4
 Event: 19.698 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002afcf08 method=java.awt.image.ComponentColorModel.extractComponent(Ljava/lang/Object;II)I @ 4
 Event: 20.539 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002c41044 method=java.lang.Math.round(F)I @ 36
-Event: 20.667 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002cbaa50 method=datatypes.lists.CleanList$ListIterator.hasNext()Z @ 39
-Event: 20.667 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002cba728 method=datatypes.lists.CleanList$ListIterator.checkNotDone()Z @ 21
+Event: 20.667 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002cbaa50 method=ds.lst.CleanList$ListIterator.hasNext()Z @ 39
+Event: 20.667 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002cba728 method=ds.lst.CleanList$ListIterator.checkNotDone()Z @ 21
 Event: 21.052 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002baeefc method=java.io.BufferedReader.readLine(Z)Ljava/lang/String; @ 192
 Event: 24.004 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002c7c498 method=functions.MathExt.contain(FFF)F @ 3
 Event: 24.237 Thread 0x00000000591d7800 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002ca4a68 method=java.lang.StrictMath.floorOrCeil(DDDD)D @ 115

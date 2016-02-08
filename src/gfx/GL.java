@@ -38,14 +38,16 @@ import twoD.Terrain2D;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
+import btl.BattlePlayer;
 import cont.GameController;
 import cont.ImageLoader;
 import cont.Text;
 import cont.TextureController;
-import datatypes.mat4;
-import datatypes.vec;
-import datatypes.vec3;
-import datatypes.vec4;
+import ds.StringExt2;
+import ds.mat4;
+import ds.vec;
+import ds.vec3;
+import ds.vec4;
 import functions.ArrayMath;
 import functions.Math2D;
 import functions.Math3D;
@@ -63,6 +65,7 @@ public class GL {
 	private static int shaderProgram;
 	private static float[] viewPos;
 	
+	private static boolean doUpdate = true, doDraw = true;
 	
 	// CURL VARIABLES
 	private static Texture prevScreenTex;
@@ -98,21 +101,29 @@ public class GL {
     private static int[] resolutionArray = {SCREEN_WIDTH,SCREEN_HEIGHT};
 		
 	private static RGBA drawingColor = RGBA.createf(1,1,1,1);
-	private static float orthoLayer = 0;
+	protected static float orthoLayer = 0;
 	
 	private static Texture rainbowTex, metalTex;
 	
 	
 	protected static mat4 modelMatrix = new mat4();
 	
+	private static int numStarts = 0;
 	
-	public static void print(String str) {
-		System.out.print(str);
+	public static void start(String action)	{
+		//println(StringExt.repeat("  ",numStarts) + "-->" + action);
+		numStarts++;
 	}
-	public static void println(String str) {
-		//ErrorPopup.open(str, false);
-		System.out.println(str);
+	public static void end(String action) 	{
+		numStarts--;
+		//println(StringExt.repeat("  ",numStarts) + "<--" + action);
+		
+		if(numStarts < 0)
+			throw new RuntimeException();
 	}
+	public static void print(Object str) 	{System.out.print(str);}
+	public static void println(Object str) 	{System.out.println(str);}
+	public static void println() 			{System.out.println("");}
 	
 	
 	public static void stM(String name) {
@@ -143,8 +154,10 @@ public class GL {
            		currentCamera = mainCamera = new Camera(Camera.PR_PERSPECTIVE,SCREEN_WIDTH,SCREEN_HEIGHT);
            			mainCamera.enableBG(true);
            		marioCamera = new Camera("marioCam", mainCamera);
+           			marioCamera.enable(false);
            		
        		PML.ini();
+       		Overlay.ini();
            		
         	TextureController.ini();
         	CubeMap.ini();
@@ -229,56 +242,66 @@ public class GL {
             	glad = glautodrawable;
             	
             	time.check();
-
-            	//if(!Room.isLoading())
+            	
+            	Room.change();
+            	
+            	if(Room.isLoading())
+            		return;
+            	
+            	if(doUpdate)
             		Updatable.updateAll();
             	
             	gl = glautodrawable.getGL().getGL2();
-            	            	
-            	setProjection();
-            	
-        		Drawable.display();           
-            	Camera.renderAll();
-            	
-            	if(Keyboard.checkPressed('x'))
-            		mainCamera.getFBO().saveScreenshot();
 
-            	/*screenBuffer.attach(gl,false);
-        		clearScreen(RGBA.WHITE);
-        		Drawable.draw3D();
-        		screenBuffer.detach(gl);*/
-                 	
-            	
-            	disableBlending();
-            	setViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
-            	//clear();
-            	setColor(RGBA.WHITE);
-            	setOrtho();
-            	
-            	if(curlTime >= 0) {
-	            	enableShader("PageCurl");
-	        		passShaderFloat("iGlobalTime", curlTime);
-	        		
-	        		if(curlTime < 1)
-	        			curlTime += Delta.convert(.008f);
-	        		else
-	        			curlTime = 1;
-	        		
-	        		bind(prevScreenTex,0);
-	        		bind(mainCamera.getFBO().getTexture(),1);
-	        		G2D.fillRectangle(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT);
+            	if(doDraw) {
+	            	setProjection();
+	            	
+	        		Drawable.display();           
+	            	Camera.renderAll();
+	            	
+	            	if(Keyboard.checkPressed('x'))
+	            		mainCamera.getFBO().saveScreenshot();
+	
+	            	/*screenBuffer.attach(gl,false);
+	        		clearScreen(RGBA.WHITE);
+	        		Drawable.draw3D();
+	        		screenBuffer.detach(gl);*/
+	                 	
+	            	
+	            	disableBlending();
+	            	setViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
+	            	//clear();
+	            	setColor(RGBA.WHITE);
+	            	setOrtho();
+	            	
+	            	if(curlTime >= 0) {
+		            	enableShader("PageCurl");
+		        		passShaderFloat("iGlobalTime", curlTime);
+		        				        		
+		        		if(curlTime < 1)
+		        			curlTime += Delta.convert(.008f*2);
+		        		else
+		        			curlTime = 1;
+		        		
+		        		bind(prevScreenTex,0);
+		        		bind(mainCamera.getFBO().getTexture(),1);
+		        		G2D.fillRectangle(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT);
+	            	}
+	            	else
+	            		drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,mainCamera.getFBO());
+	            	disableShaders();
+	            	
+	            	//if(curlTime >= 0)
+	            	drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,marioCamera.getFBO());
+	            	
+	            	enableBlending();
+	            	
+	            	Overlay.draw();
+	            	
             	}
-            	else
-            		drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,mainCamera.getFBO());
-            	disableShaders();
-            	
-            	if(curlTime >= 0)
-            		drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,marioCamera.getFBO());
-            	
-            	enableBlending();
-            	
-            	Overlay.draw();
-        	
+                else
+                	System.out.println(Delta.getFPS());
+
     			Keyboard.update();
         	}
         };
@@ -320,7 +343,7 @@ public class GL {
 	
 	public static void beginPageCurl() {
 		curlTime = 0;
-		getScreenshot(prevScreenTex);
+		getScreenshot(mainCamera.getFBO(), prevScreenTex);
 	}
 	
 	public static void beginCheckingVisibility() {
@@ -370,7 +393,8 @@ public class GL {
         gl.glLoadIdentity();
         
         // Perspective.
-        float widthHeightRatio = 1f*SCREEN_WIDTH/SCREEN_HEIGHT; //getViewWidth()/getViewHeight();
+        float widthHeightRatio = 1f*SCREEN_WIDTH/SCREEN_HEIGHT; 
+        //getViewWidth()/getViewHeight();
         glu.gluPerspective(getCamera().getFOV(), widthHeightRatio, 1, VIEW_FAR); //1000
         currentCamera.gluLookAt(glu);
         gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, perspectiveMatrix,0);
@@ -393,7 +417,7 @@ public class GL {
 		return createTexture(new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB), true);
 	}
 	public static Texture createTexture(BufferedImage img, boolean mipmap) {
-		if (img == null) 
+		if(img == null) 
 			return null;
 		
 		//HORRIBLE BUG HERE
@@ -709,7 +733,7 @@ public class GL {
 	public static void polygon(float x, float y, float r, int numPts, boolean fill) {polygon(x,y,r,numPts,0,fill);}
 	public static void polygon(float x, float y, float r, int numPts, float rotation, boolean fill) {
 		if(fill) {
-			gl.glBegin(GL2.GL_TRIANGLE_FAN);
+
 			gl.glTexCoord2d(.5, .5);	gl.glVertex3f(x, y, orthoLayer);
 		}
 		else
@@ -1285,6 +1309,20 @@ public class GL {
 		unbind();		
 	}
 
+	public static void getScreenshot(FBO f, Texture tex) {getScreenshot(f, tex.getTextureObject());}
+	public static void getScreenshot(FBO f, int tex) {getScreenshot(f, 0,0,SCREEN_WIDTH,SCREEN_HEIGHT,tex);}
+	public static void getScreenshot(FBO f, int x, int y, int w, int h, int tex) {
+		GL.clear();	
+		drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT, f);
+		
+		bind(tex);
+
+		gl.glCopyTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, x,SCREEN_HEIGHT-y-h, w,h, 0);
+		
+		unbind();		
+	}
+
+	
 		
 	public static void enableLight(int num, float dir, float dirZ) {enableLight(num, Math3D.calcPolarCoords(dir, dirZ));}
 	public static void enableLight(int num, vec3 normal) {enableLight(num, normal.x(),normal.y(),normal.z());}
@@ -1671,6 +1709,7 @@ public class GL {
 	public static GL2 getGL2() {return gl.getGL2();}
 
 	public static void endPageCurl() {
+		marioCamera.getFBO().clear(GL.getGL(), RGBA.TRANSPARENT);
 		curlTime = -1;
 	}
 	public static int getShaderProgram() {

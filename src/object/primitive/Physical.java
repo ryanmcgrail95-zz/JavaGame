@@ -1,6 +1,6 @@
 package object.primitive;
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 import object.environment.FloorBlock;
 import resource.model.Model;
 import time.Delta;
@@ -53,6 +53,9 @@ public abstract class Physical extends Positionable {
 			p = physicalList.get(i);
 			
 			didCol = didCol || p.collide(this);
+			
+			if(isDestroyed())
+				return false;
 		}
 		
 		Environmental.collideAll(this);

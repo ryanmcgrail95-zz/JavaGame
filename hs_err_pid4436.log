@@ -180,7 +180,7 @@ CodeCache: size=245760Kb used=6275Kb max_used=6287Kb free=239484Kb
 
 Compilation events (10 events):
 Event: 19.135 Thread 0x000000005487f000 nmethod 1698 0x00000000028d9b90 code [0x00000000028d9ce0, 0x00000000028d9db8]
-Event: 19.135 Thread 0x000000005487f000 1706       4       datatypes.vec::<init> (37 bytes)
+Event: 19.135 Thread 0x000000005487f000 1706       4       ds.vec::<init> (37 bytes)
 Event: 19.138 Thread 0x000000005487f000 nmethod 1706 0x00000000028d9810 code [0x00000000028d9960, 0x00000000028d9ab8]
 Event: 19.138 Thread 0x000000005487f000 1695       4       java.lang.Math::getExponent (17 bytes)
 Event: 19.138 Thread 0x000000005487f000 nmethod 1695 0x00000000028d9610 code [0x00000000028d9740, 0x00000000028d9798]
@@ -302,8 +302,8 @@ Event: 15.047 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action
 Event: 15.126 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002813f60 method=java.lang.Math.max(FF)F @ 11
 Event: 15.126 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000281427c method=java.lang.Math.min(FF)F @ 11
 Event: 15.930 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002812904 method=java.lang.Math.round(F)I @ 36
-Event: 15.967 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002886250 method=datatypes.lists.CleanList$ListIterator.hasNext()Z @ 39
-Event: 15.967 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000028865e8 method=datatypes.lists.CleanList$ListIterator.checkNotDone()Z @ 21
+Event: 15.967 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002886250 method=ds.lst.CleanList$ListIterator.hasNext()Z @ 39
+Event: 15.967 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000028865e8 method=ds.lst.CleanList$ListIterator.checkNotDone()Z @ 21
 Event: 16.183 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000289c20c method=java.io.BufferedReader.readLine(Z)Ljava/lang/String; @ 192
 Event: 18.924 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000002832f7c method=functions.MathExt.contain(FFF)F @ 3
 Event: 19.053 Thread 0x0000000056016000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000028b55d0 method=gfx.GOGL.drawWaveform(FFFFIIIILresource/sound/SoundBuffer;Z)V @ 360

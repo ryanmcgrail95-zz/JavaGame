@@ -8,14 +8,26 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import cont.ImageLoader;
-import datatypes.StringExt;
+import ds.StringExt;
 import fl.FileExt;
 import gfx.GL;
 import gfx.RGBA;
+import time.Stopwatch;
 
 public final class OBJLoader {
+	private static Stopwatch s = new Stopwatch(), k = new Stopwatch(), j = new Stopwatch(), m = new Stopwatch();
+	
 	public static void loadInto(String name, Model mod) {
 		loadModel("Resources/Models/" + name, mod);
+	}
+	
+	public static void start(Stopwatch s, String w) {
+		System.out.println(w);
+		s.start();
+	}
+	
+	public static void stop(Stopwatch s) {
+		s.stop(true);
 	}
 	
 	private static void loadMaterials(String fileName, List<Material> mats, Model mod) {
@@ -26,11 +38,14 @@ public final class OBJLoader {
 		String line, type;
 		StringExt lineExt = new StringExt(), fileText = new StringExt(FileExt.readFile2String(fileName));
 					
+		
+		start(k, "Loading Materials: ");
+		
 		while(!fileText.isEmpty()) {
 			lineExt.set(line = fileText.munchLine());
 			
 			type = lineExt.munchWord(); 
-
+			
 			if(type.equals("newmtl")) {
 				String name = lineExt.get();
 				curMaterial = new Material(name);
@@ -45,16 +60,17 @@ public final class OBJLoader {
 			else if(type.equals("map_Kd")) {
 				String n = curDirectory + lineExt.munchLine();
 				
-				System.out.println(n);
-				
+				start(s, "Loading n: " + n);
 				try {
 					BufferedImage i = ImageLoader.load(n);
 					curMaterial.setTexture(GL.createTexture(i, false));
-				} catch(Exception e) {
-			
-				}
+				} catch(Exception e) {}
+				
+				stop(s);
 			}
 		}
+		
+		stop(k);
 	}
 	
 	private static void loadModel(String fileName, Model mod) {
@@ -76,26 +92,46 @@ public final class OBJLoader {
 		File f = FileExt.getFile(fileName);
 		String curDirectory = fileName.replace(f.getName(),"");
 		
-		String line, type;
-		StringExt lineExt = new StringExt(), fileText = new StringExt(FileExt.readFile2String(fileName));
+		String type;
 		
+		StringExt lineExt = new StringExt(), fileText = new StringExt(FileExt.readFile2String(fileName));
 		Material[] matsArray = new Material[0];
 		
-		while(!fileText.isEmpty()) {
-			lineExt.set(line = fileText.munchLine());
-			//lineExt.println();
-			
-			type = lineExt.munchWord(); 
+		StringExt curSection = new StringExt();
+		String[] indices;
+		int[] face;
 
-			if(type.equals("mtllib")) {
+		
+		j.start();
+
+		float munchTime = 0, mtlTime = 0, faceTime = 0, vertTime = 0;
+		
+		while(!fileText.isEmpty()) {
+			m.start();
+			
+			lineExt.set(fileText.munchLine());
+			
+			m.stop();
+			munchTime += m.getMilli();
+
+			type = lineExt.munchWord(); 
+			
+			if(type.equals("mtllib")) {		// 74.33
+				m.start();
+
 				String matFile = curDirectory + lineExt.munchLine();
 				loadMaterials(matFile, mats, mod);
 				
+				m.stop();
+				mtlTime += m.getMilli();
+
 				matsArray = new Material[mats.size()];
 				for(int i = 0; i < mats.size(); i++)
-					matsArray[i] = mats.get(i);
+					matsArray[i] = mats.get(i);				
 			}
-			else if(type.equals("usemtl")) {
+			else if(type.equals("usemtl")) {	// .165
+
+				
 				materialName = lineExt.get();
 														
 				int matPos = -1;
@@ -107,7 +143,10 @@ public final class OBJLoader {
 				
 				vertexList.add(new int[] {-1,matPos,-1,-1});
 			}
-			else if(type.equals("v")) {					
+			else if(type.equals("v")) {
+
+				m.start();
+
 				String n;
 				while((n = lineExt.munchNumber()) != "") {
 					vertexNums.add(Float.parseFloat(n));
@@ -115,24 +154,26 @@ public final class OBJLoader {
 
 				pointList.add( new float[] {vertexNums.get(0),vertexNums.get(1),vertexNums.get(2),1} );
 
+				
 				if(vertexNums.size() > 3) {
 					hasColor = true;
 					colorList.add( RGBA.convertRGBA2Int((int)(vertexNums.get(3)*255),(int)(vertexNums.get(4)*255),(int)(vertexNums.get(5)*255),255) );
 				}
-				
+
 				vertexNums.clear();
+
+				m.stop();
+				vertTime += m.getMilli();
 			}
 			else if(type.equals("vt"))
 				uvList.add( new float[] {lineExt.munchFloat(),lineExt.munchFloat()} );
 			else if(type.equals("vn"))
 				normalList.add( new float[] {lineExt.munchFloat(),lineExt.munchFloat(),lineExt.munchFloat(),0} );
 			else if(type.equals("f")) {
-				StringExt curSection;
-				String[] indices;
-				int[] face;
+				m.start();
 				
 				for(int i = 0; i < 3; i++) {
-					curSection = new StringExt(lineExt.munchWord());
+					curSection.set(lineExt.munchWord());
 											
 					indices = curSection.split('/');
 					face = new int[] {0,0,0,-1};
@@ -148,12 +189,27 @@ public final class OBJLoader {
 					
 					vertexList.add(face);
 				}
+				
+				m.stop();
+				faceTime += m.getMilli();
 			}
 		}
 		
+		
+		start(s, "Creating: ");
 		mod.create(Model.TRIANGLES, pointList, normalList, uvList, colorList, vertexList);
 		mod.attachMaterials(matsArray);
+		stop(s);
 
 		mats.clear();
+
+		System.out.println();
+		System.out.println(munchTime);
+		System.out.println(mtlTime);
+		System.out.println(vertTime);
+		System.out.println(faceTime);
+		System.out.println();
+		j.stop(true);
+		System.out.println();
 	}
 }

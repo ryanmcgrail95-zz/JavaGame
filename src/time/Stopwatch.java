@@ -14,6 +14,11 @@ public class Stopwatch {
 	public void stop() {
 		endTime = getTime();
 	}
+	public void stop(boolean println) {
+		stop();
+		if(println)
+			System.out.println("Took " + getMilli() + " mS.");
+	}
 	
 	public float getMilli() {
 		return (endTime - startTime)/1000000f;

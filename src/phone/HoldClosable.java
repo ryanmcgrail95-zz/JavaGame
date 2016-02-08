@@ -1,7 +1,7 @@
 package phone;
 
-import datatypes.WeightedSmoothFloat;
-import datatypes.WeightedSmoothFloat;
+import ds.WeightedSmoothFloat;
+import ds.WeightedSmoothFloat;
 import gfx.GOGL;
 import object.primitive.Drawable;
 

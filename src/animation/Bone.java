@@ -5,7 +5,7 @@ import gfx.GOGL;
 import java.util.ArrayList;
 import java.util.List;
 
-import datatypes.mat4;
+import ds.mat4;
 
 public class Bone {
 	private List<Bone> children = new ArrayList<Bone>();

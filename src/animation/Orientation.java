@@ -1,6 +1,6 @@
 package animation;
 
-import datatypes.vec3;
+import ds.vec3;
 
 public class Orientation implements Interpolatable {
 	private vec3 pos, rot;

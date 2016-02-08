@@ -1,6 +1,6 @@
 package object.actor.body;
 
-import datatypes.vec3;
+import ds.vec3;
 import functions.MathExt;
 import gfx.GOGL;
 
@@ -53,7 +53,7 @@ public class WalkCycle extends Cycle {
 
 /*package object.actor;
 
-import Datatypes.vec3;
+import ds.vec3;
 import functions.MathExt;
 import gfx.GOGL;
 

@@ -1,6 +1,6 @@
 package window;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import io.Mouse;
 
 public abstract class GUIDrawable extends GUIObject {

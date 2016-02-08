@@ -1,6 +1,6 @@
 package object.environment;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import interfaces.Useable;
 import io.Mouse;
 import functions.MathExt;

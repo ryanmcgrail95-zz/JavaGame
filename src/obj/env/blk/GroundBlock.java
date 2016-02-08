@@ -17,11 +17,10 @@ import object.primitive.Environmental;
 import object.primitive.Physical;
 import resource.sound.Sound;
 
-public class GroundBlock extends Environmental {	
+public class GroundBlock extends Block {	
 	private static List<GroundBlock> groundBlockList = new ArrayList<GroundBlock>();
 	private List<Blocklet> blockletList = new ArrayList<Blocklet>();
 	private CubeMap myCubeMap = CubeMap.getMap("cmGroundBlock1");
-	private final static Texture shadow = TextureController.getTexture("texBlockShadow");
 	
 	int sNum = 3;
 	
@@ -37,7 +36,7 @@ public class GroundBlock extends Environmental {
 	
 	
 	public GroundBlock(float x, float y, float z) {
-		super(x,y,z,false,false);
+		super(x,y,z);
 		
 		/*shape = Shape.createBlock("GBlock", -size,-size,size,size,size,-size, CubeMap.getMap("cmGroundBlock1"));
 		shape.addBlockShadow(0, 0, size, size);
@@ -200,7 +199,7 @@ public class GroundBlock extends Environmental {
 		public void draw() {
 			if(!wasDestroyed) {
 				transformTranslation();
-				GL.draw3DFloor(-shSize,-shSize,shSize,shSize,.1f, shadow);
+				GL.draw3DFloor(-shSize,-shSize,shSize,shSize,.1f, shadowTex);
 				GL.draw3DBlock(-size,-size,2*size,size,size,0, myCubeMap);
 				GT.transformClear();
 			}

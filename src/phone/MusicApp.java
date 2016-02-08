@@ -7,7 +7,7 @@ import java.util.Vector;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
-import datatypes.vec2;
+import ds.vec2;
 import io.Mouse;
 import fl.FileExt;
 import functions.Math2D;

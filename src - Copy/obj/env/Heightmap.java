@@ -5,10 +5,10 @@ import obj.prim.Physical;
 import func.Math2D;
 import gfx.GOGL;
 import gfx.TextureExt;
-import Datatypes.LinearGrid;
-import Datatypes.mat3;
-import Datatypes.vec2;
-import Datatypes.vec3;
+import ds.LinearGrid;
+import ds.mat3;
+import ds.vec2;
+import ds.vec3;
 
 import com.jogamp.opengl.util.texture.Texture;
 

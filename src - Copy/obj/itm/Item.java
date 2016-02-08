@@ -1,8 +1,8 @@
 package obj.itm;
 
 import gfx.GOGL;
-import Datatypes.Inventory;
-import Datatypes.vec3;
+import ds.Inventory;
+import ds.vec3;
 
 import com.jogamp.opengl.util.texture.Texture;
 

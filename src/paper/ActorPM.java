@@ -4,8 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import collision.C3D;
-import datatypes.vec2;
-import datatypes.lists.CleanList;
+import ds.vec2;
+import ds.lst.CleanList;
 import dialog.Dialog;
 import functions.FastMath;
 import functions.Math2D;
@@ -34,16 +34,50 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		ST_TALKING = 3,
 		ST_SWITCH_OUT = 4, ST_SWITCH_IN = 5;
 	
+	
 	private Model mod;
 	protected ActorPM followActor;
+	
+	
+	private static CleanList<ActorPM> actorList = new CleanList<ActorPM>("ActorPM");
 	
 	// SWITCHING
 	private float swX, swY, swZ, swPerc = 0;
 	private String swChar;
 	
-	private static float 	SP_WALK = 1,
-							SP_RUN = 3;
+	protected static float 	SP_WALK = 1,
+							SPEED_RUN = 3;
+	
+	protected float SP_RUN = SPEED_RUN;
+	
 	private boolean isMoving, isSpinning, didJump = false;
+	
+
+	public void setCanMoveAll(boolean canMove) {
+		for(ActorPM a : actorList)
+			a.setCanMove(canMove);
+	}
+	
+	public void setCanControl(boolean canControl) {this.canControl = canControl;}
+	public boolean getCanControl() {return canControl;}
+	
+	public static void setCanControlAll(boolean canControl) {
+		for(ActorPM a : actorList)
+			a.setCanControl(canControl);
+	}
+	
+	public void setCanSee(boolean canSee) {this.canSee = canSee;}
+	public boolean canSee() {return canSee;}
+	
+	public static void setCanSeeAll(boolean canSee) {
+		for(ActorPM a : actorList)
+			a.setCanSee(canSee);
+	}
+
+	
+	private boolean
+		canControl = true,
+		canSee = true;
 	
 	
 	private List<Instant> instantList = new LinkedList<Instant>();
@@ -63,6 +97,8 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	}
 	
 	public void switchCharacter(String newChar) {
+		startSwitching();
+		
 		this.swChar = newChar;
 		this.swX = x();
 		this.swY = y();
@@ -70,6 +106,8 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		
 		state = ST_SWITCH_OUT;
 	}
+	protected void startSwitching() {};
+	protected void endSwitching() {};
 	
 	public void updateState() {
 		switch(state) {
@@ -87,32 +125,36 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 				if(swPerc <= 0) {
 					swPerc = 0;
 					state = ST_ONGROUND;
+					endSwitching();
 				}
 				break;
 		}
 		
-		PlayerPM p = PlayerPM.getInstance();
-		float v = swPerc, vF = 1 - v,
-			toX = p.x(),
-			toY = p.y(),
-			toZ = p.z();
-		myBody.setPosition(
-			x()*vF + v*toX,
-			y()*vF + v*toY,
-			z()*vF + v*toZ + Math2D.calcLenY(16, v*180));
-		myBody.setScale(vF);
+		if(swPerc > 0) {
+			PlayerPM p = PlayerPM.getInstance();
+			float v = swPerc, vF = 1 - v,
+				toX = p.x(),
+				toY = p.y(),
+				toZ = p.z();
+			myBody.setPosition(
+				x()*vF + v*toX,
+				y()*vF + v*toY,
+				z()*vF + v*toZ + Math2D.calcLenY(16, v*180));
+			myBody.setScale(vF);
+		}
 	}
 	
 		
 	public ActorPM(String name, float x, float y, float z) {
 		super(x, y, z);
 		
-		size = 16;
+		size = 8;
+		this.name = name;
 
 		myBody = new BodyPM(name);
 			myBody.setAutoIndex(false);
 			myBody.enableSteps();
-		//setAnimationStill();
+		setAnimationStill();
 		
 		maxSpeed = SP_RUN;
 		
@@ -120,40 +162,68 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		creator.add3DModelCylinder(0,0,4, 1.2f*size/2, myBody.getHeight()-4, 5, false);
 		
 		mod = creator.endModel();
+		mod.addReference();
 		
 		for(int i = 0; i < INSTANT_NUMBER; i++)
 			addInstant();
+		
+		actorList.add(this);
 	}
 	
 	public void update() {
+		start("ActorPM.update()");
 		super.update();
 		
-		if(canControl()) {
+		if(isDestroyed())
+			return;
+		
+		start("ActorPM.update()-control");
+		if(canControl) {
 			if(followActor == null)
 				control();
 			else
 				follow();
 		}
+		end("ActorPM.update()-control");
 		addInstant();
 		
+		start("ActorPM.update()-animation");
 		modelUpdate();
 		updateState();
+		myBody.animateModel();
+		end("ActorPM.update()-animation");
 		
+		start("ActorPM.update()-collision");
 		collideSplit();		
+		end("ActorPM.update()-collision");
+
+		end("ActorPM.update()");
+	}
+	
+	public float getHeight() {
+		return myBody.getHeight();
 	}
 	
 	public void destroy() {
+		if(isDestroyed())
+			return;
+		
+		start("ActorPM["+ name + "]().destroy()");
 		super.destroy();
 
 		myBody.destroy();
-		mod.destroy();
+		mod.removeReference();
 		
 		instantList.clear();
+		
+		actorList.remove(this);
 		
 		myBody = null;
 		mod = null;
 		instantList = null;
 		followActor = null;
+
+		end("ActorPM["+ name + "]().destroy()");
 	}
 
 	
@@ -180,8 +250,10 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	
 	@Override
 	public void draw() {
-		GL.setPerspective();
-		myBody.draw();
+		if(myBody != null) {
+			GL.setPerspective();
+			myBody.draw();
+		}
 	}
 
 	@Override
@@ -222,11 +294,20 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		return move(isRunning, p.getX(), p.getY(), radius, stayOut);
 	}
 	
+	
+	protected boolean move(float speed, ActorPM p) {
+		return move(speed, p.x(), p.y(), 0, false);
+	}
+	
+	
 	protected boolean move(boolean isRunning, float x, float y) {return move(isRunning, x, y, 0);}	
 	protected boolean move(boolean isRunning, float x, float y, float radius) {return move(isRunning, x, y, radius, true);}
 	protected boolean move(boolean isRunning, float x, float y, float radius, boolean stayOut) {
-		float spd = (isRunning) ? SP_RUN : SP_WALK,
-			curSpd = getXYSpeed(),
+		return move((isRunning) ? SP_RUN : SP_WALK, x,y, radius, stayOut);
+	}
+	
+	protected boolean move(float spd, float x, float y, float radius, boolean stayOut) {
+		float curSpd = getXYSpeed(),
 			dis = Math2D.calcPtDis(getX(), getY(), x, y),
 			dir = Math2D.calcPtDir(getX(), getY(), x, y),
 			pushAmt = (stayOut) ? radius : curSpd;
@@ -281,7 +362,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	
 		// Otherwise, Not Moving
 		else {
-			if (!inAir) {
+			if(!inAir) {
 				setAnimationRun();
 				addXYSpeed( Delta.convert((0 - getXYSpeed()) / 3f) ); // 3
 				if(getXYSpeed() < .01) {
@@ -362,10 +443,12 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		if(floorDis != -1) {
 			float newFloorZ = z()+buffer-floorDis;
 			
-			if(floorDis < buffer) {
+			if(floorDis <= buffer + 1) {
 				floorDis -= buffer;
 				didCollideFloor(newFloorZ);
 			}
+			else
+				inAir = true;
 
 			myBody.setFloorZ(newFloorZ);
 		}
@@ -497,7 +580,8 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		/*if(isPlayer())
 			if(isSpinning && spinTimer % 5 == 0)
 				d3d_instance_create(x+lengthdir_x(5,direction+180),y+lengthdir_y(5,direction+180),z,objSmoke);*/
-		
+		start("ActorPM.modelUpdate()");
+
 		float addAmt = 0;
 		
 		if(inAir)
@@ -515,8 +599,6 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 
 		myBody.setPosition(getX(), getY(), getZ());
 		myBody.setDirection(getDirection());
-
-		myBody.animateModel();
 		
 		
 		/*if(checkSpriteRun()) {
@@ -532,6 +614,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 			stepZ += -stepZ/1.5;
 			imageIndex = 0;
 		}*/
+		end("ActorPM.modelUpdate()");
 	}
 
 	public void stop() {
@@ -541,7 +624,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	}
 	
 	public boolean canControl() {
-		return !Dialog.isActive() || state == ST_SWITCH_IN || state == ST_SWITCH_OUT;	// No Menus Open
+		return !Dialog.isActive();	// No Menus Open
 	}
 	
 	protected abstract void control();

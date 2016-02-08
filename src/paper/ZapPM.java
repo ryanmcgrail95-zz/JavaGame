@@ -4,6 +4,7 @@ import time.Delta;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.G2D;
+import gfx.GL;
 import gfx.GT;
 import gfx.TextureExt;
 import cont.TextureController;
@@ -17,7 +18,7 @@ public class ZapPM implements AnimationsPM {
 		this.height = height;
 	}
 
-	private void animateModel() {
+	public void animateModel() {
 		float spd = 5f;
 		index1 += Delta.convert(spd);
 		if(index1 >= 360)
@@ -45,8 +46,8 @@ public class ZapPM implements AnimationsPM {
 	}
 	
 	public void draw() {
-		animateModel();
-		
+		GL.start("ZapPM.draw()");
+
 		float dX, dY, dW, dH;
 		
 		float curD, curS;
@@ -78,5 +79,7 @@ public class ZapPM implements AnimationsPM {
 			GT.transformRotationZ(-d);
 		}
 		GT.transformTranslation(0,-height*.5f,0);
+
+		GL.end("ZapPM.draw()");
 	}
 }

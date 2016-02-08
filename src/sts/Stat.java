@@ -1,7 +1,7 @@
 package sts;
 
 import brain.Name;
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 import object.actor.Actor;
 import functions.Math2D;
 import functions.MathExt;

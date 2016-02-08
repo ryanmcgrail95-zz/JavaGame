@@ -18,8 +18,8 @@ import com.jogamp.opengl.util.texture.Texture;
 import cont.Messages;
 import cont.Text;
 import cont.TextureController;
-import datatypes.StringExt;
-import datatypes.lists.CleanList;
+import ds.StringExt2;
+import ds.lst.CleanList;
 import obj.prt.Floaties;
 import object.actor.Player;
 import object.environment.Tree;
@@ -148,6 +148,8 @@ public abstract class Drawable extends Updatable {
 	
 		public static void display() {
 			
+			GL.start("Drawable.display()");
+			
 			if(selectTimer == null)
 				selectTimer = new Timer(5);
 			
@@ -208,6 +210,8 @@ public abstract class Drawable extends Updatable {
 				GL.allowLighting(true);
 				GL.unforceColor();
 			}
+
+		GL.end("Drawable.display()");
 	}
 
 	public static int getNumber() {return drawList.size();}
@@ -230,7 +234,8 @@ public abstract class Drawable extends Updatable {
 	}
 
 	public static void draw3D() {
-		
+		GL.start("Drawable.draw3D()");
+
 		Camera cam = GL.getCamera();
 		
 		//Draw BG
@@ -269,5 +274,12 @@ public abstract class Drawable extends Updatable {
 			d.draw();
 
 		//Floaties.draw();
+		
+		GL.end("Drawable.draw3D()");
+	}
+
+	public static void printList() {
+		for(Drawable d : drawList)
+			System.out.println(d.getName());
 	}
 }

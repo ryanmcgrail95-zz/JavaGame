@@ -183,7 +183,7 @@ Event: 5.736 Thread 0x0000000054d52800 1369       3       jogamp.opengl.gl4.GL4b
 Event: 5.736 Thread 0x0000000054d52800 nmethod 1369 0x0000000002d44cd0 code [0x0000000002d44f20, 0x0000000002d45c48]
 Event: 5.737 Thread 0x0000000054d52800 1371       3       jogamp.opengl.gl4.GL4bcImpl::glTexCoord2f (45 bytes)
 Event: 5.737 Thread 0x0000000054d52800 nmethod 1371 0x0000000002d46590 code [0x0000000002d467e0, 0x0000000002d47508]
-Event: 5.737 Thread 0x0000000054d49000 1374       4       Datatypes.vec::get (21 bytes)
+Event: 5.737 Thread 0x0000000054d49000 1374       4       ds.vec::get (21 bytes)
 Event: 5.738 Thread 0x0000000054d49000 nmethod 1374 0x0000000002d4aad0 code [0x0000000002d4ac20, 0x0000000002d4acd8]
 
 GC Heap History (10 events):

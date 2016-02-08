@@ -2,7 +2,7 @@ package time;
 
 import java.util.concurrent.Callable;
 
-import datatypes.vec;
+import ds.vec;
 
 public final class Delta {
 
@@ -63,7 +63,11 @@ public final class Delta {
 			
 			if(delta == 0)
 				return;
-						
+
+			if(targetFPS/delta < 30)
+				return;
+			
+			Delta.delta = delta;			
 			fps = targetFPS/delta;
 		}
 

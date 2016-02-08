@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.jogamp.opengl.util.awt.TextureRenderer;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public class Window extends GUIFrame {	
 	private static CleanList<Window> windowList = new CleanList<Window>("Window");

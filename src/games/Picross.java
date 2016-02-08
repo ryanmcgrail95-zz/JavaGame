@@ -9,7 +9,7 @@ import com.jogamp.opengl.GL2;
 
 import cont.ImageLoader;
 import cont.TextureController;
-import datatypes.vec2;
+import ds.vec2;
 import time.Timer;
 import window.GUIDrawable;
 import io.Mouse;

@@ -1,7 +1,7 @@
 package cont;
 
-import datatypes.PrintString;
-import datatypes.StringExt;
+import ds.PrintString;
+import ds.StringExt2;
 import io.Controller;
 import object.actor.Actor;
 import object.actor.Player;
@@ -15,7 +15,7 @@ import gfx.GL;
 import gfx.RGBA;
 
 public final class Text {
-	private static StringExt fullString;
+	private static StringExt2 fullString;
 	private static PrintString textString;
 	private static boolean isTalking = false, isBoxAbove = false;
 	private static float onscreenFrac;
@@ -27,7 +27,7 @@ public final class Text {
 	private Text() {};
 
 	public static void ini() {
-		fullString = new StringExt("");
+		fullString = new StringExt2("");
 		textString = new PrintString("");
 		bounceTimer = new Timer(0,20);
 		shockTimer = new Timer(0,20);

@@ -1,6 +1,6 @@
 package func;
 
-import Datatypes.vec2;
+import ds.vec2;
 
 public class Math2D {
 	public static final float INFINITY = Float.MAX_VALUE;

@@ -53,6 +53,7 @@ public class SplitFont extends Font {
 			addChar(':');
 			addChar('"');
 			addChar('-');
+			addChar('_', '-');
 			addChar('+');
 			addChar('<');
 			addChar('>');
@@ -65,6 +66,9 @@ public class SplitFont extends Font {
 		// Adding Characters
 			private void addChar(char c) {
 				addChar(c, fontDir+((byte) c)+".png");
+			}
+			private void addChar(char textC, char imgC) {
+				addChar(textC, fontDir+((byte) imgC)+".png");
 			}
 			private void addChar(int i) {
 				addChar((char) i);

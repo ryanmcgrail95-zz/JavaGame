@@ -8,8 +8,8 @@ import java.util.Map;
 import script.Variable;
 import time.Delta;
 import io.Mouse;
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
@@ -28,6 +28,8 @@ public abstract class Positionable extends Drawable {
 	private Variable 	x,y,z,
 						vX,vY,vZ,
 						xP,yP,zP;
+	private boolean
+		canMove = true;
 	
 	private float direction, directionPrevious, zDirection;
 	private long id;
@@ -51,6 +53,11 @@ public abstract class Positionable extends Drawable {
 	}
 	
 	public void destroy() {
+		if(isDestroyed())
+			return;
+		
+		start("Positionable[" + name + "].destroy()");
+		
 		super.destroy();
 		
 		for(Variable v : varList)
@@ -60,6 +67,8 @@ public abstract class Positionable extends Drawable {
 			varList = null;
 		varMap.clear();
 			varMap = null;
+			
+		end("Positionable[" + name + "].destroy()");
 	}
 	
 	
@@ -142,6 +151,9 @@ public abstract class Positionable extends Drawable {
 	public void addZVelocity(float nZ) {vZ(vZ()+nZ);}
 
 	
+	public void setCanMove(boolean canMove) {this.canMove = canMove;}
+	public boolean getCanMove() {return canMove;}
+	
 	public void update() {
 		super.update();
 	}
@@ -149,9 +161,11 @@ public abstract class Positionable extends Drawable {
 				
 		//setPrevious();
 		directionPrevious = direction;
-				
-		addX( Delta.convert(vX()) );
-		addY( Delta.convert(vY()) );
+	
+		if(canMove) {
+			addX( Delta.convert(vX()) );
+			addY( Delta.convert(vY()) );
+		}
 		addZ( Delta.convert(vZ()) );
 	}
 	
@@ -199,7 +213,6 @@ public abstract class Positionable extends Drawable {
 		for(Positionable p : positionableList)
 			p.setVelocity(0,0,p.getZVelocity());
 	}
-	
 	
 	
 	public boolean checkOnscreen() {

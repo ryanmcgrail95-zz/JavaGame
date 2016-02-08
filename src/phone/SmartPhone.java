@@ -3,8 +3,8 @@ package phone;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
-import datatypes.WeightedSmoothFloat;
-import datatypes.vec2;
+import ds.WeightedSmoothFloat;
+import ds.vec2;
 import io.Mouse;
 import functions.Math2D;
 import functions.MathExt;

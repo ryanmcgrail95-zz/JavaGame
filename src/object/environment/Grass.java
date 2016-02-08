@@ -13,8 +13,8 @@ import gfx.TextureExt;
 import com.jogamp.opengl.util.texture.Texture;
 
 import cont.TextureController;
-import datatypes.LinearGrid;
-import datatypes.vec3;
+import ds.LinearGrid;
+import ds.vec3;
 
 public class Grass extends Physical {
 	private List<Grasslet> strands = new ArrayList<Grasslet>();

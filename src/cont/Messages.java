@@ -5,8 +5,8 @@ import gfx.GL;
 import gfx.RGBA;
 import java.util.ArrayList;
 import java.util.List;
-import datatypes.PrintString;
-import datatypes.lists.CleanList;
+import ds.PrintString;
+import ds.lst.CleanList;
 
 public class Messages {
 	private final static CleanList<Message> messageList = new CleanList<Message>("Msgs");

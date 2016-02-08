@@ -31,10 +31,10 @@ import obj.prim.Instantiable;
 import obj.prim.Updatable;
 import sts.Stat;
 import time.Delta;
-import Datatypes.Inventory;
-import Datatypes.mat4;
-import Datatypes.vec3;
-import Datatypes.vec4;
+import ds.Inventory;
+import ds.mat4;
+import ds.vec3;
+import ds.vec4;
 import Sounds.SoundController;
 
 import com.jogamp.opengl.util.texture.Texture;

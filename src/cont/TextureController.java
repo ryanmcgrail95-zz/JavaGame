@@ -6,7 +6,9 @@ import gfx.GL;
 import gfx.TextureExt;
 import image.filter.BGEraserFilter;
 import image.filter.GrayscaleAlphaFilter;
+import time.Stopwatch;
 
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -25,7 +27,7 @@ import com.jogamp.opengl.util.texture.TextureIO;
 import com.sun.imageio.plugins.gif.GIFImageReader;
 import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 
 public class TextureController {
@@ -35,13 +37,28 @@ public class TextureController {
 	private static Map<String, TextureExt> texMap = new HashMap<String, TextureExt>();
 	private static float time = 0;
 	
+	private static BGEraserFilter bgEraser = new BGEraserFilter();
+	private static GrayscaleAlphaFilter gaFilter = new GrayscaleAlphaFilter();
+	
+	private Stopwatch s = new Stopwatch(), k = new Stopwatch();
+
+	/*public static start(Stopwatch s, String e) {
+		System.out.println(e);
+		s.start();
+	}
+	
+	public static stop(Stopwatch s) {
+		s.stop();
+	}*/
+	
+	
 	public static float getTime() {
 		return time;
 	}
 	
 	public static TextureExt loadExt(String fileName, byte method) {
 	    TextureExt texExt;
-	    	    	    
+
 	    try {
 		    if(fileName.endsWith(".gif"))
 		    	texExt = loadMulti(fileName, method);
@@ -73,9 +90,9 @@ public class TextureController {
 		img = addAlpha(img);
 		
 		if(method == M_BGALPHA)
-			(new BGEraserFilter()).filter(img,img);
+			bgEraser.filter(img,img);
 		
-		TextureExt texExt = new TextureExt(img);
+		TextureExt texExt = new TextureExt(img, fileName);
 		img.flush();
 		
         return texExt;
@@ -95,16 +112,16 @@ public class TextureController {
 		if(method == M_BGALPHA) {
 			for(int i = 0; i < frames.size(); i++) {
 				img = addAlpha(frames.get(i));
-				(new BGEraserFilter()).filter(img,img);
+				bgEraser.filter(img,img);
 				frames.set(i,img);
 			}
 		}
 		else if(method == M_MASK) {
 			for(BufferedImage i : frames)
-				(new GrayscaleAlphaFilter()).filter(i,i);
+				gaFilter.filter(i,i);
 		}
 		
-		TextureExt outTex = new TextureExt(frames);
+		TextureExt outTex = new TextureExt(frames, fileName);
 		
 		for(BufferedImage i : frames)
 			i.flush();
@@ -122,8 +139,10 @@ public class TextureController {
 	    
 	    ir.setInput(imgStr);
 	    
+		//s.start();
 	    for(int i = 0; i < ir.getNumImages(true); i++)
-	        frames.add(addAlpha(ir.read(i)));
+	        frames.add(ir.read(i));
+	    //s.stop(true);
 	    
 	    ir.dispose();
 	    imgStr.close();
@@ -137,7 +156,7 @@ public class TextureController {
 	     int h = bi.getHeight();
 	     int type = BufferedImage.TYPE_INT_ARGB;
 	     BufferedImage bia = new BufferedImage(w,h,type);
-	     Graphics2D g = bia.createGraphics();
+	     Graphics g = bia.createGraphics();
 	     g.drawImage(bi, 0, 0, null);
 	     g.dispose();
 	     return bia;
@@ -170,7 +189,7 @@ public class TextureController {
 
         //BattleStar Images
         load("Resources/Images/Battle/star.png", "texDamageStar", M_BGALPHA);
-        load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
+        //load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
         
         load("Resources/Images/Backgrounds/mountains.png", "bacMountains", M_NORMAL);
 	}

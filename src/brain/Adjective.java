@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import datatypes.lists.RandomList;
+import ds.lst.RandomList;
 import functions.MathExt;
 
 public class Adjective extends Descriptor {

@@ -1,7 +1,7 @@
 package obj.itm;
 
-import datatypes.vec3;
-import datatypes.lists.CleanList;
+import ds.vec3;
+import ds.lst.CleanList;
 import io.IO;
 import io.Mouse;
 import functions.Math2D;

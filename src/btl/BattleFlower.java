@@ -12,9 +12,15 @@ public class BattleFlower extends Drawable {
 	private float[] color;
 	private float x, y, z;
 	private float upDir = 0, upTimer = -1;
+	private Model mod;
 	
 	public BattleFlower(float x, float y, float z, float[] color) {
 		super(false, false);
+		
+		name = "BattleFlower";
+		mod = Model.get("flower", true);
+		mod.addReference();
+		
 		this.color = color;
 		this.x = x;
 		this.y = y;
@@ -22,6 +28,13 @@ public class BattleFlower extends Drawable {
 		resetTimer();
 	}
 
+	public void destroy() {
+		start("BattleFlower.destroy()");
+		super.destroy();
+		mod.removeReference();
+		end("BattleFlower.destroy()");
+	}
+	
 	public float calcDepth() {
 		return 2;
 	}
@@ -30,10 +43,9 @@ public class BattleFlower extends Drawable {
 		upTimer = MathExt.rndi(50,100);
 	}
 	
-	public void draw() {
+	public void draw() {		
 		float upZ = 0;
-		
-		
+				
 		if(upDir > 0) {
 			upDir -= Delta.convert(25);
 			if(Math2D.calcLenX(upDir) < 0)
@@ -58,7 +70,7 @@ public class BattleFlower extends Drawable {
 		GT.transformTranslation(0,0,upZ);
 		GT.transformScale(390);
 		GL.setColorf(color[0],color[1],color[2],1);
-			Model.get("flower").draw();
+			mod.draw();
 		GL.resetColor();
 		GT.transformClear();
 	}

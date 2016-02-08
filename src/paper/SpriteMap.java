@@ -1,6 +1,7 @@
 package paper;
 
 import gfx.TextureExt;
+import time.Stopwatch;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +9,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import cont.TextureController;
-import datatypes.StringExt;
+import ds.StringExt2;
+import fl.FileExt;
 
 public final class SpriteMap implements AnimationsPM {
 	private final static String DIRECTORY = "Resources/Images/Characters/";
@@ -17,9 +19,14 @@ public final class SpriteMap implements AnimationsPM {
 	private Map<Integer, TextureExt> texMap = new HashMap<Integer, TextureExt>();
 	private String name;
 	
+	private static Stopwatch s = new Stopwatch();
 	
 	private TextureExt load(String fn) {
-		return TextureController.loadExt(DIRECTORY + name + "/"+ fn + ".gif", TextureController.M_BGALPHA);
+		//System.out.print("Loading " + fn + ":");
+		//s.start();
+		TextureExt ext = TextureController.loadExt(DIRECTORY + name + "/"+ fn + ".gif", TextureController.M_BGALPHA);
+		//s.stop(true);
+		return ext;
 	}
 	private TextureExt load(String fn, TextureExt backup) {
 		TextureExt main = load(fn);

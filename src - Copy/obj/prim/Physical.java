@@ -1,5 +1,5 @@
 package obj.prim;
-import Datatypes.SortedList;
+import ds.SortedList;
 import obj.env.FloorBlock;
 import func.Math2D;
 import gfx.GOGL;

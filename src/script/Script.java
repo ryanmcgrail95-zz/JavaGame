@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.Stack;
 
 import cont.GameController;
-import datatypes.StringExt;
+import ds.StringExt;
+import ds.StringExt2;
 
 public class Script extends Action {
 	private List<Task> taskList = new ArrayList<Task>();
@@ -100,23 +101,23 @@ public class Script extends Action {
 			return sc.addTempVar(true).set(Integer.parseInt(trueName));
 	}*/
 	
-	public static void cleanCode(StringExt code) {
+	public static void cleanCode(StringExt2 code) {
 		String line, output = "";
 		StringExt lineExt = new StringExt();
-				
+
 		// Erase Whitespace, Newlines, Comments, Etc.
-		while((line = code.munchLine()) != "") {			
-			lineExt.set(line);
-			
+		while(!code.isEmpty()) {
+			lineExt.set(line = code.munchLine());
+						
 			if(lineExt.contains("//"))
 				output += lineExt.munchTo("//");
 			else
-				output += lineExt;
+				output += lineExt;			
 		}
 				
 		code.set(output);
 		
-		while(code.munchFromTo("/*","*/") != "");
+		while(!code.munchFromTo("/*","*/").equals(""));
 	}
 	
 	public void destroy() {
@@ -135,9 +136,9 @@ public class Script extends Action {
 	}
 	
 	public static Variable exec(String code) {
-		StringExt codeExt = new StringExt(code);
+		StringExt2 codeExt = new StringExt2(code);
 		cleanCode(codeExt);
-		
+
 		Script tempScr = createScript(codeExt.get());
 		Variable v = tempScr.run(null, null);
 		tempScr.destroy();
@@ -324,9 +325,7 @@ public class Script extends Action {
 		        		pos = i+len;
 		        		lc = c;
 		        		c = (pos < strLen) ? str.charAt(pos) : -1;
-		        		
-		        		System.out.println((char) c);
-		        		
+		        				        		
 		        		return outStr;
 		        	}
 	        	}
@@ -606,7 +605,7 @@ public class Script extends Action {
 	                		eatChar();
 	                	}
 	                	else
-	                		return null;
+	                		type = P_CONSTANT;
 	                	
 	                	if(type == P_STRING)
 	                		s = eatTo('\"');
@@ -764,6 +763,13 @@ public class Script extends Action {
         		}
         		else if(type == P_STRING)
         			return sc.addConstant(sb);
+        		else if(type == P_CONSTANT) {
+        			switch(sb) {
+        				case "TRUE": 	return sc.addConstant(true);
+        				case "FALSE": 	return sc.addConstant(false);
+        				default: 		return null;
+        			}
+        		}
         		else
         			return null;
 	        }
@@ -781,6 +787,7 @@ public class Script extends Action {
 		taskList.add(t);
 	}
 	
+	private Variable addConstant(boolean value) {return addConstant().set(value);}
 	private Variable addConstant(double value) 	{return addConstant().set(value);}
 	private Variable addConstant(String value) 	{return addConstant().set(value);}
 	private Variable addConstant() 				{return addTempVar(true,false);}

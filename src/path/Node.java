@@ -2,7 +2,7 @@ package path;
 
 import java.util.Map;
 
-import datatypes.lists.CleanList;
+import ds.lst.CleanList;
 
 public class Node {
 	private CleanList<Node> neighbors;

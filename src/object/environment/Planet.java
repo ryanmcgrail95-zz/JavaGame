@@ -1,8 +1,8 @@
 package object.environment;
 
-import datatypes.mat4;
-import datatypes.vec3;
-import datatypes.vec4;
+import ds.mat4;
+import ds.vec3;
+import ds.vec4;
 import functions.Math2D;
 import gfx.GOGL;
 import object.actor.Player;

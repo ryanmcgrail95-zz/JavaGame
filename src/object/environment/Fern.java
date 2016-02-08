@@ -2,7 +2,7 @@ package object.environment;
 
 import object.primitive.Environmental;
 import object.primitive.Physical;
-import datatypes.vec3;
+import ds.vec3;
 import gfx.GOGL;
 import resource.model.Model;
 import time.Timer;

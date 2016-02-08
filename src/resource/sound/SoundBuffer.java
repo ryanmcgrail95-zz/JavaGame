@@ -4,10 +4,11 @@ import com.jogamp.openal.*;
 import com.jogamp.openal.util.*;
 import com.jogamp.opengl.util.texture.Texture;
 
-import datatypes.vec2;
+import ds.vec2;
 import fl.FileExt;
 import functions.Math2D;
 import functions.MathExt;
+import resource.Resource;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -15,10 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class SoundBuffer {
+public class SoundBuffer extends Resource {
 	private float volume = 1;
 	private ByteBuffer data;
-	private String name,fileName;
     private int[] buffer = new int[1],
     		reverseBuffer = new int[1],
     		format = new int[1],
@@ -29,18 +29,14 @@ public class SoundBuffer {
     private String albumName = "";
 	private Texture albumImg;
     
-	public SoundBuffer(String name,String fileName, int[] buffer, int[] reverseBuffer, int[] format, ByteBuffer data, int[] size, int[] freq, float volume) {
-		setAll(name,fileName, buffer,reverseBuffer,format,data,size,freq);
-		this.volume = volume;
-	}
-	public SoundBuffer(String name,String fileName, int[] buffer, int[] reverseBuffer,  int[] format,  ByteBuffer data, int[] size, int[] freq) {
-		setAll(name,fileName, buffer,reverseBuffer,format,data,size,freq);
+	public SoundBuffer(String fileName, boolean isTemporary) {
+		super(fileName, R_SOUND, isTemporary);
+		
+		load();
 	}
 	
 	
-	public void setAll(String name,String fileName, int[] buffer, int[] reverseBuffer,  int[] format,  ByteBuffer data, int[] size, int[] freq) {
-		this.name = name;
-		this.fileName = fileName;
+	public void setAll(int[] buffer, int[] reverseBuffer,  int[] format,  ByteBuffer data, int[] size, int[] freq) {
 		this.buffer = buffer;
 		this.reverseBuffer = reverseBuffer;
 		this.format = format;
@@ -68,6 +64,8 @@ public class SoundBuffer {
 	public float getVolume() 	{return volume;}
 	public void setVolume(float volume) {
 		this.volume = volume;
+		
+        System.out.println("VOLUME ************* " + volume);
 	}
 	
 	public void setAlbumImage(Texture albumImage) {this.albumImg = albumImage;}
@@ -147,9 +145,12 @@ public class SoundBuffer {
 		return 1f*getPacketNum()/frequency[0];
 	}
 	
-	public String getName() {return name;}
-	public String getFileName() {return fileName;}
-	
 	public void setAlbumName(String albumName) {this.albumName = albumName;}
 	public String getAlbumName() {return albumName;}
+
+
+	@Override
+	public void load(String fileName) {
+		Sound.Loader.loadInto(this);
+	}
 }
