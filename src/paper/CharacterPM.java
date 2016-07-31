@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import cont.Log;
 import resource.Resource;
 import ds.StringExt2;
 import ds.lst.WeightedRandomList;
@@ -35,17 +36,14 @@ public class CharacterPM extends Resource implements Elemental {
 
 	private WeightedRandomList<Attack> attackList;
 	
-	private String name, directory;
+	private String directory;
 	//private byte element;
 	private SpriteMap spriteMap;
 	
 	private CharacterPM(String name, boolean isTemporary) {
 		super(name, Resource.R_CHARACTER, isTemporary);
-		this.name = name;
 		
-		this.attackList = new WeightedRandomList<Attack>("Character");
-		
-        cMap.put(name, this);
+        cMap.put(getName(), this);
 	}
 	
 	private void loadStats() {
@@ -170,9 +168,10 @@ public class CharacterPM extends Resource implements Elemental {
 
 	
 	@Override
-	public void load(String fileName) {
-		GL.println("LOADING CHARACTER " + fileName + "***************************");
+	public void load(String fileName, int... args) {
+		Log.println(Log.ID.RESOURCE, true, "CharacterPM["+getName()+"].load()");
 		
+		this.attackList = new WeightedRandomList<Attack>("Character");
 		this.directory = BASE_DIRECTORY + fileName + "/";
 		this.spriteMap = SpriteMap.getSpriteMap(fileName);
 		
@@ -180,18 +179,29 @@ public class CharacterPM extends Resource implements Elemental {
 			throw new UnsupportedOperationException("Spritemap is null.");
 		
 		loadStats();		
+		
+		Log.println(Log.ID.RESOURCE, false, "");		
 	}
 
 	@Override
 	public void unload() {
+		Log.println(Log.ID.RESOURCE, true, "CharacterPM["+getName()+"].unload()");
 		super.unload();
-		
-		cMap.remove(name);
-		
+
+		Log.println(Log.ID.RESOURCE, true, "Destroying spritemap!");
 		spriteMap.destroy();
 		attackList.destroy();
+		Log.println(Log.ID.RESOURCE, false, "");
 
 		spriteMap = null;
 		attackList = null;
+		
+		Log.println(Log.ID.RESOURCE, false, "");
+	}
+	
+	@Override
+	public void destroy() {
+		super.destroy();
+		cMap.remove(getName());
 	}
 }

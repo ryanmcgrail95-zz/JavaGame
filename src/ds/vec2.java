@@ -6,7 +6,6 @@ import functions.Math2D;
 
 public final class vec2 extends vec {	
 	public vec2() {super(2);}
-	public vec2(float a, float b) {super(2, a, b);}
 	public vec2(vec other) {
 		super(2);
 		set(other);

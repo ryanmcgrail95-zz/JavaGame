@@ -4,9 +4,10 @@ import time.Delta;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.MultiTexture;
+import resource.image.Img;
 
 public class DamageSpark extends SimpleParticle {
-	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/spark.png",4,1,true);
+	private static final MultiTexture TEXTURE = new MultiTexture("Resources/Images/spark.png", Img.AlphaType.GRAYSCALE_MASK, 4,1);
 	private float index;
 	private float distance, speed, weight;
 	
@@ -16,8 +17,8 @@ public class DamageSpark extends SimpleParticle {
 		
 		this.weight = weight; // .5
 		
-		distance = disWeight*MathExt.rnd(24,48);
-		speed = spdWeight*MathExt.rnd(.2f, .3f);
+		distance = disWeight*MathExt.rndf(24,48);
+		speed = spdWeight*MathExt.rndf(.2f, .3f);
 	}	
 	
 	public float calcIndex() {

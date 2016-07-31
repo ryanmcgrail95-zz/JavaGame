@@ -1,11 +1,14 @@
 package cont;
 
+import java.util.concurrent.Callable;
+
 import ds.PrintString;
 import ds.StringExt2;
 import io.Controller;
 import object.actor.Actor;
 import object.actor.Player;
 import object.primitive.Positionable;
+import paper.ActorPM;
 import time.Timer;
 import functions.Math2D;
 import functions.MathExt;
@@ -32,10 +35,10 @@ public final class Text {
 		bounceTimer = new Timer(0,20);
 		shockTimer = new Timer(0,20);
 	}
-	
-	public static void set(String str) {
+
+	private static void set(String str) {
 		fullString.set(str);
-		getNextSection();
+		getNextSection();		
 	}
 	
 	public static void getNextSection() {
@@ -72,26 +75,38 @@ public final class Text {
 		if(isBoxAbove)
 			boxY = r - (1-onscreenFrac)*124 - Math2D.calcLenY(16,180*bounceTimer.getFraction());
 		else
-			boxY = 480 + (-onscreenFrac)*124 - Math2D.calcLenY(16,180*bounceTimer.getFraction());
+			boxY = GL.getInternalHeight() + (-onscreenFrac)*124 - Math2D.calcLenY(16,180*bounceTimer.getFraction());
 		
 		if(isShaking()) {
-			boxX += shakeStrength*MathExt.rnd(-1,1);
-			boxY += shakeStrength*MathExt.rnd(-1,1);
+			boxX += shakeStrength*MathExt.rndf(-1,1);
+			boxY += shakeStrength*MathExt.rndf(-1,1);
 		}
 		else if(isShocked()) {
 			float shockStrength = calcShockStrength();
-			boxX += shockStrength*MathExt.rnd(-1,1);
-			boxY += shockStrength*MathExt.rnd(-1,1);
+			boxX += shockStrength*MathExt.rndf(-1,1);
+			boxY += shockStrength*MathExt.rndf(-1,1);
 		}
 		
-		GL.setColor(RGBA.createf(0,0,0,.8f));
-		GL.fillRectangle(boxX,boxY, 640-(2*r), 100);
+		float boxW, boxH, g = 2;
+		boxW = GL.getInternalWidth()-(2*r);
+		boxH = 100;
+		
+		GL.setColor(RGBA.BLACK);
+		GL.setAlpha(.6f);
+		G2D.fillRectangle(boxX,boxY, boxW,boxH);
+
+		GL.drawOutline(boxX,boxY, boxW,boxH, true);
+		GL.drawOutline(boxX+g,boxY+g, boxW-2*g,boxH-2*g, false);
 		
 		float s = 1.0f;
+
 		
+		GL.forceColor(RGBA.BLACK);
+		G2D.drawString(boxX+p+1.5f,boxY+p+1.5f, s,s, 8, textString);
 		GL.forceColor(RGBA.WHITE);
 		G2D.drawString(boxX+p,boxY+p, s,s, 8, textString);
-
+		GL.unforceColor();
+		
 		if(moveOnscreen())
 			if(textString.advance("blipMale")) {
 				GL.setColor(RGBA.WHITE);
@@ -121,6 +136,11 @@ public final class Text {
 	public static void close() {
 		set("");
 		onscreenFrac = 0;
+		
+		if(isTalking) {
+			ActorPM.setCanControlAll(true);
+			isTalking = false;
+		}
 	}
 
 	public static boolean isActive() {
@@ -128,11 +148,14 @@ public final class Text {
 	}
 
 
-	public static void createTextDialog(String string) {
+	public static void talk(String string) {
 		set(string);
+		
+		isTalking = true;
+		ActorPM.setCanControlAll(false);
 	}
 	
-	public static void talk(Actor a1, Actor a2, String string) {
+	public static void talk(ActorPM a1, ActorPM a2, String string) {
 		
 		Camera cam = GL.getMainCamera();
 		

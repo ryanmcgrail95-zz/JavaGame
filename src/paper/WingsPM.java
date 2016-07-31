@@ -5,10 +5,11 @@ import gfx.GT;
 import gfx.G2D;
 import gfx.GL;
 import gfx.TextureExt;
+import resource.image.Img;
 import cont.TextureController;
 
 public class WingsPM implements AnimationsPM {
-	private final static TextureExt wingTex = TextureController.loadExt("Resources/Images/Characters/extra/wings.gif", TextureController.M_BGALPHA);
+	private final static TextureExt wingTex = TextureController.loadExt("Resources/Images/Characters/extra/wings.gif", Img.AlphaType.BG_ALPHA);
 	private int IMAGE_NUMBER = wingTex.getImageNumber();
 	private float imageIndex;
 	private float size = 36, downH = -size*.1f;
@@ -34,14 +35,14 @@ public class WingsPM implements AnimationsPM {
 	}
 	
 	public float getExtraHeight() {
-		return exHeight*size*.1f;//Math2D.calcLenY(size*.2f,180*imageIndex/IMAGE_NUMBER);
+		return (.5f + .5f*exHeight)*(size*.1f);//Math2D.calcLenY(size*.2f,180*imageIndex/IMAGE_NUMBER);
 	}
 	public float getExtraBaseHeight() {
 		return size*.1f;
 	}
 	
 	public void draw() {
-		GL.start("draw()");
+		//GL.start("draw()");
 		
 		animateModel();
 		
@@ -55,6 +56,6 @@ public class WingsPM implements AnimationsPM {
 		wingTex.draw(dX,dY, dW, -dH, imageIndex);
 		GT.transformTranslation(0,-downH,1);
 
-		GL.end("draw()");
+		//GL.end("draw()");
 	}
 }

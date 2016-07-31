@@ -11,6 +11,12 @@ public final class Keyboard implements KeyEventDispatcher {
 	private static int E_PRESSED = 400, E_DOWN = 401, E_RELEASED = 402;
 	private static byte[] keys = new byte[36];
 	public static String keyboardString = "";
+	
+	private static char 
+		dpadLeft = 'a',
+		dpadRight = 'd',
+		dpadUp = 'w',
+		dpadDown = 's';
 		
 	private Keyboard() {}
 	
@@ -32,8 +38,7 @@ public final class Keyboard implements KeyEventDispatcher {
 	
 
 	@Override
-	public boolean dispatchKeyEvent(KeyEvent e)
-	{
+	public boolean dispatchKeyEvent(KeyEvent e) {
 		int event = e.getID();
 		char c = e.getKeyChar();
 		
@@ -79,7 +84,7 @@ public final class Keyboard implements KeyEventDispatcher {
 		if(pos > -1)
 			keys[pos] = state;
 	}
-	public static  byte get(char c) {
+	public static byte get(char c) {
 		int pos = getPos(c);
 		if(pos > -1)
 			return keys[pos];
@@ -90,35 +95,33 @@ public final class Keyboard implements KeyEventDispatcher {
 	
 	public static boolean checkPressed(char c) {return check(c,K_PRESSED);}
 	public static boolean checkReleased(char c) {return check(c,K_RELEASED);}
-	public static  boolean checkDown(char c) {return check(c,K_DOWN) || check(c,K_PRESSED);}
-	public static  boolean checkUp(char c) {return check(c,K_UP) || check(c,K_RELEASED);}
-	public static  boolean check(char c, byte state) {
+	public static boolean checkDown(char c) {return check(c,K_DOWN) || check(c,K_PRESSED);}
+	public static boolean checkUp(char c) {return check(c,K_UP) || check(c,K_RELEASED);}
+	public static boolean check(char c, byte state) {
 		return get(c) == state;
 	}
+	
+	public static boolean eat(char c, byte state) {
+		boolean output = (get(c) == state);		
+		set(c, K_UP);
+		
+		return output;
+	}
+	public static boolean eatPressed(char c) {return eat(c,K_PRESSED);}
+	
 	
 
 
 	//Access and Mutation Functions
-	public static float getWASDDir() {
-		int hDir = 0, vDir = 0;
-		boolean aDown = checkDown('A'),
-				wDown = checkDown('W'),
-				dDown = checkDown('D'),
-				sDown = checkDown('S');
-		
-		if(!aDown && !dDown && !sDown && !wDown)
+	public static float getDPadDown()		{return getDPad(checkDown(dpadUp),checkDown(dpadLeft),checkDown(dpadDown),checkDown(dpadRight));}
+	public static float getDPadPressed() 	{return getDPad(checkPressed(dpadUp),checkPressed(dpadLeft),checkPressed(dpadDown),checkPressed(dpadRight));}
+	
+	private static float getDPad(boolean up, boolean left, boolean down, boolean right) {
+		if(!left && !right && !up && !down)
 			return -1;
-			
-		if(aDown && !dDown)
-			hDir = -1;
-		else if(dDown && !aDown)
-			hDir = 1;
-		
-		if(sDown && !wDown)
-			vDir = -1;
-		else if(wDown && !sDown)
-			vDir = 1;
-		
-		return Math2D.calcPtDir(0,0,hDir,vDir);
+				
+		return Math2D.calcPtDir(0,0,
+			(right ? 1 : 0) - (left ? 1 : 0),
+			(up ? 1 : 0) - (down ? 1 : 0));
 	}
 }

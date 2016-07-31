@@ -2,11 +2,15 @@ package resource.model;
 
 import functions.Math2D;
 import gfx.GL;
+import gfx.TextureExt;
+
 import com.jogamp.opengl.util.texture.Texture;
+
+import cont.TextureController;
 
 public class Material {
 	private float[] ambient, diffuse, specular;
-	private Texture tex;
+	private TextureExt tex;
 	private String name;
 	
 	public Material(String name) {
@@ -16,7 +20,7 @@ public class Material {
 	public void setAmbient(float r, float g, float b, float a)	{this.ambient = new float[] {r,g,b,a};}
 	public void setDiffuse(float r, float g, float b, float a)	{this.diffuse = new float[] {r,g,b,a};}
 	public void setSpecular(float r, float g, float b, float a)	{this.specular = new float[] {r,g,b,a};}
-	public void setTexture(Texture tex) 	{this.tex = tex;}
+	public void setTexture(TextureExt tex) 	{this.tex = tex;}
 	
 	public boolean checkName(String oName) {
 		return name.equals(oName);
@@ -34,24 +38,24 @@ public class Material {
 		//gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_EMISSION, emission, 0);
 
 		if(tex != null) {
-			GL.bind(tex);
+			GL.bind(tex.getTexture());
 			GL.setTextureRepeat(true);
 		}
 		else {
 			GL.disableTextures();
 			GL.enableBlending();
-			GL.enableInterpolation();
+			GL.enableTextureInterpolation();
 		}
 	}
 	public void disable() {GL.unbind();}
 	public String getName() {return name;}
-	public Texture getTexture() {return tex;}
+	public TextureExt getTexture() {return tex;}
 
 	public void destroy() {
 		ambient = diffuse = specular = null;
 		name = null;
 		if(tex != null) {
-			tex.destroy(GL.getGL());
+			tex.destroy();
 			tex = null;
 		}
 	}

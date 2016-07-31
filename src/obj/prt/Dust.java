@@ -1,5 +1,6 @@
 package obj.prt;
 
+import cont.ImgIO;
 import gfx.G2D;
 import gfx.GL;
 import gfx.GT;

@@ -28,13 +28,23 @@ public class Background {
 		else if(bgX >= bgW)
 			bgX -= bgW;
 	}
-	public static void draw() {
-		bgH = GL.getScreenHeight();
+	public static void draw() {		
+		bgH = GL.getInternalHeight();
 		bgW = 1f*bgTex.getWidth()/bgTex.getHeight()*bgH;
 
 		GL.setColorf(1,1,1);
-		
-		G2D.drawTexture(bgX-bgW,bgH, bgW,-bgH, bgTex);
-		G2D.drawTexture(bgX,bgH, bgW,-bgH, bgTex);
+
+		GL.unforceColor();
+		GL.enableTextures();
+		GL.enableBlending();
+				
+		GL.bind(bgTex);		
+			//GL.setTextureRepeat(true);
+			//GL.enableShader("battleBG");
+			G2D.fillRectangle(bgX-bgW,0, bgW,bgH);
+			G2D.fillRectangle(bgX,0, bgW,bgH);
+			//G2D.fillRectangle();
+			//GL.disableShaders();
+		GL.unbind();
 	}
 }

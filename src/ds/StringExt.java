@@ -11,6 +11,9 @@ public class StringExt {
 	private StringF temp = new StringF();
 	private final static RandomList<Character> rndChar = new RandomList<Character>("Chars");
 	
+	public static final char NULL_CHAR = 0;
+	public static final String NULL_STRING = ""+NULL_CHAR;
+	
 	int rLen = 0;
 	
 	static {
@@ -27,14 +30,29 @@ public class StringExt {
 	
 	// CONSTRUCTORS
 	
-	public StringExt() 				{set("");}
+	public StringExt() 					{set("");}
 	public StringExt(String str) 		{set(str);}
 	public StringExt(StringExt str) 	{set(str.get());}
 	
 	
 	// STRING MANIPULATION
 	
-	public char charAt(int i) {return str.charAt(i);}
+	public char charAt(int i) {
+		if(i >= length())
+			return NULL_CHAR;
+
+		char c = str.charAt(pos+i);
+
+		return c;
+	}
+	public boolean isValidChar(int i) {
+		if(i >= 0 && i >= length())
+			return false;
+		else if(i < 0 && -i > pos)
+			return false;
+		return true;
+	}
+	
 	public int length() {
 		int len = rLen-pos;
 		return (len < 0) ? 0 : len;
@@ -73,6 +91,13 @@ public class StringExt {
 	// CHOMPING FUNCTIONS
 	// These functions will "chomp" (remove and return) a certain amount of data. These are very helpful
 	// for iterating through files.
+	public void chomp(char c) {chomp(""+c);}
+	public void chomp(String substr) {		
+		if(!nibble(substr))
+        	throw new RuntimeException("Expected: " + substr);	
+	}
+	
+	
 	public char munchChar() {
 		if(isEmpty())
 			return ' ';
@@ -88,9 +113,11 @@ public class StringExt {
 
 		int le = rlength();
 		
-		char c = charAt(pos);
-		while((c == ' ' || c == '\t' || c == '\n') && le-pos > 0)
-			c = charAt(++pos);
+		char c = charAt(0);
+		while((c == ' ' || c == '\t' || c == '\n') && le-pos > 0) {
+			munchChar();
+			c = charAt(0);
+		}
 	}
 
 	public int munchInt() 		{return Integer.parseInt(munchNumber());}
@@ -120,7 +147,7 @@ public class StringExt {
 		
 		char c;
 		do
-			c = charAt(pos++);
+			c = munchChar();
 		while((c != ' ' && c != '\t' && c != '\n' && c != '.') && le-pos > 0);
 
 		if(le-pos > 0)
@@ -144,7 +171,7 @@ public class StringExt {
 		
 		char c;
 		do
-			c = charAt(pos++);
+			c = munchChar(); //eatChar(pos++)
 		while((c != ' ' && c != '\t' && c != '\n') && le-pos > 0);
 
 		if(le-pos > 0)
@@ -194,21 +221,35 @@ public class StringExt {
 				
 		return numFinds;
 	}
-	
-	public boolean nibble(String substr) {
+
+	public boolean nibble(char c) {return nibble(""+c);}
+	public boolean nibble(String substr) {		
 		if(startsWith(substr)) {
-			removeFirst(substr);
+			pos += substr.length();
+			//removeFirst(substr);
 			return true;
 		}
 		return false;
 	}
+
+	public char nibbleMisc(char... cs) {
+		for(char cc : cs)
+    		if(nibble((char) cc))
+    			return cc;
+    	return NULL_CHAR;
+	}
+	public String nibbleMisc(String... cs) {
+		for(String cc : cs)
+    		if(nibble(cc))
+    			return cc;
+    	return NULL_STRING;
+	}
+
 	
+		
 	public String munchTo(char c) 					{return munchTo(false, "" + c);}
 	public String munchTo(boolean munchAll, char c) {return munchTo(munchAll, "" + c);}
 	public String munchTo(String substr)			{return munchTo(false, substr);}
-
-	
-	
 	public String munchTo(boolean munchAll, String substr) {
 		int minInd = str.indexOf(substr, pos);
 				
@@ -314,8 +355,8 @@ public class StringExt {
 		return length() == 0;
 	}
 	
-	public boolean startsWith(String string) {
-		return str.startsWith(string);
+	public boolean startsWith(String substr) {
+		return str.regionMatches(pos, substr, 0, substr.length());
 	}
 	public boolean isWhiteSpace() {
 		int len = str.length();
@@ -373,4 +414,5 @@ public class StringExt {
 	public boolean equals(String other) {
 		return toString().equals(other);
 	}
+
 }

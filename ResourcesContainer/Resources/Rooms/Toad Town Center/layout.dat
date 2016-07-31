@@ -1,12 +1,20 @@
 // Objects
 
-#playMusic("pleasantIntro", "pleasantLoop", .1, TRUE, FALSE);
+//#playMusic("pleasantIntro", "pleasantLoop", .1, TRUE, FALSE);
+//#playMusic("bgm3", .1, TRUE, FALSE);
+
+#popupOK("TEST");
 
 &ModelRenderer("Pleasant_Path_3");
 
 &Player(0,0,117);
 
-&Enemy("mario", -200,103,117);
+//&Enemy("mario", -200,103,117);
+&NPC("geno", -200,103,117) {
+	$text = "This is pretty damn cool.\nhe\nhe\nhe\n";
+}
+
+&Enemy("mario", -300,103,117);
 
 &SpinningEyes {
 	$x = -285;

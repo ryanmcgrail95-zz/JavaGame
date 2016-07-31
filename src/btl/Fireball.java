@@ -5,7 +5,9 @@ import object.primitive.Drawable;
 import time.Delta;
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
+import gfx.GT;
 import gfx.MultiTexture;
 import gfx.RGBA;
 
@@ -81,49 +83,49 @@ public class Fireball extends Drawable {
 	}
 	
 	public void draw() {		
-		GOGL.transformClear();
-			GOGL.transformTranslation(x,y,z);
-			GOGL.transformPaper();
+		GT.transformClear();
+			GT.transformTranslation(x,y,z);
+			GT.transformPaper();
 
 			float dSize = sc*size, dBSize = scB*size;
 			
 			float f = 1f; //1.4f
 			if(index < 6)
-				GOGL.setColor(element ? RGBA.RED : RGBA.BLUE);
+				GL.setColor(element ? RGBA.RED : RGBA.BLUE);
 			else {
 				float frac = Math.min((index - 6)/2, 1);
-				GOGL.setColor(RGBA.interpolate(element ? RGBA.RED : RGBA.BLUE, RGBA.BLACK, frac));
+				GL.setColor(RGBA.interpolate(element ? RGBA.RED : RGBA.BLUE, RGBA.BLACK, frac));
 			}
 
-			GOGL.enableShader("FireballGaussian");
+			GL.enableShader("FireballGaussian");
 				float[] bounds = tex.getBounds((int) index);
-				GOGL.bind(texBlur.getTexture());
-					GOGL.enableInterpolation();
-					GOGL.fillRectangle(-dBSize/2,-dBSize/2,dBSize,dBSize, bounds);
-				GOGL.unbind();
-			GOGL.disableShaders();
+				GL.bind(texBlur.getTexture());
+					GL.enableInterpolation();
+					G2D.fillRectangle(-dBSize/2,-dBSize/2,dBSize,dBSize, bounds);
+				GL.unbind();
+			GL.disableShaders();
 			
-			GOGL.transformTranslation(0,0, 1);
+			GT.transformTranslation(0,0, 1);
 			if(index < 6) {
-				GOGL.enableShader("Fireball");
+				GL.enableShader("Fireball");
 				
 				if(element)
-					GOGL.passShaderVec4("outsideColor", new float[] {1,1,0,1});
+					GL.passShaderVec4("outsideColor", new float[] {1,1,0,1});
 				else
-					GOGL.passShaderVec4("outsideColor", new float[] {.5f,.5f,1,1});
+					GL.passShaderVec4("outsideColor", new float[] {.5f,.5f,1,1});
 
-				GOGL.passShaderVec4("insideColor", new float[] {1,1,1,1});
+				GL.passShaderVec4("insideColor", new float[] {1,1,1,1});
 					
-				GOGL.bind(tex.getTexture());
-					GOGL.enableInterpolation();
-					GOGL.fillRectangle(-dSize/2,-dSize/2,dSize,dSize, bounds);
-				GOGL.unbind();
-				GOGL.disableShaders();
+				GL.bind(tex.getTexture());
+					GL.enableInterpolation();
+					G2D.fillRectangle(-dSize/2,-dSize/2,dSize,dSize, bounds);
+				GL.unbind();
+				GL.disableShaders();
 			}
 			
-			GOGL.resetColor();
-			GOGL.disableInterpolation();
-		GOGL.transformClear();
+			GL.resetColor();
+			GL.disableInterpolation();
+		GT.transformClear();
 	}
 
 	public float calcDepth() {

@@ -133,6 +133,7 @@ public class EdgeFilter extends WholeImageFilter {
 				r = PixelUtils.clamp(r);
 				g = PixelUtils.clamp(g);
 				b = PixelUtils.clamp(b);
+				
 				outPixels[index++] = a | (r << 16) | (g << 8) | b;
 			}
 

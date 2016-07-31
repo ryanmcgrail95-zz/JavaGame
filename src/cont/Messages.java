@@ -94,7 +94,7 @@ public class Messages {
 		    	curTime = curMessage.getTime();
 		    	
 	    	    //Draw Message
-		    	GL.setColor(RGBA.createf(1f,1f,1f,(curTime < 20) ? curTime/20 : 1));
+		    	GL.setAlpha((curTime < 20) ? curTime/20 : 1);
 		    	G2D.drawStringCentered(0,dY, curMessage.getText(), true);
 	    	    
 	    	    //Move Next Message Down

@@ -10,7 +10,7 @@ import object.environment.BlockTerrain;
 import object.environment.Heightmap;
 import object.environment.Heightmap2;
 
-public abstract class Environmental extends Positionable {
+public abstract class Environmental extends Collideable {
 	private static CleanList<Environmental> envList = new CleanList<Environmental>("Env");
 	public static RGBA COL_SELECTED = RGBA.WHITE, 
 			COL_TRUNK = RGBA.createi(72,75,49), 

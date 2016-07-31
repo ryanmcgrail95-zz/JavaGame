@@ -13,7 +13,6 @@ public class BattlePlayer extends BattleActor {
 		this.setSurviveTransition(true);
 	}
 	
-	
 	@Override
 	public void attack() {
 		super.attack();

@@ -1,6 +1,5 @@
 package ds;
 
-import functions.FastMath;
 import functions.Math2D;
 import functions.MathExt;
 

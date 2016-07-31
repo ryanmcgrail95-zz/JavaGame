@@ -2,8 +2,8 @@ package window;
 
 import functions.Math2D;
 import functions.MathExt;
-import gfx.GLText;
-import gfx.GOGL;
+import gfx.G2D;
+import gfx.GL;
 import gfx.RGBA;
 import io.Mouse;
 
@@ -18,6 +18,10 @@ public class Window extends GUIFrame {
 	protected final static int SIDE_BORDER = 8, TOP_BORDER = 20;
 	protected final static byte W_CLOSE = 0;
 
+	private final static RGBA
+		colorBorder = RGBA.createi(70,70,80),//RGBA.createi(80,73,55),
+		colorTitle = RGBA.createi(240,240,255);//RGBA.createi(255,152,31);
+	
 	private String name;
 	private boolean canDrag = false, isDragging;
 	
@@ -38,8 +42,9 @@ public class Window extends GUIFrame {
 	
 	
 	public static void ini() {
-		//new SnakeWindow(100,100);
-		//new PicrossWindow(100,100);
+		new SnakeWindow(100,100);
+		//GUIPicross.createWindow(100,100);
+		//GuiOverlay.createWindow(100,100);
 		//StoreGUI.open("POOP");
 	}
 	
@@ -48,27 +53,37 @@ public class Window extends GUIFrame {
 	public byte draw() {
 		super.draw(x()+SIDE_BORDER,y()+TOP_BORDER);
 
-		GOGL.setColor(new RGBA(80,73,55));
+		GL.setColor(colorBorder);
 		//GOGL.fillRectangle(x(),y(),w()+sideBorder*2,h()+topBorder+sideBorder);*/
-		GOGL.fillRectangle(x(),y(),SIDE_BORDER,h()+TOP_BORDER+SIDE_BORDER);
-		GOGL.fillRectangle(x()+SIDE_BORDER+w(),y(),SIDE_BORDER,h()+TOP_BORDER+SIDE_BORDER);
-		GOGL.fillRectangle(x(),y(),w()+2*SIDE_BORDER,TOP_BORDER);
-		GOGL.fillRectangle(x(),y()+TOP_BORDER+h(),w()+2*SIDE_BORDER,SIDE_BORDER);
-		
+		G2D.fillRectangle(x(),y(),SIDE_BORDER,h()+TOP_BORDER+SIDE_BORDER);
+		G2D.fillRectangle(x()+SIDE_BORDER+w(),y(),SIDE_BORDER,h()+TOP_BORDER+SIDE_BORDER);
+		G2D.fillRectangle(x(),y(),w()+2*SIDE_BORDER,TOP_BORDER);
+		G2D.fillRectangle(x(),y()+TOP_BORDER+h(),w()+2*SIDE_BORDER,SIDE_BORDER);
+
+		G2D.drawOutline(x()+SIDE_BORDER-1,y()+TOP_BORDER-1,w()+2,h()+2, false);
+		G2D.drawOutline(x(),y(),w()+2*SIDE_BORDER,h()+SIDE_BORDER+TOP_BORDER, true);		
+		/*G2D.drawLine(x()+SIDE_BORDER+w()+1,y()+TOP_BORDER,x()+SIDE_BORDER+w()+1,y()+TOP_BORDER+h());
+		GL.setColor(RGBA.BLACK);
+		GL.setAlpha(.5f);
+		G2D.drawLine(x()+SIDE_BORDER,y()+TOP_BORDER,x()+SIDE_BORDER+w()+1,y()+TOP_BORDER);
+		G2D.drawLine(x()+SIDE_BORDER,y()+TOP_BORDER,x()+SIDE_BORDER,y()+TOP_BORDER+h()+1);
+		*/
 		
 		float tS = 1f;
-		GOGL.setColor(new RGBA(255,152,31));
-		GLText.drawStringCentered(x()+w()/2, y()+TOP_BORDER/2, tS,tS, name, true);
+		GL.setColor(colorTitle);
+		G2D.drawStringCentered(x()+w()/2, y()+TOP_BORDER/2, tS,tS, name, true);
+
 		
-		GOGL.setColor(RGBA.BLACK);
-		GOGL.drawRectangle(x()+SIDE_BORDER,y()+TOP_BORDER, w(),h());
-		GOGL.drawRectangle(x(),y(), w()+2*SIDE_BORDER,h()+SIDE_BORDER+TOP_BORDER);
+		GL.setColor(RGBA.BLACK);
+		//G2D.drawRectangle(x(),y(), w()+2*SIDE_BORDER,h()+SIDE_BORDER+TOP_BORDER);
 		
 		float bX,bY,bS;
-		bX = x()+w()-12;
-		bY = y()+2;
-		bS = 16;
-		GOGL.drawRectangle(bX,bY,bS,bS);
+		bS = 12;
+		bX = x()+SIDE_BORDER+w() - bS;
+		bY = y()+TOP_BORDER/2-bS/2;
+		GL.setColorf(1,0,0);
+		G2D.fillRectangle(bX,bY,bS,bS);
+		G2D.drawOutline(bX,bY,bS,bS, true);
 		if(Mouse.checkRectangle(bX,bY, bS,bS)) {
 			Mouse.setFingerCursor();
 			if(Mouse.getLeftClick()) {

@@ -2,21 +2,23 @@ package gfx;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.glu.GLU;
 import ds.vec3;
 import ds.lst.CleanList;
-import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
 import object.actor.Actor;
 import object.primitive.Drawable;
+import object.primitive.Positionable;
 import object.primitive.Updatable;
 import paper.Background;
 import resource.model.Model;
 import time.Delta;
 
 
-public class Camera extends Updatable {
+public class Camera extends Positionable {
 	//CAMERA FOCUS
 	public static final byte PR_PERSPECTIVE = 0, PR_ORTHOGRAPHIC = 1, PR_ORTHOPERSPECTIVE = 2;
 	private static final byte CF_STATIC = 0, CF_OBJECT = 1, CF_CAMERA = 2;
@@ -37,13 +39,17 @@ public class Camera extends Updatable {
 	private float smoothOnceFrac;
 	
 	private vec3 pos = new vec3(), toPos = new vec3();
-	private float fieldOfView = 25, viewFar = 3000, //3000
-			viewNear = 1, whRatio;
+	private float fieldOfView = 25,
+			viewFar = 100, //3000
+			viewNear = .5f, 
+			viewScale = .007f,
+			maxDistance = 1000,
+			whRatio;
 	private float focusAddX, focusAddY, focusAddZ;
 	
 	
 	public Camera(byte projType, FBO fbo) {
-		super();
+		super(0,0,0, false,false);
 		name = "Camera";
 		whRatio = 1f*fbo.getWidth()/fbo.getHeight();
 		
@@ -56,7 +62,7 @@ public class Camera extends Updatable {
 		camList.add(this);
 	}
 	public Camera(byte projType, int resWidth, int resHeight) {
-		super();
+		super(0,0,0, false,false);
 		name = "Camera";
 		whRatio = 1f*resWidth/resHeight;
 
@@ -70,7 +76,7 @@ public class Camera extends Updatable {
 	}
 	
 	public Camera(String name, Camera copyCam) {
-		super();
+		super(0,0,0, false,false);
 		
 		this.copyCam = copyCam;
 		this.name = name;
@@ -100,6 +106,21 @@ public class Camera extends Updatable {
 		
 		camX = cX; camY = cY; camZ = cZ;
 		toX = tX; toY = tY; toZ = tZ;
+		
+		//camDir = Math2D.calcPtDir(camX, camY, toX, toY);
+	}
+	
+	public void setProjectionStiff(float cX, float cY, float cZ, float tX, float tY, float tZ) {
+		if(isLocked)
+			return;
+		
+		camFocusType = CF_STATIC;
+		
+		camX = cX; camY = cY; camZ = cZ;
+		toX = tX; toY = tY; toZ = tZ;
+		
+		pos.set(cX,cY,cZ);
+		toPos.set(tX,tY,tZ);
 		
 		//camDir = Math2D.calcPtDir(camX, camY, toX, toY);
 	}
@@ -245,6 +266,9 @@ public class Camera extends Updatable {
 		focusTranslation.destroy();
 	}
 
+	public String toString() {
+		return "("+camX+", "+camY+", "+camZ+") --> ("+toX+", "+toY+", "+toZ+")";
+	}
 
 	public void lock(boolean state) 	{isLocked = state;}
 	public void lock() 				{lock(true);}
@@ -274,7 +298,7 @@ public class Camera extends Updatable {
 	public boolean checkOnscreen(float x, float y) {return checkOnscreen(x,y,fieldOfView);}
 	public boolean checkOnscreen(float x, float y, float fov) {
 		switch(projType) {
-			case PR_PERSPECTIVE:		return FastMath.calcAngleDiff(Math2D.calcPtDir(getX(),getY(), x,y),camDir) < fov;
+			case PR_PERSPECTIVE:		return Math2D.calcAngleDiff(Math2D.calcPtDir(getX(),getY(), x,y),camDir) < fov;
 			case PR_ORTHOGRAPHIC:		return true;
 			case PR_ORTHOPERSPECTIVE:
 				float w, h, leeway = 100;
@@ -290,6 +314,7 @@ public class Camera extends Updatable {
 	public float getWidthHeightRatio() {return whRatio;}
 	public float getViewNear() {return viewNear;}
 	public float getViewFar() {return viewFar;}
+	public float getMaxDistance() {return maxDistance;}
 	
 	public void setResolution(int w, int h) {
 		//fbo.destroy();
@@ -305,15 +330,29 @@ public class Camera extends Updatable {
 	}
 
 	public void gluLookAt(GLU glu) {
-		glu.gluLookAt(pos.x(),pos.y(),pos.z(),
-				toPos.x(),toPos.y(),toPos.z(),
-				upNormal[0],upNormal[1],upNormal[2]);
+   		/*glu.gluLookAt(0,0,0,
+				5,0,0,
+				0,0,1);*/
+
+		GL2 g = GL.gl;
+		
+        g.glMatrixMode(g.GL_PROJECTION);
+        //g.glLoadIdentity();
+        g.glScalef(viewScale,viewScale,viewScale);
+   		glu.gluLookAt(pos.x(),pos.y(),pos.z(),
+			toPos.x(),toPos.y(),toPos.z(),
+			upNormal[0],upNormal[1],upNormal[2]);
+		
+   		g.glMatrixMode(g.GL_MODELVIEW);
 	}
 	
 	
 	public float[] getPosition() {return pos.getArray();}
 
-	public void setFBO(FBO fbo) {this.fbo = fbo;}
+	public void setFBO(FBO fbo) {
+		this.fbo = fbo;
+		fbo.setFlipY(true);
+	}
 	public FBO getFBO() {return fbo;}
 
 	public void enable(boolean isEnabled) {this.isEnabled = isEnabled;}
@@ -328,14 +367,12 @@ public class Camera extends Updatable {
 	}
 	public void renderDrawable() {
 		GL.setCamera(this);
-    	fbo.attach(GL.gl,false);
-    	
-    	project();
 		
-    	GL.clear(RGBA.TRANSPARENT);
-    	Drawable.presort();
-    	
-		Drawable.draw3D();
+    	fbo.attach(GL.gl,false);
+    			
+	    	GL.clear(RGBA.TRANSPARENT);
+	    	Drawable.presort();	    	
+			Drawable.draw3D();
 		
 		fbo.detach(GL.gl);
 	}
@@ -389,4 +426,9 @@ public class Camera extends Updatable {
 		prevSmoothing = smoothing;
 		smoothing = 0;
 	}
+	
+	@Override
+	public void draw() {}
+	@Override
+	public void add() {}
 }

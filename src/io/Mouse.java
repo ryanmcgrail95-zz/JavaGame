@@ -21,7 +21,7 @@ public class Mouse implements MouseListener, MouseMotionListener {
 
 	public static final int C_ARROW = 0, C_TEXT = 2, C_HOURGLASS = 3, C_POINTING_FINGER = 12;
 	private static Timer cursorResetTimer;
-	private static Timer leftTimer, rightTimer;
+	private static int leftTimer = 0, rightTimer = 0;
 	
 
 	public static void ini() {
@@ -29,7 +29,6 @@ public class Mouse implements MouseListener, MouseMotionListener {
 		GL.getCanvas().addMouseListener(instance);
 		GL.getCanvas().addMouseMotionListener(instance);
 		
-		leftTimer = new Timer(1); rightTimer = new Timer(1);
 		cursorResetTimer = new Timer(2);
 	}
 	public static void update() {				
@@ -39,10 +38,14 @@ public class Mouse implements MouseListener, MouseMotionListener {
 		mouseXPrevious = mouseX;
 		mouseYPrevious = mouseY;
 				
-		if(leftTimer.checkOnce())
-			leftClick = false;		
-		if(rightTimer.checkOnce())
+		if(leftTimer == 0)
+			leftClick = false;	
+		else
+			leftTimer--;
+		if(rightTimer == 0)
 			rightClick = false;
+		else
+			rightTimer--;
 	}
 	
 	
@@ -58,7 +61,7 @@ public class Mouse implements MouseListener, MouseMotionListener {
 				leftClick = true;
 				leftChecked = true;
 				
-				leftTimer.reset();
+				leftTimer = 1;
 			}
 		}
 		else
@@ -66,7 +69,7 @@ public class Mouse implements MouseListener, MouseMotionListener {
 				rightClick = true;
 				rightChecked = true;
 				
-				rightTimer.reset();
+				rightTimer = 1;
 			}
 	}
 
@@ -183,11 +186,9 @@ public class Mouse implements MouseListener, MouseMotionListener {
 			setArrowCursor();
 	}
 	
-	public static Color getPixelColor() {
-		return GL.getPixelColor(getMousePickX(), getMousePickY());
-	}
-	public static RGBA getPixelRGBA() {
-		return GL.getPixelRGBA(getMousePickX(), getMousePickY());
+	
+	public static int getPixelRGB() {
+		return GL.getPixelRGB(getMousePickX(), getMousePickY());
 	}
 	
 	

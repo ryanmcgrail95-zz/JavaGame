@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.jogamp.opengl.util.texture.Texture;
-
+import resource.image.Img;
 import cont.GameController;
 import cont.TextureController;
 
@@ -76,7 +76,7 @@ public class SplitFont extends Font {
 			private void addChar(char c, String fileName) {
 				TextureExt cTex;
 
-				cTex = TextureController.load(fileName, fileName, TextureController.M_BGALPHA);
+				cTex = TextureController.load(fileName, fileName, Img.AlphaType.BG_ALPHA);
 				fontMap.put(c, cTex);
 			}
 

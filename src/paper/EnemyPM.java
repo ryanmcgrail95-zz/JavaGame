@@ -1,6 +1,7 @@
 package paper;
 
 import object.primitive.Physical;
+import paper.ActorPM.MOVEMENT;
 import resource.sound.Sound;
 import rm.Room;
 
@@ -12,21 +13,17 @@ public class EnemyPM extends ActorPM {
 	public EnemyPM(String name, float x, float y, float z) {
 		super(name, x, y, z);
 		
-		SP_RUN = SPEED_RUN*.7f;
+		this.movementType = MOVEMENT.ENEMY;
+		
+		SP_RUN = .7f;
 	}
 	
-	public void update() {
-		start("EnemyPM.update()");
-		super.update();
-		end("EnemyPM.update()");
-	}
-
 	@Override
 	public boolean collide(Physical other) {
 		if(other instanceof PlayerPM)
 			if(other.calcDis2D(this) < 8) {
 				Room.changeRoom("Battle");
-				Sound.playMusic("battleIntro", "battleLoop");
+				//Sound.playMusic("battleIntro", "battleLoop");
 			}
 		return false;
 	}

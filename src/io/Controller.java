@@ -46,7 +46,11 @@ public class Controller {
 	}
 
 
-	public static float getDPadDir() {
-		return Keyboard.getWASDDir();
+	public static float getDirDown() {
+		return Keyboard.getDPadDown();
 	}
+	public static float getDirPressed() {
+		return Keyboard.getDPadPressed();
+	}
+
 }

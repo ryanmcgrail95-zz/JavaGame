@@ -1,6 +1,9 @@
 package paper;
 
+import gfx.GL;
 import gfx.TextureExt;
+import resource.image.Img;
+import resource.image.Img.AlphaType;
 import time.Stopwatch;
 
 import java.util.HashMap;
@@ -8,11 +11,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import cont.Log;
 import cont.TextureController;
 import ds.StringExt2;
 import fl.FileExt;
 
-public final class SpriteMap implements AnimationsPM {
+public final class SpriteMap implements AnimationsPM, Img {
 	private final static String DIRECTORY = "Resources/Images/Characters/";
 	private final static Map<String, SpriteMap> map = new HashMap<String, SpriteMap>();
 
@@ -24,9 +28,12 @@ public final class SpriteMap implements AnimationsPM {
 	private TextureExt load(String fn) {
 		//System.out.print("Loading " + fn + ":");
 		//s.start();
-		TextureExt ext = TextureController.loadExt(DIRECTORY + name + "/"+ fn + ".gif", TextureController.M_BGALPHA);
+		String fileName = DIRECTORY + name + "/"+ fn + ".gif";
+		if(FileExt.getFile(fileName).exists())
+			return TextureController.loadExt(fileName, AlphaType.BG_ALPHA);
+		else
+			return null;
 		//s.stop(true);
-		return ext;
 	}
 	private TextureExt load(String fn, TextureExt backup) {
 		TextureExt main = load(fn);
@@ -144,6 +151,8 @@ public final class SpriteMap implements AnimationsPM {
 		
 		
 		public void destroy() {
+			Log.println(Log.ID.RESOURCE, true, "SpriteMap["+name+"].destroy()");
+
 			map.remove(name);
 			
 			Set<Entry<Integer, TextureExt>> s = texMap.entrySet();
@@ -153,5 +162,7 @@ public final class SpriteMap implements AnimationsPM {
 			
 			s.clear();
 			texMap = null;
+			
+			Log.println(Log.ID.RESOURCE, false, "");
 		}	
 }

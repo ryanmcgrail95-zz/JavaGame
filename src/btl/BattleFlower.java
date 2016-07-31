@@ -29,10 +29,8 @@ public class BattleFlower extends Drawable {
 	}
 
 	public void destroy() {
-		start("BattleFlower.destroy()");
 		super.destroy();
 		mod.removeReference();
-		end("BattleFlower.destroy()");
 	}
 	
 	public float calcDepth() {

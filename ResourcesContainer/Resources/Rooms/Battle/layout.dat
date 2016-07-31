@@ -4,4 +4,5 @@
 
 &BattleController();
 
-&ModelRenderer("Battle-Pleasant_Path_1_Flowerless");
+//&ModelRenderer("Battle-Pleasant_Path_1_Flowerless");
+&BattleEnvironment("Battle-Pleasant_Path_1_Flowerless");

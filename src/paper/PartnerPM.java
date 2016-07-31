@@ -13,7 +13,7 @@ public class PartnerPM extends ActorPM {
 	private static PartnerPM instance;
 	private boolean isActing = false;
 	
-	private static String[] partners = {"mario", "luigi", "watt"};
+	private static String[] partners = {"mario", "luigi"}; //, "watt"};
 	private static int currentPartnerNum = 0;
 	
 	private PartnerPM(String type, float x, float y, float z) {
@@ -31,8 +31,7 @@ public class PartnerPM extends ActorPM {
 	public void update() {
 		super.update();
 		
-		if(IO.checkPressed(IO.C_DOWN))
-			Text.createTextDialog("HELLO!\nline2\nline3\nline4\nUhoh");
+		//if(IO.checkPressed(IO.C_DOWN))
 		if(IO.checkPressed(IO.C_RIGHT))
 			switchCharacter(partners[currentPartnerNum = (currentPartnerNum+1) % partners.length]);
 	}

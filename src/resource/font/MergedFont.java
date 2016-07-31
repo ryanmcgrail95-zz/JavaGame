@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.jogamp.opengl.util.texture.Texture;
 
+import cont.ImgIO;
 import cont.TextureController;
 
 public class MergedFont extends Font {
@@ -15,7 +16,7 @@ public class MergedFont extends Font {
 	
 	public MergedFont(String name, float hangFrac) {
 		super(name, T_MERGED, hangFrac);
-		tex = new MultiTexture("Resources/Fonts/"+name+".png",16,16);
+		tex = new MultiTexture("Resources/Fonts/"+name+".png",ImgIO.AlphaType.GRAYSCALE_MASK,16,16);
 		width = 8;
 		height = 8;
 		

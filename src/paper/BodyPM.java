@@ -1,10 +1,11 @@
 package paper;
 
+import cont.Log;
 import cont.TextureController;
 import obj.prt.Dust;
+import object.primitive.Positionable;
 import resource.sound.Sound;
 import time.Delta;
-import functions.FastMath;
 import functions.Math2D;
 import functions.MathExt;
 import gfx.GL;
@@ -14,11 +15,13 @@ import gfx.TextureExt;
 
 public class BodyPM implements AnimationsPM {
 	
+	private Positionable parent;
 	private CharacterPM myChar;
 	private TextureExt sprite;
 	private float imageIndex, imageSpeed = IMAGE_SPEED, imageNumber,
 		direction = 0,
-		flipDir = 1;
+		flipDir = 1,
+		spinDir = 0;
 	private float
 		x, y, z,
 		xRot, yRot, zRot, alpha = 1;
@@ -60,7 +63,12 @@ public class BodyPM implements AnimationsPM {
 		ini();
 	}
 	
-	public BodyPM(String name) {
+	public void enableDoBlur(boolean doBlur) {
+		this.doBlur = doBlur;
+	}
+	
+	public BodyPM(Positionable parent, String name) {
+		this.parent = parent;
 		setCharacter(name);
 		
 		ini();
@@ -83,17 +91,23 @@ public class BodyPM implements AnimationsPM {
 		this.yScale = yScale;
 	}
 
-	public void setAnimationStill() {setAnimation(S_STILL);}
-	public void setAnimationRun() 	{setAnimation(S_RUN);}
-	public void setAnimationJump() 	{setAnimation(S_JUMP);}
+	public void setAnimationStill() 		{setAnimation(S_STILL);}
+	public void setAnimationRun() 			{setAnimation(S_RUN);}
+	public void setAnimationJump() 			{setAnimation(S_JUMP);}
 	public void setAnimationLand() 	{setAnimation(S_LAND);}
 	public void setAnimationHurt() 	{setAnimation(S_HURT);}
 	public void setAnimationBurned(){setAnimation(S_BURNED);}
+	public void setAnimationSpin()	{setAnimation(S_SPIN);}
 	public void setAnimationDodge() {setAnimation(S_DODGE);}
-	public void setAnimationJumpFall() {setAnimation(S_JUMP_FALL);}
-	public void setAnimationJumpLandHurt() {setAnimation(S_JUMP_LAND_HURT);}
+	public void setAnimationJumpFall() 		{setAnimation(S_JUMP_FALL);}
+	public void setAnimationJumpLandHurt() 	{setAnimation(S_JUMP_LAND_HURT);}
 	public void setAnimation(int type) {
 		animation = type;
+		
+		if(myChar == null)
+			throw new NullPointerException();
+		else if(myChar.getSpriteMap() == null)
+			throw new NullPointerException();
 		
 		sprite = myChar.getSpriteMap().get(animation);
 		imageNumber = sprite.getImageNumber();
@@ -135,7 +149,7 @@ public class BodyPM implements AnimationsPM {
 	}
 	
 	public void animateModel() {
-		GL.start("BodyPM.animateModel()");
+		//GL.start("BodyPM.animateModel()");
 		
 		if(autoIndex)
 			addIndex(Delta.convert(calcImageSpeed()));
@@ -144,7 +158,7 @@ public class BodyPM implements AnimationsPM {
 			
 			if(doStep)
 				if(imageIndex > 4 && imageIndex < 6 && !stepSound) {					
-		        	Sound.play("footstep");
+		        	Sound.play("footstep", parent);
 		            stepSound = true;
 		            
 		            new Dust(x+Math2D.calcLenX(5,direction+180),y+Math2D.calcLenY(5,direction+180),z+5, 0, true);
@@ -158,8 +172,10 @@ public class BodyPM implements AnimationsPM {
 			stepZ = MathExt.to(stepZ, 0, 1.5f);
 		}
 		
+		spinDir = checkAnimation(S_SPIN) ? spinDir+.25f : 0;
+		
 		if(autoFlip) {
-			float diff = (float) FastMath.calcAngleSubt(GL.getCamera().getDirection(), direction);
+			float diff = (float) Math2D.calcAngleSubt(GL.getCamera().getDirection(), direction);
 			int flipSign = (int) Math.signum(diff);
 			
 			if(flipSign != 0)
@@ -183,7 +199,7 @@ public class BodyPM implements AnimationsPM {
 			blurPos[6] = imageIndex;
 		}
 
-		GL.end("BodyPM.animateModel()");
+		//GL.end("BodyPM.animateModel()");
 	}
 
 	public void setAutoFlip(boolean autoFlip) {this.autoFlip = autoFlip;}
@@ -200,13 +216,17 @@ public class BodyPM implements AnimationsPM {
 	}
 	
 	public void drawShadow(float x, float y, float floorZ, int blurInd) {
-		GL.start("Body.drawShadow()");
+		if(z-floorZ < -.5)
+			return;
+		
+		//GL.start("Body.drawShadow()");
 
 		
 		GT.transformClear();
 		GT.transformTranslation(x, y, floorZ);
 		GT.transformRotationZ(zRot);
-		GT.transformPaper(flipDir);
+		
+		GT.transformPaper(flipDir + (animation==S_SPIN?spinDir:0));
 		
 		float maxDis = 128;
 		GT.transformScale((maxDis - (z-floorZ))/maxDis);
@@ -223,17 +243,17 @@ public class BodyPM implements AnimationsPM {
 		GL.unforceColor();
 		GL.setAlpha(1);
 
-		GL.end("Body.drawShadow()");
+		//GL.end("Body.drawShadow()");
 	}
 	
 	public void draw() {
 		
-		GL.start("Body.draw()");
+		//GL.start("Body.draw()");
 
 		if(!doBlur)
 			draw(x,y,z);
 		else {
-			if(FastMath.calcAngleDiff(GL.getCamera().getDirection(),direction) < 90) {
+			if(Math2D.calcAngleDiff(GL.getCamera().getDirection(),direction) < 90) {
 				draw(x,y,z);
 				for(int i = 1; i < blurNum; i++)
 					draw(blurPos[blurVarNum*i], blurPos[blurVarNum*i+1], blurPos[blurVarNum*i+2], blurPos[blurVarNum*i+3], blurPos[blurVarNum*i+4], blurPos[blurVarNum*i+5], blurPos[blurVarNum*i+6], i);
@@ -246,7 +266,7 @@ public class BodyPM implements AnimationsPM {
 		}	
 		GL.setAlpha(1);
 		
-		GL.end("Body.draw()");
+		//GL.end("Body.draw()");
 	}
 	
 	private void draw(float x, float y, float z) {
@@ -254,7 +274,7 @@ public class BodyPM implements AnimationsPM {
 	}
 	private void draw(float x, float y, float z, float floorZ, float xScale, float yScale, float imageIndex, int blurInd) {
 
-		GL.start("Body.draw(...)");
+		//GL.start("Body.draw(...)");
 
 		if(isDestroyed)
 			return;
@@ -270,10 +290,10 @@ public class BodyPM implements AnimationsPM {
 		GT.transformClear();
 		GT.transformTranslation(x, y, z-1);	
 		GT.transformRotationZ(zRot);
-		GT.transformPaper(flipDir);
+		GT.transformPaper(flipDir + (animation==S_SPIN?spinDir:0));
 		GT.transformRotationX(xRot);
 		
-		GL.start("Body.draw(...)-translation");
+		//Log.println(Log.ID.RESOURCE, true, "BodyPM.draw(...)-translation");
 		if(myShoe != null)
 			GT.transformTranslation(0,myShoe.getExtraHeight(),0);
 		else if(myWings != null)
@@ -290,23 +310,23 @@ public class BodyPM implements AnimationsPM {
 			GT.transformScale(xScale,yScale,1);
 		else if(scaleDirection == SC_UP)
 			GT.transformScale(xScale,yScale,1);
-		GL.end("Body.draw(...)-translation");
+		//GL.end(Log.ID.RESOURCE, false, "Body.draw(...)-translation");
 				
 		
 		if(forceColor != null)
 			GL.forceColor(forceColor);
 		
-		GL.start("Body.draw(...)-alpha");
+		//GL.start("Body.draw(...)-alpha");
 		if(blurInd > 0)
 			GL.setAlpha(alpha * blurAlpha*(blurNum - 1f*blurInd)/blurNum);
 		else
 			GL.setAlpha(alpha);
-		GL.end("Body.draw(...)-alpha");
+		//GL.end("Body.draw(...)-alpha");
 
 		if(sprite != null)
 			sprite.draw(dX,dY, dW, -dH, getFrame());
 		
-		GL.start("Body.draw(...)-subparts");
+		//GL.start("Body.draw(...)-subparts");
 		if(mySpike != null)
 			mySpike.draw();
 		if(myWings != null)
@@ -315,13 +335,13 @@ public class BodyPM implements AnimationsPM {
 			myZap.draw();
 		if(myShoe != null)
 			myShoe.draw(-flipDir);
-		GL.end("Body.draw(...)-subparts");
+		//GL.end("Body.draw(...)-subparts");
 		
 		GT.transformClear();
 
 		GL.unforceColor();
 		
-		GL.end("Body.draw(...)");
+		//GL.end("Body.draw(...)");
 	}
 	
 	public float getExtraBaseHeight() {

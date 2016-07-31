@@ -92,10 +92,17 @@ public class Shader {
 		addShader(gl, "Fireball");
 		addShader(gl, "FireballGaussian");
 		addShader(gl, "Gaussian");
+		addShader(gl, "battleBG");
+		addShader(gl, "battleFloor");
+		addShader(gl, "blurFBO");
+		addShader(gl, "heatWave");
 		addShader(gl, "Rainbow");
 		addShader(gl, "Metal");
 		addShader(gl, "Model");
 		addShader(gl, "PageCurl");
+		addShader(gl, "Grass");
+		addShader(gl, "gameboy");
+		addShader(gl, "BlendAdditiveColor");
 		/*addShader(gl, "Galaxy");
 		addShader(gl, "Grayscale");
 		addShader(gl, "Rainbow");

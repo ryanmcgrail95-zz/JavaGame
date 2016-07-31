@@ -14,12 +14,14 @@ import paper.PlayerPM;
 import phone.SmartPhone;
 import resource.Loadbar;
 import resource.Resource;
+import resource.image.Img;
 import resource.model.Model;
 import resource.sound.Sound;
 import sts.Stat;
 import time.Delta;
 import time.Timer;
 import window.Window;
+import cont.ImgIO;
 import cont.Messages;
 import cont.Text;
 import cont.TextureController;
@@ -35,8 +37,8 @@ public class Overlay {
 	private static int timer = 0, secs = 0;
 	private static boolean isEnabled = true;
 	
-	private static MultiTexture starpointTex = new MultiTexture("Resources/Images/starpoints.png",8,1);
-	private static MultiTexture hpBarTex = new MultiTexture("Resources/Images/hp1.png",27,1);
+	private static MultiTexture starpointTex = new MultiTexture("Resources/Images/starpoints.png",Img.AlphaType.NORMAL,8,1);
+	private static MultiTexture hpBarTex = new MultiTexture("Resources/Images/hp1.png",Img.AlphaType.NORMAL,27,1);
 	private static float starpointInd = 0;
 	
 	public static void ini() {
@@ -47,11 +49,13 @@ public class Overlay {
 		if(isEnabled)
 			if(Text.isActive())
 				Text.draw();
-			/*else if(Window.isWindowOpen())
-				Window.drawAll();*/
 			else { // if(!SmartPhone.isActive()){
-				//Controller.draw();
+ 				//Controller.draw();
 				//Menu.drawAll();
+				
+				if(Window.isWindowOpen())
+					Window.drawAll();
+				GL.setColor(RGBA.WHITE);
 				
 				Messages.draw();
 								
@@ -67,7 +71,7 @@ public class Overlay {
 					}
 					
 					float dS = 16, ddS = dS*.75f;
-					float dX = GL.SCREEN_WIDTH - 3*ddS, dY = GL.SCREEN_HEIGHT - 2*ddS;
+					float dX = GL.getInternalWidth() - 3*ddS, dY = GL.getInternalHeight() - 2*ddS;
 					int pts = inst.getStarPoints();
 					for(int i = 0; i < pts; i++) {
 						G2D.drawTexture(dX, dY, dS, dS, starpointTex, (int) starpointInd);
@@ -77,10 +81,7 @@ public class Overlay {
 					if(starpointInd > 8)
 						starpointInd -= 8;
 				}
-				//Stat.drawOverheads();
-				
-				//GL.drawFBO(0,0, FireSprite.getFBO());
-				
+								
 				timer++;
 				if(timer == 60) {
 					timer = 0;
@@ -108,7 +109,7 @@ public class Overlay {
 						"Vectors: " + vec.getNumber(),
 						"Matrices: " + mat.getNumber(),
 						"FBOs: " + FBO.getNumber(),
-						//"RGBAs: " + RGBA.getNumber(),
+						"RGBAs: " + RGBA.getNumber(),
 						"Characters: " + CharacterPM.getNumber()
 					);
 					
@@ -122,7 +123,7 @@ public class Overlay {
 					
 					//drawUpdatables(300,0);
 					drawCleanLists(500,0);
-					drawResources(300,0);
+					//drawResources(300,0);
 				}
 			}
 		
@@ -154,14 +155,10 @@ public class Overlay {
 		CleanList<CleanList> list = CleanList.getLists();
 		for(CleanList c : list) {
 			G2D.drawString(x,y, c.getName() + ": " + c.size());
-			y += 15;
+			y += 10;
 		}
 	}
 
-	public static void enable() {
-		isEnabled = true;
-	}
-	public static void disable() {
-		isEnabled = false;
-	}
+	public static void enable()		{isEnabled = true;}
+	public static void disable()	{isEnabled = false;}
 }

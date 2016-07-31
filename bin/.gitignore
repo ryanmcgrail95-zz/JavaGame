@@ -1,3 +1,4 @@
+/Reference/
 /Resources/
 /Smithing/
 /animation/
@@ -8,15 +9,18 @@
 /cont/
 /dialog/
 /ds/
+/face/
 /fl/
 /functions/
 /games/
 /gfx/
 /gui/
+/hqx/
 /image/
 /interfaces/
 /io/
 /menu/
+/notepad/
 /obj/
 /object/
 /org/
@@ -32,3 +36,4 @@
 /time/
 /twoD/
 /window/
+/TEST.class

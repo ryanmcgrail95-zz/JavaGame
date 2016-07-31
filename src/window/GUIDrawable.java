@@ -4,10 +4,10 @@ import ds.lst.CleanList;
 import io.Mouse;
 
 public abstract class GUIDrawable extends GUIObject {
-	private CleanList<GUIListener> listeners = new CleanList<GUIListener>();
+	private CleanList<GUIListener> listeners = new CleanList<GUIListener>("Listener");
 	private float x, y, w, h;
 
-	public GUIDrawable(int x, int y, int w, int h) {
+	public GUIDrawable(float x, float y, float w, float h) {
 		super(true);
 		x(x);
 		y(y);
@@ -54,4 +54,7 @@ public abstract class GUIDrawable extends GUIObject {
 					l.click();
 		}
 	}
+	
+	public float centerX() {return x() + w()/2;}
+	public float centerY() {return y() + h()/2;}
 }

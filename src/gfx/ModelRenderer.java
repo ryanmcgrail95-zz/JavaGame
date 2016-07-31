@@ -42,7 +42,7 @@ public class ModelRenderer extends Drawable {
 			GT.transformRotationZ(GL.getTime());
 
 			GT.transformScale(2);
-			GT.transformRotationX(-90);
+			GT.transformRotationX(-90); 	 	
 			
 			GL.enableCulling();
 			GL.enableShader("Model");
@@ -50,7 +50,7 @@ public class ModelRenderer extends Drawable {
 			GL.disableShaders();
 		GT.transformClear();*/
 		
-		start("ModelRenderer.draw()");
+		//start("ModelRenderer.draw()");
 		
 		GL.setPerspective();
 		GT.transformClear();
@@ -60,7 +60,7 @@ public class ModelRenderer extends Drawable {
 			mod.drawFast();
 			GL.disableShaders();
 		GT.transformClear();
-		end("ModelRenderer.draw()");
+		//end("ModelRenderer.draw()");
 	}
 
 	@Override

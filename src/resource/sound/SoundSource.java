@@ -5,6 +5,7 @@ import com.jogamp.openal.AL;
 import ds.vec3;
 import functions.Math2D;
 import functions.MathExt;
+import object.primitive.Positionable;
 
 public class SoundSource {
 	private SoundBuffer parentBuffer;
@@ -12,46 +13,46 @@ public class SoundSource {
 	private int bufferID;
 	private float volumePercent = 1, fadeAmount = 1, fadeToAmt = 1, volume, speed = 1;
 	private int doLoop;
+	private boolean isDestroyed = false;
 	private boolean isReversed = false, wasNeverPlayed = true;
+	
+	private float[]
+		positionArray = new float[3],
+		velocityArray = new float[3];
 	
 	// EFFECTS
 	private static final byte FX_NONE = 0, FX_DIZZY = 1;
 	private byte effect = FX_NONE;
-	private float wobbleDir = 0, wobbleDirSpeedDir = 0, wobbleDirSpeedMax = 2 , wobbleSize = .15f;
+	private ThetaValue
+		dizzyWeight = new ThetaValue(0,.2f, 0,1);
 	
 	private boolean fadeIn;
 	private SoundBuffer newBuffer;
 
+	private Positionable sourceObject;
 	
 	private final static byte S_STOPPED = 0, S_PAUSED = 1, S_PLAYING = 2;
 	private byte playState = S_PAUSED;
 	
 	
 	public SoundSource(SoundBuffer blueprint, boolean doLoop) {
-		create(blueprint,Sound.getListenerPosition(),Sound.getListenerVelocity(),doLoop);
+		create(blueprint, Sound.getListenerObject(), doLoop);
 	}
-	public SoundSource(SoundBuffer blueprint, float[] pos, float[] vel, boolean doLoop) {
-		create(blueprint,pos,vel,doLoop);
+	public SoundSource(SoundBuffer blueprint, Positionable sourceObject, boolean doLoop) {
+		create(blueprint, sourceObject, doLoop);
 	}	
-	public SoundSource(SoundBuffer blueprint, float x, float y, float z, float vX, float vY, float vZ, boolean doLoop) {
-		float[] pos = {x,y,z}, vel = {vX,vY,vZ};
-		create(blueprint, pos,vel, doLoop);
-	}
 		
 	public static AL al() {
 		return Sound.al();
 	}
 	
-	public void create(SoundBuffer blueprint, vec3 pos, vec3 vel, boolean doLoop) {create(blueprint,pos.getArray(),vel.getArray(), doLoop);}
-	public void create(SoundBuffer blueprint, float[] pos, float[] vel, boolean doLoop) {
-
+	public void create(SoundBuffer blueprint, Positionable sourceObject, boolean doLoop) {
 		generateSource();
 		
 		this.doLoop = doLoop ? 1 : 0;
 		setSoundBuffer(blueprint);
 
-        setPosition(pos);
-        setVelocity(vel);
+        setSourceObject(sourceObject);
 	}
 	
 	
@@ -87,15 +88,7 @@ public class SoundSource {
 		setSoundBuffer(newBuffer);
 		if(wasPlaying)
 			play();
-	}
-	
-	public void setPosition(float[] pos) {
-		al().alSourcefv(sourceID[0], AL.AL_POSITION, pos, 0);        
-	}
-	public void setVelocity(float[] vel) {
-        al().alSourcefv(sourceID[0], AL.AL_VELOCITY, vel, 0);
-	}
-	
+	}	
 	
 	
 	public void play() 	{
@@ -116,13 +109,19 @@ public class SoundSource {
 	}
 
 	public void destroy() {
-		stop();
-		
-		al().alSourcei(sourceID[0], AL.AL_BUFFER, 0);
-		al().alDeleteSources(1, sourceID, 0);
-		
-		parentBuffer = null;
-		sourceID = null;
+		if(!isDestroyed) {	
+			isDestroyed = true;
+			
+			stop();
+			
+			al().alSourcei(sourceID[0], AL.AL_BUFFER, 0);
+			al().alDeleteSources(1, sourceID, 0);
+			
+			parentBuffer = null;
+			sourceID = null;
+			
+			dizzyWeight.destroy();
+		}
 	}
 	
 	
@@ -186,37 +185,46 @@ public class SoundSource {
 	}
 	
 	public void update() {
-		if(effect == FX_DIZZY) {
-			wobbleDirSpeedDir += 1;
-			wobbleDir += Math.abs(Math2D.calcLenY(wobbleDirSpeedMax,wobbleDirSpeedDir));
-		}
-		
-		fade(fadeToAmt);
-
-		System.out.println(this.getParentBuffer().getName() + ": " + fadeAmount + ", " + fadeToAmt);
-
-		if(fadeAmount < .01 && newBuffer != null) {
-			setBuffer(newBuffer);
-			
-			if(fadeIn) {
-				setFadeAmount(0);
-				fadeTo(1);
-			}
-			else {
-				setFadeAmount(1);
-				fadeTo(1);
+		if(isPlaying()) {
+			fade(fadeToAmt);
+	
+			if(fadeAmount < .01 && newBuffer != null) {
+				setBuffer(newBuffer);
+				
+				if(fadeIn) {
+					setFadeAmount(0);
+					fadeTo(1);
+				}
+				else {
+					setFadeAmount(1);
+					fadeTo(1);
+				}
+				
+				newBuffer = null;
 			}
 			
-			newBuffer = null;
+	
+			// Pass Changes to OpenAL
+			passALSource();
+			passALSpeed();
 		}
-		
+	}
 
-		
-		setALSpeed();
+	// SOURCE
+	public void setSourceObject(Positionable sourceObject) {
+		this.sourceObject = sourceObject;
+		passALSource();
+	}
+	public void passALSource() {
+		if(sourceObject != null) {
+			setPosition(sourceObject.x(),sourceObject.y(),sourceObject.z());
+			setVelocity(sourceObject.vX(),sourceObject.vY(),sourceObject.vZ());
+		}
 	}
 	
-	public void setSpeed(float newSpeed) {
-		
+	
+	// SPEED
+	public void setSpeed(float newSpeed) {		
 		float prevSpeed = speed;
 		
 		speed = newSpeed;
@@ -224,18 +232,41 @@ public class SoundSource {
 			reverse(false);
 		else if(prevSpeed >= 0 && speed < 0)
 			reverse(true);
-		setALSpeed();
+		passALSpeed();
 	}
-	private void setALSpeed() {
+	private void passALSpeed() {
 		float calcSpeed;
 		calcSpeed = Math.abs(speed);
 		if(effect == FX_DIZZY)
-			calcSpeed += Math2D.calcLenY(wobbleSize,wobbleDir);
+			calcSpeed += dizzyWeight.get();
 		
 		al().alSourcef(sourceID[0], AL.AL_PITCH, calcSpeed);
 	}
-	
-	
+
+	// POSITION
+	public void setPosition(float[] newPos) {setPosition(newPos[0],newPos[1],newPos[2]);}
+	public void setPosition(float x, float y, float z) {
+		positionArray[0] = x;
+		positionArray[1] = y;
+		positionArray[2] = z;
+		passALPosition();
+	}
+	public void passALPosition() {
+		al().alSourcefv(sourceID[0], AL.AL_POSITION, positionArray, 0);
+	}
+
+	// VELOCITY
+	public void setVelocity(float[] newVel) {setVelocity(newVel[0],newVel[1],newVel[2]);}
+	public void setVelocity(float vx, float vy, float vz) {
+		velocityArray[0] = vx;
+		velocityArray[1] = vy;
+		velocityArray[2] = vz;
+		passALVelocity();
+	}
+	public void passALVelocity() {
+        al().alSourcefv(sourceID[0], AL.AL_VELOCITY, velocityArray, 0);
+	}
+
 	
 	public void setSecOffset(float secondsOffset) {
 		al().alSourcef(sourceID[0], AL.AL_SEC_OFFSET, secondsOffset);
@@ -293,5 +324,8 @@ public class SoundSource {
 		
 		newBuffer = newMusic;
 		this.fadeIn = fadeIn;
+	}
+	public boolean isDestroyed() {
+		return isDestroyed;
 	}
 }

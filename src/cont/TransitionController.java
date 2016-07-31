@@ -36,14 +36,14 @@ public class TransitionController {
 		if(trType == T_FADE) {
 			GL.setColor(trColor);
 			GL.setAlpha(1 - trFrac.get());
-			G2D.fillRectangle(0,0,GL.SCREEN_WIDTH,GL.SCREEN_HEIGHT);
+			G2D.fillRectangle(0,0,GL.getInternalWidth(),GL.getInternalHeight());
 			GL.resetColor();
 		}
 		else if(trType == T_IMAGE) {
 			/*
 				w = background_get_width(trImg);
 		        h = background_get_height(trImg);
-		        
+		         
 		        lX = 320 - w/2*s*t;
 		        rX = 320 + w/2*s*t;
 		        tY = 240 - h/2*s*t;

@@ -7,15 +7,13 @@ import java.util.List;
 
 import com.jogamp.opengl.GL2;
 
-import cont.ImageLoader;
+import cont.ImgIO;
 import cont.TextureController;
 import ds.vec2;
 import time.Timer;
 import window.GUIDrawable;
 import io.Mouse;
 import functions.MathExt;
-import gfx.GLText;
-import gfx.GOGL;
 import gfx.RGBA;
 
 public class Picross {
@@ -27,20 +25,16 @@ public class Picross {
 	protected boolean isSolved = false;	
 	private int[] hints[] = new int[30][];
 	
-	public Picross() {
-	}
-	
-	public void destroy() {}
+	public Picross() {}
 
-	
-	
+	public void destroy() {}	
 	public void load(String name) {
 		try {
-			BufferedImage img = ImageLoader.load(name);
+			BufferedImage img = ImgIO.load(name);
 			// Fill in Solution Grid; White = Empty, Black = Filled
 			for(int r = 0; r < yNum; r++)
 				for(int c = 0; c < xNum; c++)
-					solutionGrid[c][r] = (new RGBA(img.getRGB(c,r))).getValue() < .5f;
+					solutionGrid[c][r] = (RGBA.create(img.getRGB(c,r))).Vf() < .5f;
 
 			// Come up with Solutions
 			generateHints();
@@ -54,12 +48,23 @@ public class Picross {
 		
 		for(int r = 0; r < yNum; r++)
 			for(int c = 0; c < xNum; c++)
-				if(solutionGrid[c][r] != (grid[c][r] == 1))
+				if(solutionGrid[c][r] != (grid[c][r] == CELL_FILLED))
 					return false;
 		
 		return isSolved = true;
 	}
 	
+	public void solve() {
+		if(isSolved)
+			return;
+		
+		for(int r = 0; r < yNum; r++)
+			for(int c = 0; c < xNum; c++)
+				grid[c][r] = solutionGrid[c][r] ? CELL_FILLED : CELL_EMPTY;
+		
+		isSolved = true;
+	}
+
 	
 	private void generateHints() {
 		int curLenR = 0, curLenC = 0, siR, siC;
@@ -100,15 +105,21 @@ public class Picross {
 		}
 	}
 	
-	public void set(int x, int y, byte state) {
-		if(0 <= x && x < 15 && 0 <= y && y < 15)
-			grid[x][y] = state;
+	public boolean set(int x, int y, byte state) {
+		if(0 <= x && x < 15 && 0 <= y && y < 15)			
+			if(state == CELL_EMPTY || grid[x][y] == CELL_EMPTY) {
+				grid[x][y] = state;
+				return true;
+			}		
+		return false;
 	}
 	public byte get(int x, int y) {
 		if(0 <= x && x < 15 && 0 <= y && y < 15)
 			return grid[x][y];
-		else
+		else {
+			System.out.println(x + ", " + y);
 			return -1;
+		}
 	}
 	public boolean check(int x, int y, byte state) {
 		return get(x,y) == state;

@@ -7,10 +7,11 @@ import gfx.G2D;
 import gfx.GL;
 import gfx.GT;
 import gfx.TextureExt;
+import resource.image.Img;
 import cont.TextureController;
 
 public class ZapPM implements AnimationsPM {
-	private final static TextureExt zapTex = TextureController.loadExt("Resources/Images/Characters/extra/zap.gif", TextureController.M_BGALPHA);
+	private final static TextureExt zapTex = TextureController.loadExt("Resources/Images/Characters/extra/zap.gif", Img.AlphaType.BG_ALPHA);
 	private float index1, index2 = 180;
 	private float size = 9, distance = 8, height, exDistance = 3;
 		
@@ -46,7 +47,7 @@ public class ZapPM implements AnimationsPM {
 	}
 	
 	public void draw() {
-		GL.start("ZapPM.draw()");
+		//GL.start("ZapPM.draw()");
 
 		float dX, dY, dW, dH;
 		
@@ -80,6 +81,6 @@ public class ZapPM implements AnimationsPM {
 		}
 		GT.transformTranslation(0,-height*.5f,0);
 
-		GL.end("ZapPM.draw()");
+		//GL.end("ZapPM.draw()");
 	}
 }

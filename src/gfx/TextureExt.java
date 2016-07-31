@@ -14,15 +14,18 @@ import javax.imageio.ImageIO;
 import com.jhlabs.image.*;
 import com.jogamp.opengl.util.texture.Texture;
 
+import cont.ImgIO;
+import cont.Log;
 import cont.TextureController;
 import fl.FileExt;
 import functions.Math2D;
+import functions.MathExt;
 
 public class TextureExt extends Sprite {
 	public final static byte E_NONE = -1, E_GRAYSCALE = 0, E_INVERT = 1, E_TWIRL = 2, E_CHROME = 3, E_CRYSTALLIZE = 4, E_POINTILLIZE = 5, E_BLUR = 6, E_OIL = 7, E_PIXELIZE = 8, E_RAINBOW = 9, E_UNDERWATER = 10, E_DIFFUSE = 11, E_SHIVER = 12, E_EDGE = 13, E_DISSOLVE = 14;
 	
-	private List<Texture> frameList = new ArrayList<Texture>();
-	private int imageNumber = 0;
+	private List<Texture> frameList;
+	private int imageNumber;
 		
 	private static BufferedImage sprGlow; 
 	static {
@@ -33,37 +36,40 @@ public class TextureExt extends Sprite {
 		}
 	}
 	
-	public TextureExt(BufferedImage img, String name) {
-		super(name);
-		addFrame(img);		
+	public TextureExt(String filename, AlphaType alphaModel) {
+		super(filename, MathExt.indexEnum(alphaModel, alphaTypeList));
 	    TextureController.add(this);
 	}	
-	public TextureExt(List<BufferedImage> imgs, String name) {
-		super(name);
-		for(BufferedImage i : imgs)
-			addFrame(i);
-		imageNumber = frameList.size();
-		
-	    TextureController.add(this);
-	}
+
 	
+	@Override
 	public void destroy() {
 		TextureController.remove(this);
-		for(Texture t : frameList)
-			TextureController.destroy(t);
-		
-		frameList.clear();
 	}
 	
 	public int getImageNumber() {return imageNumber;}
 	
-	public void addFrame(BufferedImage img) {
+	private void addFrame(BufferedImage img) {
 		frameList.add(GL.createTexture(img, false));
 		imageNumber++;
 	}
 	
 	public Texture getTexture(int frame) {
-		return frameList.get(containFrame(frame));
+		int index = containFrame(frame);
+		if(index == -1)
+			return null;
+		else
+			return frameList.get(index);
+	}
+	
+	public void unload() {
+		super.unload();
+
+		for(Texture t : frameList)
+			TextureController.destroy(t);
+		frameList.clear();
+		
+		imageNumber = 0;
 	}
 				
 	public BufferedImage applyImageEffect(BufferedImage curImg, byte effect) {
@@ -245,4 +251,36 @@ public class TextureExt extends Sprite {
 
 	@Override
 	public float[] getBounds(int frame) {return DEFAULT_BOUNDS;}
+
+
+	@Override
+	public void load(String fileName, int... args) {
+		try {
+			Log.println(Log.ID.RESOURCE, true, "TextureExt["+getFileName()+"].load()");
+			
+			if(frameList == null) {
+				frameList = new ArrayList<Texture>();
+				imageNumber = 0;
+			}
+			
+			BufferedImage[] frames = ImgIO.load(fileName, (byte) args[0]);
+						
+			if(frames == null)
+				Log.println(Log.ID.RESOURCE, "Failed to load: " + fileName);
+			else {
+				Log.println(Log.ID.RESOURCE, "Loaded: " + fileName + ", " + frames.length + " frames");
+
+				for(BufferedImage b : frames) {
+					addFrame(b);
+					b = null;
+					//b.flush();
+				}
+			}
+			
+			Log.println(Log.ID.RESOURCE, false, "");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

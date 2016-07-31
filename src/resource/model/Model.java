@@ -223,16 +223,15 @@ public class Model extends Resource {
 			this.vertexList[i] = vertexList.get(i);
 	}
 	
-	public void unload() {
-		super.unload();
-		destroy();
-	}
-	
 	public void destroy() {
 		System.out.println("**Destroyed model " + getFileName());
 
 		modList.remove(this);
 		modelMap.remove(key);
+	}
+	
+	public void unload() {
+		super.unload();
 		
 		// Delete Arrays
 		// Delete Material
@@ -306,6 +305,8 @@ public class Model extends Resource {
 				if(c != -1) {
 					RGBA.convertInt2RGBA(colorList[c],color);
 					GL.setColor(RGBA.create(colorList[c]));
+					
+					System.out.println("WASTEFUL RGBA MODEL.draw");
 					gl.glColor4f(color[0]/255f,color[1]/255f,color[2]/255f,255f);
 				}
 				gl.glVertex3fv(pointList[p],0);
@@ -322,10 +323,10 @@ public class Model extends Resource {
 		if(!this.isLoaded())
 			throw new UnsupportedOperationException("Model \"" + getFileName() + "\" is not loaded yet!");
 		
-		GL.start("Model[" + getFileName() + "].drawFast()");
+		//GL.start("Model[" + getFileName() + "].drawFast()");
 		for(Submodel s : submodelList)
 			s.draw();		
-		GL.end("Model.drawFast()");
+		//GL.end("Model.drawFast()");
 	}
 	
 	public void add() {
@@ -395,9 +396,9 @@ public class Model extends Resource {
 	
 	public void scale(float scaleFactor) {scale(scaleFactor,scaleFactor,scaleFactor);}
 	public void scale(float sX, float sY, float sZ) {
-		GL.start("Model["+this.getFileName()+"].scale()");
+		//GL.start("Model["+this.getFileName()+"].scale()");
 		transform(mat4.createScaleArray(sX,sY,sZ));
-		GL.end("Model.scale()");
+		//GL.end("Model.scale()");
 	}
 	
 	public void flipNormals() {
@@ -567,7 +568,7 @@ public class Model extends Resource {
 	}
 
 
-	public void load(String fileName) {
+	public void load(String fileName, int... args) {
 		if(getTemporary())
 			return;
 		

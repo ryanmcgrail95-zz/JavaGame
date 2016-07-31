@@ -408,7 +408,7 @@ public abstract class BattleActor extends Positionable {
 		this.parent = parent;		
 		
 
-		myBody = new BodyPM(name);
+		myBody = new BodyPM(this, name);
 		hp = getCharacter().getMaxHP();
 
 		setAnimationStill();
@@ -420,7 +420,7 @@ public abstract class BattleActor extends Positionable {
 
 	@Override
 	public void update() {
-		start("BattleActor.update()");
+		//start("BattleActor.update()");
 				
 		updateZPrevious();
 		myBody.setFloorZ(0);
@@ -446,7 +446,7 @@ public abstract class BattleActor extends Positionable {
 			if(getZ() <= groundZ)
 				setZ(groundZ);
 		
-		end("BattleActor.update()");
+		//end("BattleActor.update()");
 	}
 	
 	private void updateZPrevious() {
@@ -531,12 +531,12 @@ public abstract class BattleActor extends Positionable {
 			float
 				rndPos = 1, //8
 				sX, sZ;
-			sX = getX() + MathExt.rnd(-rndPos,rndPos);
-			sZ = getTopZ() + MathExt.rnd(-rndPos,rndPos);
-			new DamageSpark(sX,-10,sZ,MathExt.rnd(360), .5f, 1, 1, 1);
+			sX = getX() + MathExt.rndf(-rndPos,rndPos);
+			sZ = getTopZ() + MathExt.rndf(-rndPos,rndPos);
+			new DamageSpark(sX,-10,sZ,MathExt.rndf(360), .5f, 1, 1, 1);
 			
 			if(i < 8)
-				new DamageSpark(sX,-10,sZ,MathExt.rnd(360), 1.6f, .4f, 1.2f, 2.1f);
+				new DamageSpark(sX,-10,sZ,MathExt.rndf(360), 1.6f, .4f, 1.2f, 2.1f);
 		}
 	}
 	public void createSmokeBurst() {	
@@ -545,9 +545,9 @@ public abstract class BattleActor extends Positionable {
 				rndPos = 2,
 				rndDir = 5,
 				sX, sZ, sD;
-			sX = getX() + MathExt.rnd(-rndPos,rndPos);
-			sZ = getZ() + MathExt.rnd(-rndPos,rndPos);
-			sD = i/16f*180 + MathExt.rnd(-rndDir,rndDir);
+			sX = getX() + MathExt.rndf(-rndPos,rndPos);
+			sZ = getZ() + MathExt.rndf(-rndPos,rndPos);
+			sD = i/16f*180 + MathExt.rndf(-rndDir,rndDir);
 			new DamageSmoke(sX,-1,sZ,sD);
 		}
 	}
@@ -797,7 +797,6 @@ public abstract class BattleActor extends Positionable {
 					GL.beginPageCurl();
 					GL.setPerspective();
 					
-					Sound.lockMusic();
 					Sound.fadeMusic(0);
 					
 					Room.revertRoom();
@@ -886,9 +885,7 @@ public abstract class BattleActor extends Positionable {
 					c.smoothOnce(2f);
 										
 					pl.destroy();
-					pa.destroy();
-					
-					Sound.unlockMusic();
+					pa.destroy();					
 				}
 				break;
 
@@ -1097,12 +1094,12 @@ public abstract class BattleActor extends Positionable {
 		if(shakeFraction > 0) {
 			float shR = 20, shF;
 			shF = (float) Math.pow(shakeFraction, .4f);
-			dXT += shF*MathExt.rnd(-shR,shR);
+			dXT += shF*MathExt.rndf(-shR,shR);
 			//dZ += shF*MathExt.rnd(-shR,shR);
 		}
 		
 		if(hopZ != 0)
-			dZT += MathExt.rnd(4);
+			dZT += MathExt.rndf(4);
 		
 		myBody.setPosition(x() + dXT, y(), z() + dZT);
 		

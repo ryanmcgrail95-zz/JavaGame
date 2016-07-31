@@ -1,6 +1,9 @@
 package gfx;
 
 import io.Keyboard;
+import io.Mouse;
+import menu.ListMenu;
+import menu.Menu;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -9,6 +12,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+import java.util.concurrent.Callable;
 
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.GLCanvas;
@@ -24,34 +29,42 @@ import object.primitive.Updatable;
 import paper.Background;
 import paper.PlayerPM;
 import phone.SmartPhone;
+import resource.Resource;
+import resource.image.Img;
 import resource.model.Model;
 import resource.shader.Shader;
 import resource.sound.Sound;
 import resource.sound.SoundBuffer;
 import rm.Room;
 import script.PML;
+import script.PMLMemory;
 import time.Delta;
+import time.Stopwatch;
 import time.Timer;
 import twoD.Player2D;
 import twoD.Terrain2D;
+import window.Window;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
-import btl.BattlePlayer;
 import cont.GameController;
-import cont.ImageLoader;
+import cont.ImgIO;
+import cont.Log;
 import cont.Text;
 import cont.TextureController;
-import ds.StringExt2;
+import ds.StringExt;
 import ds.mat4;
 import ds.vec;
 import ds.vec3;
 import ds.vec4;
+import face.FaceTracker;
 import functions.ArrayMath;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
+import window.RectButton;
+import window.TextButton;
 
 public class GL {
 	private static final float TOP_LAYER = 999;
@@ -63,7 +76,13 @@ public class GL {
 	private static GLCapabilities gcap;
 	private static boolean canLight = true;
 	private static int shaderProgram;
-	private static float[] viewPos;
+	
+	private static boolean 
+		enableTextures = true;	
+	private static float[]
+		viewPos;
+	
+	private static FBO blurMask;
 	
 	private static boolean doUpdate = true, doDraw = true;
 	
@@ -73,9 +92,10 @@ public class GL {
 		
 	private static Camera currentCamera, mainCamera, marioCamera;
 	
-	public static FBO currentFBO = null;	
+	private static FBO currentFBO = null;	
 	private static GLAutoDrawable glad;
 	
+	private static Stopwatch unboundTime = new Stopwatch();
 	private static Timer time = new Timer(360);
 	
     private static float[] perspectiveMatrix = new float[16];    
@@ -93,14 +113,14 @@ public class GL {
 	
 	public static int 
 		BORDER_LEFT = 3, // 3 is PERFECT but doesn't work, 2 works but isn't perfect
-		BORDER_TOP = 25, // 25 is PERFECT but doesn't work, 24 works but isn't perfect
-		SCREEN_WIDTH = 640, 
-		SCREEN_HEIGHT = 436,
-		WINDOW_WIDTH = 640,
-		WINDOW_HEIGHT = 436;
-    private static int[] resolutionArray = {SCREEN_WIDTH,SCREEN_HEIGHT};
-		
-	private static RGBA drawingColor = RGBA.createf(1,1,1,1);
+		BORDER_TOP = 25; // 25 is PERFECT but doesn't work, 24 works but isn't perfect
+	private static int[]
+		INTERNAL_RESOLUTION = {640, 436},
+		EXTERNAL_RESOLUTION = {640, 436};
+    	
+	private final static RGBA
+		drawingColor = RGBA.createf(1,1,1,1),
+		tempColor = RGBA.create();
 	protected static float orthoLayer = 0;
 	
 	private static Texture rainbowTex, metalTex;
@@ -108,30 +128,9 @@ public class GL {
 	
 	protected static mat4 modelMatrix = new mat4();
 	
-	private static int numStarts = 0;
 	
-	public static void start(String action)	{
-		//println(StringExt.repeat("  ",numStarts) + "-->" + action);
-		numStarts++;
-	}
-	public static void end(String action) 	{
-		numStarts--;
-		//println(StringExt.repeat("  ",numStarts) + "<--" + action);
-		
-		if(numStarts < 0)
-			throw new RuntimeException();
-	}
-	public static void print(Object str) 	{System.out.print(str);}
-	public static void println(Object str) 	{System.out.println(str);}
-	public static void println() 			{System.out.println("");}
-	
-	
-	public static void stM(String name) {
-		//print(name + "(" + checkError() + " -- ");
-	}	
-	public static void eM() {
-		//println(checkError() + ")");
-	}
+	public static PMLMemory memory = new PMLMemory();
+
 	
 	
 	
@@ -151,12 +150,12 @@ public class GL {
             	gl = glautodrawable.getGL().getGL2();
             	
             	
-           		currentCamera = mainCamera = new Camera(Camera.PR_PERSPECTIVE,SCREEN_WIDTH,SCREEN_HEIGHT);
+           		currentCamera = mainCamera = new Camera(Camera.PR_PERSPECTIVE,getInternalWidth(),getInternalHeight());
            			mainCamera.enableBG(true);
            		marioCamera = new Camera("marioCam", mainCamera);
            			marioCamera.enable(false);
            		
-       		PML.ini();
+       		PML.ini(memory);
        		Overlay.ini();
            		
         	TextureController.ini();
@@ -166,23 +165,26 @@ public class GL {
             	
             Text.ini();
             	
+            Window.ini();
             	G2D.initialize();        	            	
 
                 //GroundBlocks                
                                 
                 viewPos = new float[4];
                 float border = 150 + Math2D.calcLenY(getTime())*20;
-                setViewPos(0,border,SCREEN_WIDTH-border,SCREEN_HEIGHT-border);
+                //setViewPos(0,border,SCREEN_WIDTH-border,SCREEN_HEIGHT-border);
     
                 prevScreenTex = createTexture(640,436);
-                //FireSprite.ini();
+                FireSprite.ini();
 		        
-                rainbowTex = loadTexture("Resources/Images/rainbow.png");
-                metalTex = loadTexture("Resources/Images/metal.png");
+                
+                
+                //rainbowTex = loadTexture("Resources/Images/rainbow.png");
+                //metalTex = loadTexture("Resources/Images/metal.png");
                 
 		        //iniModelRenderer(Model.MOD_CASTLE);
-		        	iniPMBattle();
-		        	//iniPMRoom();
+		        	//iniPMBattle();
+		        	iniFaceTracker();
 		        //ini3D();
 		        //ini2D();
                 //iniPage();
@@ -194,26 +196,54 @@ public class GL {
                 gl.glEnable(GL2.GL_NORMALIZE);
             	
             	gcap = new GLCapabilities(gp);
-            	gcap.setDepthBits(16);
-        
-            println("Initializing Shaders...");
+            	//gcap.setDepthBits(24*4);
+                    	
+            //println("Initializing Shaders...");
             	Shader.ini(gl);
             	          
-            	println("Finished Initialization");
+            	//println("Finished Initialization");
             	//checkError();
             }
             public void dispose( GLAutoDrawable glautodrawable ) {}
             public void display( GLAutoDrawable glautodrawable ) { 
+          
+            	/*setViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
+
+            	FBO fbo = mainCamera.getFBO();
+            	fbo.attach(gl);
+            		GL.clear();
+            		
+            		GL.setPerspective();
+            		
+            			GL.setColor(RGBA.WHITE);
+
+            			float 
+            				ang = ((float) getUnboundTime()/10) % 360,
+            				r = 500 + Math2D.calcLenX(500, ang),
+            				dR = 5;
+            			
+            			mainCamera.setProjectionStiff(0,0,0, 5,0,0);
+            			
+            			System.out.println(mainCamera);
+            			
+            			System.out.println(r);
+            			
+            			//GL.gl.glDepthRange(0,.5);
+            			
+            			//G3D.draw3DSphere(0,0,r, dR, 10);
+            			//G3D.draw3DSphere(0,r,0, dR, 10);
+            			G3D.draw3DSphere(r,0,0, dR, 10);
+            		
+            	fbo.detach(gl);
             	
-            	            	
-            	/*checkError();
-            	
-            	if(ErrorPopup.isOpen()) {
-            		clear();
-            		return;
-            	}*/
-            	
-            	
+            	if(true)
+            		return;*/
+            		
+            
+    			Mouse.resetCursor();
+
+    			
+    			
             	if(Keyboard.checkPressed('1'))
             		setResolution(256,174);
             	else if(Keyboard.checkPressed('2'))
@@ -269,7 +299,7 @@ public class GL {
 	                 	
 	            	
 	            	disableBlending();
-	            	setViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
+	            	setViewport(0,0,getExternalWidth(),getExternalHeight());
 	            	//clear();
 	            	setColor(RGBA.WHITE);
 	            	setOrtho();
@@ -285,60 +315,84 @@ public class GL {
 		        		
 		        		bind(prevScreenTex,0);
 		        		bind(mainCamera.getFBO().getTexture(),1);
-		        		G2D.fillRectangle(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT);
+		        		G2D.fillRectangle(0,getInternalHeight(),getInternalWidth(),-getInternalHeight());
+		            	disableShaders();
+
+		        		drawFBO(marioCamera.getFBO());
+	            	}
+	            	else if(Keyboard.checkDown('t'))	{
+		            	FBO f = mainCamera.getFBO();
+		            	f.copyDepth2FBO2(gl);
+		            	
+		            	int rgb = f.getTextureRGB(gl, f.getWidth()/2, f.getHeight()/2),
+		    	            dRGB = f.getDepthRGB(gl, f.getWidth()/2, f.getHeight()/2);
+		            	
+		            	int[] dRGBA = new int[4];
+		            	
+		            	RGBA.convertInt2RGBA(dRGB, dRGBA);
+		            	
+		            	
+		            	float focalScale = 3; //(float) Math2D.calcAbsLenX(3, (float) (getUnboundTime()/10) % 360);
+		            	
+		            	drawFBOBlur(0,0, getExternalWidth(),getExternalHeight(),mainCamera.getFBO(),mainCamera.getFBO().getDepthTexture(), dRGBA[0]/255f, focalScale);
+		            	//drawFBOHeatwave(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,mainCamera.getFBO(),mainCamera.getFBO().getDepthTexture());
+            		}
+	            	else if(!Keyboard.checkDown('c')) {
+	            		// MAIN
+	            		//enableShader("BlendAdditiveColor");	            	
+	            		//float v = Math2D.calcLenY((float) ((getUnboundTime() / 30) % 360));
+	            		//GL.passShaderVec4("fadeRGBA", v,v,v,1);
+
+	                	drawFBO(mainCamera.getFBO());
+	            		//disableShaders();
 	            	}
 	            	else
-	            		drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,mainCamera.getFBO());
+	            		drawFBO(marioCamera.getFBO());
+	            		//drawFBODepth(mainCamera.getFBO());
+	            	
 	            	disableShaders();
-	            	
-	            	//if(curlTime >= 0)
-	            	drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,marioCamera.getFBO());
-	            	
+
 	            	enableBlending();
 	            	
-	            	Overlay.draw();
 	            	
+	            	Overlay.draw();
             	}
                 else
                 	System.out.println(Delta.getFPS());
-
+            	
+            	drawFBO(0,0, FireSprite.getFBO());
+            	
     			Keyboard.update();
         	}
         };
                 
         canv.addGLEventListener(listener);
 	
-	    canv.setSize(SCREEN_WIDTH,SCREEN_HEIGHT);
+	    canv.setSize(getExternalWidth(),getExternalHeight());
 	    gameController.add(canv, BorderLayout.CENTER);  
 	}
+			
+	
 
 	protected static void setWindowSize(int w, int h) {
-		canv.setSize(WINDOW_WIDTH = w, WINDOW_HEIGHT = h);
+		canv.setSize(EXTERNAL_RESOLUTION[0] = w, EXTERNAL_RESOLUTION[1] = h);
 		GameController.getInstance().setSize(w,h+28);
 	}
 
 	public static void setResolution(int[] array) 	{setResolution(array[0],array[1]);}
 	public static void setResolution(int w, int h) {
-		Background.changeResolution(SCREEN_WIDTH,w);
-		mainCamera.setResolution(SCREEN_WIDTH = w, SCREEN_HEIGHT = h);
+		Background.changeResolution(getInternalWidth(),w);
+		mainCamera.setResolution(INTERNAL_RESOLUTION[0] = w, INTERNAL_RESOLUTION[1] = h);
 	}
 
 	public static void setViewport(float x, float y, float w, float h) {
-		y = WINDOW_HEIGHT-h-y;
+		y = getExternalHeight()-h-y;
 		gl.glViewport((int)x, (int)y, (int)w, (int)h);
 
 		viewPos[0] = x;
 		viewPos[1] = y;
 		viewPos[2] = w;
 		viewPos[3] = h;
-	}
-
-	public static void setFogCoord(float x, float y, float z) {
-		float[] array = new float[3];
-		array[0] = x;
-		array[1] = y;
-		array[2] = z;
-		gl.glFogCoordfv(array, 0);
 	}
 	
 	public static void beginPageCurl() {
@@ -367,24 +421,30 @@ public class GL {
 	}
 
 	
-	public static void enableFog(float start, float end, RGBA col) {		
+	public static void enableFog(float start, float end, RGBA col) {enableFog(start, end, col.RGBf());}
+	public static void enableFog(float start, float end, int rgb) {
+		int[] rgbA = RGBA.convertInt2RGBA(rgb);
+		enableFogi(start, end, rgbA[0], rgbA[1], rgbA[2]);
+	}
+	public static void enableFogi(float start, float end, int r, int g, int b) {
+		enableFog(start, end, ArrayMath.setTemp3(r/255f,g/255f,b/255f));
+	}
+	public static void enableFog(float start, float end, float[] col3) {		
 		gl.glEnable(GL2.GL_FOG);
 		gl.glFogi(GL2.GL_FOG_COORD_SRC, GL2.GL_FRAGMENT_DEPTH);
 		gl.glFogi(GL2.GL_FOG_MODE, GL2.GL_LINEAR);
 
-		gl.glFogfv(GL2.GL_FOG_COLOR, col.RGBf(), 0);
+		gl.glFogfv(GL2.GL_FOG_COLOR, col3, 0);
 		
 		gl.glFogf(GL2.GL_FOG_START, start);
 		gl.glFogf(GL2.GL_FOG_END, end);
 	}
+
 	public static void disableFog() {
 		gl.glDisable(GL2.GL_FOG);
 	}
 		
 	private static void setProjection() {
-		
-			//stM("setPerspective");
-		
 		float camSpeed = 5;
 		Sound.updateListener(currentCamera);
 		
@@ -393,17 +453,15 @@ public class GL {
         gl.glLoadIdentity();
         
         // Perspective.
-        float widthHeightRatio = 1f*SCREEN_WIDTH/SCREEN_HEIGHT; 
+        float widthHeightRatio = 1f*getInternalWidth()/getInternalHeight(); 
         //getViewWidth()/getViewHeight();
-        glu.gluPerspective(getCamera().getFOV(), widthHeightRatio, 1, VIEW_FAR); //1000
+        glu.gluPerspective(getCamera().getFOV(), widthHeightRatio, currentCamera.getViewNear(), currentCamera.getViewFar()); //1000
         currentCamera.gluLookAt(glu);
         gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, perspectiveMatrix,0);
 
         // Change back to model view matrix.
         gl.glMatrixMode(gl.GL_MODELVIEW);
         gl.glLoadIdentity();
-			
-        	//eM();
 	}
 	
 	public static void repaint() {
@@ -416,16 +474,20 @@ public class GL {
 	public static Texture createTexture(int width, int height) {
 		return createTexture(new BufferedImage(width,height, BufferedImage.TYPE_INT_ARGB), true);
 	}
+	public static Texture createTexture(BufferedImage img) {
+		return createTexture(img, false);
+	}
 	public static Texture createTexture(BufferedImage img, boolean mipmap) {
 		if(img == null) 
 			return null;
 		
 		//HORRIBLE BUG HERE
-		//return AWTTextureIO.newTexture(AWTTextureIO.newTextureData(gp, img, 24, 24, mipmap));
 		Texture tex = (AWTTextureIO.newTexture(gp, img, mipmap));
 		tex.setMustFlipVertically(false);
 		
 		TextureController.add(tex);
+		
+		GL.checkError();
 		
 		return tex;
 	}
@@ -438,7 +500,7 @@ public class GL {
 		gl.glEnable(GL2.GL_TEXTURE_2D);
 		gl.glActiveTexture(GL2.GL_TEXTURE0);
 		gl.glBindTexture(GL2.GL_TEXTURE_2D, tex);
-		disableInterpolation();
+		disableTextureInterpolation();
 	}
 	
 	public static void unbind() {
@@ -470,7 +532,7 @@ public class GL {
 	    int[] viewport = new int[16];
 	    float[] modelView;
 	    
-	    float SCREEN_WIDTH_HALF = SCREEN_WIDTH/2;
+	    float SCREEN_WIDTH_HALF = getInternalWidth()/2;
 	    
 	    modelView = GT.getModelViewMatrix();
 	    gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport,0);
@@ -478,22 +540,14 @@ public class GL {
 	    if (result) {
 	    	int pX = (int) (SCREEN_WIDTH_HALF + SCREEN_WIDTH_HALF*(screenCoords[0]-SCREEN_WIDTH_HALF)/
 	    						(SCREEN_WIDTH_HALF+BORDER_LEFT));
-	        return new int[] {pX, (SCREEN_HEIGHT-BORDER_TOP) - (int) screenCoords[1]};
+	        return new int[] {pX, (getInternalHeight()-BORDER_TOP) - (int) screenCoords[1]};
 	    }
 	    return new int[] {-1,-1};
 	}
 	public static boolean isPtOnscreen(float x, float y, float z) {		
 		int[] pt = calcScreenPt(x,y,z);
-		return Math2D.checkRectangle(pt[0],pt[1], 0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+		return Math2D.checkRectangle(pt[0],pt[1], 0,0,getInternalWidth(),getInternalHeight());
 	}
-	
-	public static void setViewPos(float x, float y, float w, float h) {
-		viewPos[0] = x;
-		viewPos[1] = y;
-		viewPos[2] = w;
-		viewPos[3] = h;
-	}
-	
 	
 	public static boolean checkOrtho() {return projectionMode == PR_ORTHO;}
 	public static boolean checkPerspective() {return projectionMode == PR_PERSPECTIVE;}
@@ -539,9 +593,10 @@ public class GL {
 		gl.glMatrixMode(GL2.GL_PROJECTION);
 	    gl.glLoadIdentity();
     	setProjection();
+    	
 	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glLoadIdentity();
-		setHidden(true);
+		setHidden(true);		
 	}
 	
 	
@@ -563,9 +618,9 @@ public class GL {
         
         // Perspective.
         int x1,y1,x2,y2;
-        y2 = (int) (SCREEN_HEIGHT/2f);
+        y2 = (int) (getInternalHeight()/2f);
         y1 = -y2;
-        x2 = (int) (SCREEN_WIDTH/2f);
+        x2 = (int) (getInternalWidth()/2f);
         x1 = -x2;
         gl.glOrtho(x1,x2,y1,y2, -1000,VIEW_FAR);
         currentCamera.gluLookAt(glu);
@@ -583,7 +638,9 @@ public class GL {
 
 	public static void resetColor() {setColor(RGBA.WHITE);}
 	
-	public static RGBA getColor() {return RGBA.create(drawingColor);}
+	public static RGBA getColor() {
+		return tempColor.set(drawingColor);
+	}
 
 	public static void setColor(RGBA col) {setColorf(col.Rf(),col.Gf(),col.Bf(),col.Af());}
 	public static void setColori(int r, int g, int b) {setColorf(r/255f, g/255f, b/255f, 1f);}
@@ -598,7 +655,7 @@ public class GL {
 		gl.glColor4f(r,g,b,a);
 		passShaderVec4("uColor",drawingColor.RGBAf());
 		
-			//eM();
+		GL.checkError();
 	}
 	
 	public static void setLightColori(int r, int g, int b) {setLightColor(r/255f, g/255f, b/255f);}
@@ -636,18 +693,79 @@ public class GL {
 	}
 	
 	
+	public static void attach(FBO fbo) {
+		currentFBO = fbo;
+		fbo.attach(gl);
+		
+		GL.checkError();
+	}
+	public static void detach(FBO fbo) {
+		currentFBO = null;
+		fbo.detach(gl);
+		
+		GL.checkError();
+	}
+
+	public static void drawFBO(FBO fbo) {
+		if(fbo == null)
+			return;
+		drawFBO(0,0,getExternalWidth(),getExternalHeight(), fbo);
+	}
 	public static void drawFBO(float x, float y, FBO fbo) {drawFBO(x, y, fbo.getWidth(), fbo.getHeight(), fbo);}
 	public static void drawFBO(float x, float y, float w, float h, FBO fbo) {
 		fbo.bind(gl);
-			enableInterpolation();
-			fillRectangle(x, y, w, h);
+			enableTextureInterpolation(fbo.getTextureInterpolation());
+			if(fbo.getDoFlipY())
+				G2D.fillRectangle(x, y+h, w, -h);
+			else
+				G2D.fillRectangle(x, y, w, h);
+		fbo.unbind(gl);
+		
+		GL.checkError();
+	}
+
+	public static void drawFBOBlur(float x, float y, float w, float h, FBO fbo, int mask, float focalPoint, float focalScale) {
+		fbo.bind(gl);
+			enableTextureInterpolation(fbo.getTextureInterpolation());
+			
+			GL.enableShader("blurFBO");
+				bind(mask, 1);
+				GL.passShaderFloat("focalPoint", focalPoint);
+				GL.passShaderFloat("focalScale", focalScale);
+			
+			if(fbo.getDoFlipY())
+				G2D.fillRectangle(x, y+h, w, -h);
+			else
+				G2D.fillRectangle(x, y, w, h);
+
+			GL.disableShaders();
+		unbind(0);
+		unbind(1);
+	
 		fbo.unbind(gl);
 	}
-		
+
+	public static void drawFBOHeatwave(float x, float y, float w, float h, FBO fbo, int mask) {
+		fbo.bind(gl);
+			enableTextureInterpolation();
+			
+			GL.enableShader("heatWave");
+				bind(mask, 1);			
+			G2D.fillRectangle(x, y, w, h);
+
+			GL.disableShaders();
+		unbind(0);
+		unbind(1);
+	
+		fbo.unbind(gl);
+	}
+
+	
+	public static void drawFBODepth(FBO fbo) {drawFBODepth(0,0,getExternalWidth(),getExternalHeight(), fbo);}	
 	public static void drawFBODepth(float x, float y, FBO fbo) {drawFBODepth(x, y, fbo.getWidth(), fbo.getHeight(), fbo);}
 	public static void drawFBODepth(float x, float y, float w, float h, FBO fbo) {
 		fbo.bindDepth(gl);
-			fillRectangle(x, y, w, h);
+			G2D.fillRectangle(x, y+h, w, -h);
 		fbo.unbind(gl);
 	}
 		
@@ -658,61 +776,19 @@ public class GL {
 	    gl.glEnd();
 	}
 	
-	public static void setLineWidth(float w) {gl.glLineWidth(w);}
 	
-	public static void drawLine(float x1, float y1, float x2, float y2) {drawLine(x1,y1,x2,y2,1);};
-	public static void drawLine(float x1, float y1, float x2, float y2, float w) {
-		setLineWidth(w);
-		gl.glBegin(GL2.GL_LINES);
-			gl.glVertex3f(x1,y1, orthoLayer);
-			gl.glVertex3f(x2,y2, orthoLayer);
-	    gl.glEnd();
-	    setLineWidth(1);
+	
+	public static void drawOutline(float x, float y, float w, float h, boolean outside) {
+		GL.setColor(outside ? RGBA.BLACK : RGBA.WHITE);
+		GL.setAlpha(.5f);
+		G2D.drawLine(x+w,y+1,x+w,y+h);
+		G2D.drawLine(x+1,y+h+1,x+w,y+h);
+		GL.setColor(outside ? RGBA.WHITE : RGBA.BLACK);
+		GL.setAlpha(.5f);
+		G2D.drawLine(x+1,y+2,x+w,y+1);
+		G2D.drawLine(x+1,y+1,x+1,y+h);
 	}
-	
-	public static void drawLine(List<float[]> pts) {
-		gl.glBegin(GL2.GL_LINES);
-			int i = 0, si = pts.size();
-			for(float[] pt : pts) {
-				gl.glVertex3f(pt[0],pt[1], orthoLayer);
-				if(i > 0 && i < si-1)
-					gl.glVertex3f(pt[0],pt[1], orthoLayer);
-				i++;
-			}
-	    gl.glEnd();
-	}
-	
-	
-	/*public static void addRectangle(float x, float y, float w, float h) {
-		float[] mat, v1, v2, v3, v4;
-		mat = getModelMatrix().array();
-		v1 = mult(mat, new float[] {x,y,orthoLayer,1});
-		v2 = mult(mat, new float[] {x+w,y,orthoLayer,1});
-		v3 = mult(mat, new float[] {x,y+h,orthoLayer,1});
-		v4 = mult(mat, new float[] {x+w,y+h,orthoLayer,1});
 
-		gl.glTexCoord2f(0, 0);	gl.glVertex3d(v1[0],v1[1],v1[2]);
-		gl.glTexCoord2f(1, 0);	gl.glVertex3d(v2[0],v2[1],v2[2]);
-		gl.glTexCoord2f(0, 1);	gl.glVertex3d(v3[0],v3[1],v3[2]);
-		
-		gl.glTexCoord2f(1, 0);	gl.glVertex3d(v2[0],v2[1],v2[2]);
-		gl.glTexCoord2f(1, 1);	gl.glVertex3d(v4[0],v4[1],v4[2]);
-		gl.glTexCoord2f(0, 1);	gl.glVertex3d(v3[0],v3[1],v3[2]);
-	}*/
-
-	public static void drawRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,false);}
-	public static void drawRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,false);}
-	public static void fillRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,true);}
-	public static void fillRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,true);}
-	public static void rectangle(float x, float y, float w, float h, boolean fill) {rectangle(x,y,w,h,ArrayMath.setTemp4(0,0,1,1),fill);}
-	public static void rectangle(float x, float y, float w, float h, float[] bounds, boolean fill) {
-		gl.glBegin((fill ? GL2.GL_QUADS : GL2.GL_LINE_LOOP));
-			gl.glTexCoord2d(bounds[0], bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
-			gl.glTexCoord2d(bounds[2], bounds[1]);	gl.glVertex3f(x+w, y, orthoLayer);
-			gl.glTexCoord2d(bounds[2], bounds[3]);	gl.glVertex3f(x+w, y+h, orthoLayer);
-			gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);		
-        gl.glEnd();
-	}
 
 	public static void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3) {triangle(x1,y1,x2,y2,x3,y3,false);}
 	public static void fillTriangle(float x1, float y1, float x2, float y2, float x3, float y3) {triangle(x1,y1,x2,y2,x3,y3,true);}
@@ -733,8 +809,9 @@ public class GL {
 	public static void polygon(float x, float y, float r, int numPts, boolean fill) {polygon(x,y,r,numPts,0,fill);}
 	public static void polygon(float x, float y, float r, int numPts, float rotation, boolean fill) {
 		if(fill) {
-
-			gl.glTexCoord2d(.5, .5);	gl.glVertex3f(x, y, orthoLayer);
+			gl.glBegin(GL2.GL_TRIANGLE_FAN);
+			gl.glTexCoord2d(.5, .5);
+				gl.glVertex3f(x, y, orthoLayer);
 		}
 		else
 			gl.glBegin(GL2.GL_LINE_LOOP);
@@ -847,88 +924,6 @@ public class GL {
 				
 				unbind();
 			}
-
-			/*public static void add3DVertWall(float x, float y1, float z1, float y2, float z2) {
-
-				float[] mat, v1, v2, v3, v4, n;
-				mat = getModelMatrix().array();
-				v1 = mult(mat, new float[] {x,y1,z1,1});
-				v2 = mult(mat, new float[] {x,y2,z1,1});
-				v3 = mult(mat, new float[] {x,y1,z2,1});
-				v4 = mult(mat, new float[] {x,y2,z2,1});
-				n = mult(mat,new float[] {0,(y1 > y2) ? 1 : -1,0,0});
-
-				gl.glTexCoord2f(0, 0); 	
-					gl.glVertex3d(v1[0],v1[1],v1[2]);
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(v2[0],v2[1],v2[2]);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(v3[0],v3[1],v3[2]);
-
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(v2[0],v2[1],v2[2]);
-				gl.glTexCoord2f(1, 1);
-					gl.glVertex3d(v4[0],v4[1],v4[2]);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(v3[0],v3[1],v3[2]);
-			}
-			
-			
-			public static void add3DHoriWall(float y, float x1, float z1, float x2, float z2) {
-				
-				float[] mat, v1, v2, v3, v4, n;
-				mat = getModelMatrix().array();
-				v1 = mult(mat, new float[] {x1,y,z1,1});
-				v2 = mult(mat, new float[] {x2,y,z1,1});
-				v3 = mult(mat, new float[] {x1,y,z2,1});
-				v4 = mult(mat, new float[] {x2,y,z2,1});
-				n = mult(mat,new float[] {0,(x1 < x2) ? 1 : -1,0,0});
-				gl.glNormal3f(n[0],n[1],n[2]);
-
-				gl.glTexCoord2f(0, 0); 	
-					gl.glVertex3d(v1[0],v1[1],v1[2]);
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(v2[0],v2[1],v2[2]);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(v3[0],v3[1],v3[2]);
-	
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(v2[0],v2[1],v2[2]);
-				gl.glTexCoord2f(1, 1);
-					gl.glVertex3d(v4[0],v4[1],v4[2]);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(v3[0],v3[1],v3[2]);
-			}
-
-
-			public static void add3DFloor(float x1, float y1, float x2, float y2, float z) {
-
-				float[] mat, v1, v2, v3, v4, n;
-				mat = getModelMatrix().array();
-				v1 = mult(mat, new float[] {x1,y1,z,1});
-				v2 = mult(mat, new float[] {x2,y1,z,1});
-				v3 = mult(mat, new float[] {x1,y2,z,1});
-				v4 = mult(mat, new float[] {x2,y2,z,1});
-				n = mult(mat,new float[] {0,(x1 < x2) ? 1 : -1,0,0});
-				gl.glNormal3f(n[0],n[1],n[2]);
-
-
-				gl.glTexCoord2f(0, 0); 	
-					gl.glVertex3d(v1[0],v1[1],v1[2]);
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(v2[0],v2[1],v2[2]);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(v3[0],v3[1],v3[2]);
-		
-				gl.glTexCoord2f(1, 0);
-					gl.glVertex3d(v2[0],v2[1],v2[2]);
-				gl.glTexCoord2f(1, 1);
-					gl.glVertex3d(v4[0],v4[1],v4[2]);
-				gl.glTexCoord2f(0, 1);
-					gl.glVertex3d(v3[0],v3[1],v3[2]);
-			}*/
-			
-			
 
 			
 		// Tetrahedron-Drawing Function
@@ -1047,13 +1042,17 @@ public class GL {
     // Once activated, it will be applied to anything that you draw from here on
     // until you call the dontUseShader(GL) function.
     public static void enableShader(String shaderName) {
-    		//stM("enableShader");
-    	shaderProgram = Shader.getShader(shaderName).getProgram();
+    	Shader shader;
+    	if((shader = Shader.getShader(shaderName)) == null)
+    		return;
+    	
+    	shaderProgram = shader.getProgram();
 	    
 	    gl.glUseProgram(shaderProgram);
-		gl.glUniform2iv(gl.glGetUniformLocation(shaderProgram, "iResolution"), 1, resolutionArray, 0);
-    	gl.glUniform1f(gl.glGetUniformLocation(shaderProgram, "iGlobalTime"), getTime()/50f);        
-    	
+		gl.glUniform2iv(gl.glGetUniformLocation(shaderProgram, "iResolution"), 1, INTERNAL_RESOLUTION, 0);
+    	gl.glUniform1f(gl.glGetUniformLocation(shaderProgram, "iGlobalTime"), getTime()/50f);
+    	gl.glUniform1f(gl.glGetUniformLocation(shaderProgram, "iUnboundTime"), (float) getUnboundTime()/Delta.getTargetFPS()/20);
+    	    	
     	gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "tex0"), 0);
     	gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "tex1"), 1);
     	
@@ -1061,7 +1060,10 @@ public class GL {
     		//eM();
     }
     
-    public static float getTime() {return time.get();}
+    public static double getUnboundTime() {
+		return unboundTime.getCurrentMilli();
+	}
+	public static float getTime() {return time.get();}
     
     public static void passShaderFloat(String name, float val) {
     	if(shaderProgram != 0)
@@ -1083,6 +1085,10 @@ public class GL {
     public static void passShaderVec2(String name, float[] vec) {
     	if(shaderProgram != 0)
     		gl.glUniform2fv(gl.glGetUniformLocation(shaderProgram, name), 1, vec, 0);
+    }
+    
+    public static void passCamPos(String name) {
+    	passShaderVec4(name, currentCamera.getPosition());
     }
 
     
@@ -1110,13 +1116,9 @@ public class GL {
     }
 
     public static void disableShaders() {
-    		//stM("disableShaders");
-		
     	gl.glUseProgram(shaderProgram = 0);
-        bind(0,1);
-        bind(0,0);
-        
-        	//eM();
+        //bind(0,1);
+        //bind(0,0);
     }
     
     public static void enableShaderGaussian(float blurRadius) {
@@ -1127,7 +1129,7 @@ public class GL {
 		int res = getShLoc("iResolution");
 		int globTime = getShLoc("iGlobalTime");
 		gl.glUniform1f(getShLoc("iRadius"), blurRadius); //20
-		gl.glUniform2iv(res, 1, resolutionArray, 0);			
+		gl.glUniform2iv(res, 1, INTERNAL_RESOLUTION, 0);			
     }
     
     private static int getShLoc(String varName) {return gl.glGetUniformLocation(shaderProgram, varName);}
@@ -1142,15 +1144,10 @@ public class GL {
     	enableShader("FireballGaussian");
 	    	
     	int shaderprogram = Shader.getShader("Gaussian").getProgram();
-
-	    float[] resI = {
-	    		SCREEN_WIDTH, SCREEN_HEIGHT
-	    };
 		
-		int res = getShLoc("iResolution");
 		int globTime = getShLoc("iGlobalTime");
 		gl.glUniform1f(getShLoc("iRadius"), blurRadius); //20
-		gl.glUniform2fv(res, 1, resI, 0);			
+		gl.glUniform2iv(getShLoc("iResolution"), 1, INTERNAL_RESOLUTION, 0);			
     }
     
 
@@ -1247,19 +1244,21 @@ public class GL {
 			
 		// Inside
 		setColor(possColor);
-		fillRectangle(x, y, w*MathExt.contain(0,possFrac,1), h);
+		G2D.fillRectangle(x, y, w*MathExt.contain(0,possFrac,1), h);
 
 		// Inside
 		setColor(fillColor);
-		fillRectangle(x, y, w*MathExt.contain(0,frac,1), h);
+		G2D.fillRectangle(x, y, w*MathExt.contain(0,frac,1), h);
 		
 		// Outline
 		setColorf(0,0,0,1);
-		drawRectangle(x,y,w,h);
+		G2D.drawRectangle(x,y,w,h);
 		
 		int nSteps = 3;
 		
 		RGBA clearWhite, fullWhite, clearBlack, halfBlack, fullBlack;
+
+		//System.out.println("WASTEFUL RGBA drawFillBar()");
 		clearWhite = RGBA.createf(1,1,1,0); fullWhite = RGBA.createf(1,1,1,.8f);
 		clearBlack = RGBA.createf(0,0,0,0); halfBlack = RGBA.createf(0,0,0,.5f); fullBlack = RGBA.createf(0,0,0,.7f);
 		
@@ -1282,22 +1281,35 @@ public class GL {
 		gl.glClearColor(color.Rf(),color.Gf(),color.Bf(),color.Af());
     	gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 	}
+	public static void clear(int argb) {
+		int[] color = RGBA.convertInt2RGBA(argb);
+		
+		gl.glClearColor(color[0]/255f,color[1]/255f,color[2]/255f,color[3]/255f);
+    	gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+	}
 
-
-	
-	public static Color getPixelColor(int x, int y) {return getPixelRGBA(x,y).getColor();}
-	public static RGBA getPixelRGBA(int x, int y) {
+	public static int getPixelRGB(int x, int y) {
 		
 		y = 480-y + 8;
 		
 		ByteBuffer RGB = ByteBuffer.allocateDirect(3);
 		gl.glReadPixels(x, y-10, 1 , 1 , GL2.GL_RGB , GL2.GL_UNSIGNED_BYTE, RGB);
 		
-		return RGBA.createf(RGB.get(0)/255f,RGB.get(1)/255f,RGB.get(2)/255f);
+		//System.out.println("WASTEFUL RGBA getPixelRGBA()");
+		
+		int r, g, b;
+		r = RGB.get(0);
+		g = RGB.get(1);
+		b = RGB.get(2);
+		if(r < 0)	r += 256;
+		if(g < 0)	g += 256;
+		if(b < 0)	b += 256;
+		
+		return RGBA.convertRGB2Int(r,g,b);
 	}
 
-	public static void getScreenshot(Texture tex) {getScreenshot(tex.getTextureObject());}
-	public static void getScreenshot(int tex) {getScreenshot(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,tex);}
+	/*public static void getScreenshot(Texture tex) {getScreenshot(tex.getTextureObject());}
+	public static void getScreenshot(int tex) {getScreenshot(0,0,getWindowWidth(),getWindowHeight(),tex);}
 	public static void getScreenshot(int x, int y, int w, int h, int tex) {
 		
 		bind(tex);
@@ -1307,19 +1319,19 @@ public class GL {
 		//tex.setMustFlipVertically(true);
 		
 		unbind();		
-	}
+	}*/
 
 	public static void getScreenshot(FBO f, Texture tex) {getScreenshot(f, tex.getTextureObject());}
-	public static void getScreenshot(FBO f, int tex) {getScreenshot(f, 0,0,SCREEN_WIDTH,SCREEN_HEIGHT,tex);}
+	public static void getScreenshot(FBO f, int tex) {getScreenshot(f, 0,0,getInternalWidth(),getInternalHeight(),tex);}
 	public static void getScreenshot(FBO f, int x, int y, int w, int h, int tex) {
 		GL.clear();	
-		drawFBO(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT, f);
+		drawFBO(0,0, f);
 		
 		bind(tex);
 
-		gl.glCopyTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, x,SCREEN_HEIGHT-y-h, w,h, 0);
+		gl.glCopyTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA, x,getInternalHeight()-y-h, w,h, 0);
 		
-		unbind();		
+		unbind();
 	}
 
 	
@@ -1423,17 +1435,31 @@ public class GL {
 		
 		if(gl == null)
 			return "";
+
 		
-		int error = gl.glGetError();
-		//while((error = gl.glGetError()) != 0) {
+		
+		int error, numErrors = 0;
+		while((error = gl.glGetError()) != 0) {
+			numErrors++;
 			errors += error; // + ", ";
-		//}
+		}
+		
+		////if(numErrors != 0)
+		////	throw new UnsupportedOperationException(numErrors + " OpenGL Errors: " + errors);
+		
 		//if(error != 0)
-		//	ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);*/
+		//	ErrorPopup.open("A fatal OpenGL error has occurred.\nPlease contact the developer.\n(ERROR CODE #" + error + ")", false);
 				
 		return errors;
 	}
 	
+
+	public static void forceColor(int rgb) 		{enableFog(-1000,-1000,rgb);}
+	public static void forceColor(float[] rgb) 	{enableFog(-1000,-1000,rgb);}
+	public static void forceColor(float r, float g, float b) {
+		ArrayMath.setTemp3(r,g,b);
+		enableFog(-1000,-1000,ArrayMath.tempArray3);
+	}
 	public static void forceColor(RGBA color) 	{enableFog(-1000,-1000,color);}
 	public static void unforceColor() 			{disableFog();}
 	
@@ -1469,11 +1495,11 @@ public class GL {
         	gl.glDisable(GL2.GL_DEPTH_TEST);
 	}
 
-	public static void setViewportResolution() {
+	/*public static void setViewportResolution() {
 		setViewport(0,0,resolutionArray[0],resolutionArray[1]);
-	}
+	}*/
 
-	public static Texture loadTexture(String fileName) {return loadTexture(fileName, false);}
+	/*public static Texture loadTexture(String fileName) {return loadTexture(fileName, false);}
 	public static Texture loadTexture(String fileName, boolean grayscale) {
 		try {
 			if(grayscale)
@@ -1483,19 +1509,20 @@ public class GL {
 		} catch (IOException e) {
 			return null;
 		}
-	}
+	}*/
 	
     // CULLING
-	    public static void enableCulling() 		{gl.glEnable(GL2.GL_CULL_FACE);}
+	    public static void enableCulling(
+	    		) 		{gl.glEnable(GL2.GL_CULL_FACE);}
 	    public static void disableCulling() 	{gl.glDisable(GL2.GL_CULL_FACE);}
 	
 	// TEXTURING
 	    public static void enableTextures() 	{gl.glEnable(GL2.GL_TEXTURE_2D);}
 	    public static void disableTextures() 	{gl.glDisable(GL2.GL_TEXTURE_2D);}
    
-	public static void enableInterpolation() {enableInterpolation(true);};
-	public static void disableInterpolation() {enableInterpolation(false);};
-	public static void enableInterpolation(boolean yes) {
+	public static void enableTextureInterpolation() {enableTextureInterpolation(true);};
+	public static void disableTextureInterpolation() {enableTextureInterpolation(false);};
+	public static void enableTextureInterpolation(boolean yes) {
 		int type = yes ? GL2.GL_LINEAR : GL2.GL_NEAREST;
 		gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, type);
 		gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, type);
@@ -1507,8 +1534,8 @@ public class GL {
 		gl.glTexParameteri(GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_WRAP_T, repeat);
 	}
 	
-	public static void drawWaveform(float dX, float dY, float w, float h, int startOffset, int endOffset, int jumpNum, int skipNum, SoundBuffer snd) {drawWaveform(dX,dY,w,h,startOffset,endOffset,jumpNum,skipNum,snd,false);}
-	public static void drawWaveform(float dX, float dY, float w, float h, int startOffset, int endOffset, int jumpNum, int skipNum, SoundBuffer snd, boolean shrinkSides) {
+	public static void drawWaveform(float dX, float dY, float w, float h, int startOffset, int endOffset, int jumpNum, int skipNum, SoundBuffer snd) {drawWaveform(dX,dY,w,h,startOffset,endOffset,jumpNum,skipNum,snd,true,false);}
+	public static void drawWaveform(float dX, float dY, float w, float h, int startOffset, int endOffset, int jumpNum, int skipNum, SoundBuffer snd, boolean inMiddle, boolean shrinkSides) {
 		
 		List<float[]> pts = new ArrayList<float[]>();
 		float xSize;
@@ -1516,8 +1543,7 @@ public class GL {
 		
 		
 		int len, packetNum = snd.getPacketNum(), packetSize = snd.getPacketSize(), offsetMax = packetNum*packetSize;
-		int jumpSize = jumpNum*packetSize;
-		
+		int jumpSize = jumpNum*packetSize;		
 		
 		startOffset = (int) MathExt.snap(startOffset, packetSize);
 
@@ -1531,6 +1557,9 @@ public class GL {
 		
 		if(startOffset > endOffset)
 			return;
+		
+		if(inMiddle)
+			dY += h/2;
 		
 		int n = 0;
 		
@@ -1546,20 +1575,33 @@ public class GL {
 				n++;
 			}
 		}
-		else
-			for(int i = startOffset; i+jumpSize < endOffset; i += jumpSize) {
-				avg = 0;
-				for(int k = 0; k < jumpSize; k += (1+skipNum)*packetSize)
-					avg += snd.getAmplitudeFraction(i);
-				avg /= jumpNum/(1+skipNum);
-				
-				pts.add(new float[] {dX + n*xSize, (float) (dY + h/2*avg)} );
-				
-				n++;
-			}
+		else {
+			if(inMiddle)
+				for(int i = startOffset; i+jumpSize < endOffset; i += jumpSize) {
+					avg = 0;
+					for(int k = 0; k < jumpSize; k += (1+skipNum)*packetSize)
+						avg += snd.getAmplitudeFraction(i);
+					avg /= jumpNum/(1+skipNum);
+					
+					pts.add(new float[] {dX + n*xSize, (float) (dY + h/2*avg)} );
+					
+					n++;
+				}
+			else
+				for(int i = startOffset; i+jumpSize < endOffset; i += jumpSize) {
+					avg = 0;
+					for(int k = 0; k < jumpSize; k += (1+skipNum)*packetSize)
+						avg += snd.getAmplitudeFraction(i);
+					avg /= jumpNum/(1+skipNum);
+					
+					pts.add(new float[] {dX + n*xSize, (float) (dY + Math.abs(h*(1-avg)))} );
+					
+					n++;
+				}
+		}
 
 		
-		drawLine(pts);
+		G2D.drawLine(pts);
 		
 		pts.clear();
 	}
@@ -1617,6 +1659,49 @@ public class GL {
         //PlayerPM.create(0,0,10);
 	}
 
+	public static void iniFaceTracker() {
+		if(false) {
+			Face f = new Face();
+			return;
+		}
+		
+		/*Window w = new Window("Whatever", 20,20,200,100,false);
+		
+		w.setBGi(20,20,20);
+		
+		//w.add(new RectButton(5,5,40,40));
+		w.add(new TextButton("Normal",5,5,40,20,
+				new Callable() {
+				    public Object call() {
+				    	ImgIO.setFilter(Img.FilterType.NONE);
+				    	Resource.reloadTextures();
+				    	return null;
+				    }
+				}));
+		w.add(new TextButton("HQX",5,30,40,20,
+			new Callable() {
+			    public Object call() {
+			    	ImgIO.setFilter(Img.FilterType.HQX_2X);
+			    	Resource.reloadTextures();
+			    	return null;
+			    }
+			}));
+		w.add(new TextButton("xBR",5,55,40,20,
+				new Callable() {
+				    public Object call() {
+				    	ImgIO.setFilter(Img.FilterType.XBRZ_2X);
+				    	Resource.reloadTextures();
+				    	return null;
+				    }
+				}));*/
+		//w.add(new RectButton(5,95,40,40));
+		
+		iniPMBattle();
+		
+		//w.add();
+		//new FaceTracker();
+	}
+	
 	public static void iniPMBattle() {
 		Sound.iniLoad();
         
@@ -1642,7 +1727,7 @@ public class GL {
 
     	new WorldMap();
 
-        //Floaties.ini();
+    	unboundTime.start();
                  
         // Generate Environment
         float seaLevel = 50;
@@ -1698,8 +1783,14 @@ public class GL {
 	public static float getViewX() {return viewPos[0];}
 	public static float getViewY() {return viewPos[1];}
 
-	public static int getScreenWidth() 	{return SCREEN_WIDTH;}
-	public static int getScreenHeight() {return SCREEN_HEIGHT;}
+
+	// Width/height of window
+	public static int getExternalWidth() 	{return EXTERNAL_RESOLUTION[0];}
+	public static int getExternalHeight() 	{return EXTERNAL_RESOLUTION[1];}
+	
+	// Width/height of internal canvas
+	public static int getInternalWidth() 	{return INTERNAL_RESOLUTION[0];}
+	public static int getInternalHeight() 	{return INTERNAL_RESOLUTION[1];}
 
 	public static float getPageCurl() {
 		return curlTime;

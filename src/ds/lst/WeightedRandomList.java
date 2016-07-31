@@ -15,7 +15,7 @@ public class WeightedRandomList<K> extends CleanList<K> {
 	private float totalWeight;
 	
 	public K get() {
-		float rnd = MathExt.rnd(totalWeight);
+		float rnd = MathExt.rndf(totalWeight);
 		
 		K curK;
 		float curWeight;

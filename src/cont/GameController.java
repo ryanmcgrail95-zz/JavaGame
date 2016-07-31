@@ -22,9 +22,8 @@ public class GameController extends JFrame implements WindowListener {
 	private static GameController instance;
 	private boolean isRunning = true;
 	int lastFpsTime;
-	int fps;    
+	int fps;
 	
-    
 	public static void main(String args[]) {
 		getInstance().start();
 	}
@@ -42,7 +41,7 @@ public class GameController extends JFrame implements WindowListener {
 
     	this.setVisible(true);
     	//setSize(GOGL.SCREEN_WIDTH, GOGL.SCREEN_HEIGHT);
-    	setSize(GL.SCREEN_WIDTH+2*GL.BORDER_LEFT, GL.SCREEN_HEIGHT+GL.BORDER_LEFT+GL.BORDER_TOP);
+    	setSize(GL.getExternalWidth()+2*GL.BORDER_LEFT, GL.getExternalHeight()+GL.BORDER_LEFT+GL.BORDER_TOP);
     	setResizable(false);
     	    	
     	Sound.ini();
@@ -156,7 +155,7 @@ public class GameController extends JFrame implements WindowListener {
 	        	  if(sleepTime >= 0)
 	        		  Thread.sleep(sleepTime);
 	          } catch(InterruptedException e) {}
-	       }	       
+	       }
 	    } 	
 
 	public void windowClosing(WindowEvent arg0) {
@@ -180,20 +179,4 @@ public class GameController extends JFrame implements WindowListener {
 		unload();
 		System.exit(5);
 	}
-
-	/*public static BufferedImage getScreenshot() {
-		Rectangle rec = getInstance().getBounds();
-		BufferedImage img = null;
-	    try {
-			img = new Robot().createScreenCapture(rec);
-		} catch (AWTException e) {
-			e.printStackTrace();
-		}
-	    
-	    // CHANGE ME LATER
-	    BufferedImage wtf =  new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
-	    wtf.getGraphics().drawImage(img, 0, 0, null);
-	    
-	    return wtf;
-	}*/
 }

@@ -2,27 +2,35 @@ package menu;
 
 import ds.lst.CleanList;
 
-public abstract class Menu {
+public class Menu extends MenuComponent {
 	private static CleanList<Menu> menuList = new CleanList<Menu>("Menu");
-
-	private float x, y;
+	private CleanList<MenuComponent> compList = new CleanList<MenuComponent>("Menu");	
 	
+	private double w, h;
 	
-	public Menu(float x, float y) {
-		this.x = x;
-		this.y = y;
+	public Menu(double x, double y, double w, double h) {
+		super(x,y);
+		
+		w(w);
+		h(h);
 		
 		menuList.add(this);
 	}
 	
 	public static void ini() {
-		new PartnerList(300,200);
+		//new PartnerList(300,200);
+	}
+
+	public void draw(double x, double y) {
+		for()
 	}
 	
-	public abstract void draw();
-	
-	public float getX() {return x;}
-	public float getY() {return y;}
+	public double w() 		{return w;}
+	public void w(double w) {this.w = w;}
+
+	public double h()		{return h;}
+	public void h(double h) {this.h = h;}
+
 	
 	public static void drawAll() {
 		for(Menu u : menuList)

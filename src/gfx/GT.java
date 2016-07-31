@@ -9,7 +9,7 @@ import functions.Math2D;
 public class GT extends GL {
 	private GT() {}
 
-	
+	public static void getProjectionMatrix(float[] dst) 				{gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, dst,0);}
 	public static void getModelViewMatrix(float[] dst) 					{gl.glGetFloatv(GL2.GL_MODELVIEW_MATRIX, dst,0);}
 	public static float[] getModelViewMatrix() {
 		float[] outMatrix = new float[16];

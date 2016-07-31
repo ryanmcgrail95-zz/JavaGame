@@ -14,8 +14,8 @@ public class DamageSmoke extends SimpleParticle {
 		super(x,y,z,32,direction, TEXTURE);
 		index = 0;
 		
-		distance = MathExt.rnd(16,40);
-		speed = MathExt.rnd(.2f, .4f);
+		distance = MathExt.rndf(16,40);
+		speed = MathExt.rndf(.2f, .4f);
 	}	
 	
 	public float calcIndex() {

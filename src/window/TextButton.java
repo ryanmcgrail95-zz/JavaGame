@@ -1,7 +1,9 @@
 package window;
 
-import gfx.GLText;
-import gfx.GOGL;
+import java.util.concurrent.Callable;
+
+import gfx.G2D;
+import gfx.GL;
 import gfx.RGBA;
 import io.Mouse;
 
@@ -9,13 +11,13 @@ public class TextButton extends RectButton {
 	private String text;
 	private float scale;
 	
-	public TextButton(int x, int y, int w, int h, String text) {
-		super(x, y, w, h);
+	public TextButton(String text, int x, int y, int w, int h, Callable function) {
+		super(x, y, w, h, function);
 		this.text = text;
 		
 		float xS,yS;
-		xS = 1f*w/GLText.getStringWidth(text);
-		yS = 1f*h/GLText.getStringHeight(text);
+		xS = 1f*w/G2D.getStringWidth(text);
+		yS = 1f*h/G2D.getStringHeight(text);
 		scale = Math.min(xS,yS);
 	}
 
@@ -26,14 +28,31 @@ public class TextButton extends RectButton {
 		dY = frameY+y();
 		
 		// Draw Text
-		GOGL.setColor(RGBA.WHITE);
-		GOGL.fillRectangle(dX,dY,w(),h());
-		GOGL.setColor(RGBA.BLACK);
-		GLText.drawStringCentered(dX+w()/2,dY+h()/2,scale,scale,text,false);
+		GL.setColor(RGBA.WHITE);
+		G2D.fillRectangle(dX,dY,w(),h());
+		GL.setColor(RGBA.BLACK);
+		G2D.drawStringCentered(dX+w()/2,dY+h()/2,scale,scale,text,false);
 		// Draw Outline
-		GOGL.drawRectangle(dX,dY,w(),h());
+		G2D.drawRectangle(dX,dY,w(),h());
 		
-		GOGL.resetColor();
+		
+		if(checkMouse()) {
+			glowTo(1);
+			Mouse.setFingerCursor();
+			
+			if(Mouse.getLeftClick())
+				activate();
+		}
+		else if(isSelected())
+			glowTo(1);
+		else
+			glowTo(0);
+			
+		GL.setAlpha(getGlow()*.5f);
+		G2D.fillRectangle(dX,dY,w(),h());
+		
+		
+		GL.resetColor();
 		
 		return -1;
 	}

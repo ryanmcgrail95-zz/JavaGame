@@ -18,7 +18,7 @@ public class FireSprite extends Drawable {
 	
 	private FireSprite() {
 		super(false,true);
-		sprite = new FBO(GOGL.gl,w,h);
+		sprite = new FBO(GL.gl,w,h);
 	}
 	
 	public static void ini() {
@@ -31,24 +31,24 @@ public class FireSprite extends Drawable {
 	
 	
 	public void render() {
-		GL2 gl = GOGL.gl;
+		GL2 gl = GL.gl;
 				
 		sprite.attach(gl);
 		
-			GOGL.clear(new RGBA(0,0,0,0));
+			GL.clear(RGBA.TRANSPARENT);
 		
-			GOGL.setColor(RGBA.WHITE);
+			GL.setColor(RGBA.WHITE);
 
-			GOGL.enableShader("FireSprite");
-			GOGL.bind(fireAni, 0);
-			GOGL.enableTextureRepeat();
-			GOGL.bind(fireMask, 1);
+			GL.enableShader("FireSprite");
+			GL.bind(fireAni, 0);
+			G2D.setTextureRepeat(true);
+			GL.bind(fireMask, 1);
 			
-			GOGL.fillRectangle(0,0,w,h);
+			G2D.fillRectangle(0,0,w,h);
 			
-			GOGL.unbind(1);
-			GOGL.unbind(0);
-			GOGL.disableShaders();
+			GL.unbind(1);
+			GL.unbind(0);
+			GL.disableShaders();
 		sprite.detach(gl);
 	}
 	

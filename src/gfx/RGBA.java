@@ -5,12 +5,15 @@ import java.nio.FloatBuffer;
 import java.util.Comparator;
 
 import ds.vec4;
+import ds.lst.CleanList;
 import obj.itm.Item;
 import functions.ArrayMath;
 import functions.Math2D;
 import functions.MathExt;
 
 public class RGBA extends ArrayMath {
+	
+	private static CleanList<RGBA> rgbaList = new CleanList<RGBA>("RGBAs");
 	
 	public static final RGBA
 		RED = createf(1,0,0,1),
@@ -28,11 +31,12 @@ public class RGBA extends ArrayMath {
 
 	private int argb;
 	
-	private RGBA() 													{set(0);}
-	private RGBA(int argb) 											{set(argb);}
-	private RGBA(Color color) 										{set(color.getRGB());}
-	private RGBA(RGBA color) 										{set(color);}
+	private RGBA() 													{rgbaList.add(this);set(0);}
+	private RGBA(int argb) 											{rgbaList.add(this);set(argb);}
+	private RGBA(Color color) 										{rgbaList.add(this);set(color.getRGB());}
+	private RGBA(RGBA color) 										{rgbaList.add(this);set(color);}
 
+	public static RGBA create() 									{return new RGBA();}
 	public static RGBA create(int rgba) 							{return new RGBA(rgba);}
 	public static RGBA create(Color color)							{return new RGBA(color);}
 	public static RGBA create(RGBA rgba)							{return new RGBA(rgba);}
@@ -40,7 +44,7 @@ public class RGBA extends ArrayMath {
 	public static RGBA createi(int r, int g, int b, int a) 			{return new RGBA().seti(r,g,b,a);}
 	public static RGBA createf(float r, float g, float b) 			{return new RGBA().setf(r,g,b);}
 	public static RGBA createf(float r, float g, float b, float a) 	{return new RGBA().setf(r,g,b,a);}
-	public static RGBA creater() 									{return createf(MathExt.rnd(), MathExt.rnd(), MathExt.rnd(), 1);}
+	public static RGBA creater() 									{return createf(MathExt.rndf(), MathExt.rndf(), MathExt.rndf(), 1);}
 	
 	public RGBA set(int argb) 										{this.argb = argb; return this;}
 	public RGBA set(RGBA rgba) 										{return set(rgba.argb);}
@@ -92,7 +96,12 @@ public class RGBA extends ArrayMath {
 			f = MathExt.contain(0, f, 1);
 			iF = 1-f;
 
-			return new RGBA(iF*col1.R + f*col2.R, iF*col1.G + f*col2.G, iF*col1.B + f*col2.B, iF*col1.A + f*col2.A);
+			return RGBA.createf(
+				(float) Math.sqrt(iF*MathExt.sqr(col1.Rf()) + f*MathExt.sqr(col2.Rf())),
+				(float) Math.sqrt(iF*MathExt.sqr(col1.Gf()) + f*MathExt.sqr(col2.Gf())),
+				(float) Math.sqrt(iF*MathExt.sqr(col1.Bf()) + f*MathExt.sqr(col2.Bf())),
+				(float) Math.sqrt(iF*MathExt.sqr(col1.Af()) + f*MathExt.sqr(col2.Af()))
+			);
 		}
 		public static RGBA mean(RGBA col1, RGBA col2) {
 			return createf(MathExt.squareMean(col1.Rf(),col2.Rf()), MathExt.squareMean(col1.Gf(),col2.Gf()), MathExt.squareMean(col1.Bf(),col2.Bf()), MathExt.squareMean(col1.Af(),col2.Af()));
@@ -113,33 +122,69 @@ public class RGBA extends ArrayMath {
 	public Color getColor() {return new Color(argb);}
 
 	public static class Comparators {
-		public final static Comparator<RGBA> RED = new Comparator<RGBA>() {
-            public int compare(RGBA o1, RGBA o2) {return o1.Ri() - o2.Ri();}
-        };
-        public final static Comparator<RGBA> GREEN = new Comparator<RGBA>() {
-            public int compare(RGBA o1, RGBA o2) {return o1.Gi() - o2.Gi();}
-        };
-        public final static Comparator<RGBA> BLUE = new Comparator<RGBA>() {
-            public int compare(RGBA o1, RGBA o2) {return o1.Bi() - o2.Bi();}
-        };
-        public final static Comparator<RGBA> VALUE = new Comparator<RGBA>() {
-            public int compare(RGBA o1, RGBA o2) {return o1.Vi() - o2.Vi();}
-        };
+		public final static Comparator<RGBA> RED = new Comparator<RGBA>() 	{public int compare(RGBA o1, RGBA o2) {return o1.Ri() - o2.Ri();}};
+        public final static Comparator<RGBA> GREEN = new Comparator<RGBA>() {public int compare(RGBA o1, RGBA o2) {return o1.Gi() - o2.Gi();}};
+        public final static Comparator<RGBA> BLUE = new Comparator<RGBA>() 	{public int compare(RGBA o1, RGBA o2) {return o1.Bi() - o2.Bi();}};
+        public final static Comparator<RGBA> ALPHA = new Comparator<RGBA>() {public int compare(RGBA o1, RGBA o2) {return o1.Ai() - o2.Ai();}};
+        public final static Comparator<RGBA> VALUE = new Comparator<RGBA>() {public int compare(RGBA o1, RGBA o2) {return o1.Vi() - o2.Vi();}};
 	}
 	
+
 	public static int convertRGBA2Int(int r, int g, int b, int a) {
 		return (a&0x0ff) << 24 | (r&0x0ff) << 16 | (g&0x0ff) << 8 | (b&0x0ff);
 	}
+	public static int convertRGB2Int(int r, int g, int b) {
+		return (255&0x0ff) << 24 | (r&0x0ff) << 16 | (g&0x0ff) << 8 | (b&0x0ff);
+	}
 	
 	public static int[] convertInt2RGBA(int argb) {
-		int[] outArray = new int[4];
-		convertInt2RGBA(argb,outArray);
-		return outArray;
+		convertInt2RGBA(argb,tempInt4);
+		return tempInt4;
 	}
 	public static void convertInt2RGBA(int argb, int[] array) {
 		array[0] = (argb>>16) & 0xFF;
 		array[1] = (argb>>8) & 0xFF;
 		array[2] = (argb) & 0xFF;
 		array[3] = (argb>>24) & 0xFF;
+	}
+
+	
+	
+	public static int convertHex2Int(String hex) {
+		int len = hex.length(), tot = 0, c, v;
+
+		for(int i = 0; i < len; i++) {
+			c = hex.charAt(i);
+			
+			// Get Value of Character if Valid, or Throw Error if Not
+			if((v = c-'0') > 9)
+				if((v = Character.toLowerCase(c)-'a'+10) > 15)
+					throw new UnsupportedOperationException("Unexpected character in hex string: " + (char) c);
+			
+			tot += v;
+		}
+		
+		return tot;
+	}
+	
+	public static int[] convertHex2RGBA(String hex, int[] array) {
+		int len = hex.length();
+		
+		if(len == 6 || len == 8) {
+			array[0] = convertHex2Int(hex.substring(0,1));
+			array[1] = convertHex2Int(hex.substring(2,3));
+			array[2] = convertHex2Int(hex.substring(4,5));
+			
+			if(len == 6)	array[3] = 255;
+			else			array[3] = convertHex2Int(hex.substring(6,7));
+		}
+		else
+			throw new UnsupportedOperationException("Invalid hex string length: " + len);
+		
+		return array;
+	}
+	
+	public static int getNumber() {
+		return rgbaList.size();
 	}
 }

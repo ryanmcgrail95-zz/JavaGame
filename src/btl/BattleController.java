@@ -29,7 +29,7 @@ public class BattleController extends Drawable {
 	private byte state, prevState;
 	private final byte ST_FIRSTSTRIKE = 0, ST_PLAYER = 1, ST_ENEMY = 2, ST_ENEMY_DEATHS = 3, ST_WON_BATTLE = 4;
 	
-	private Model mod;
+	//private Model mod;
 	
 	private Timer timer = new Timer(0,0);
 	
@@ -46,21 +46,18 @@ public class BattleController extends Drawable {
 	
 	private int starPoints;
 	
-	private float alpha, rad = 393, toRad = 393, zPos = 17;
+	private float rad = 393, toRad = 393, zPos = 17;
 	
 	private CleanList<BattleActor> playerActors = new CleanList<BattleActor>("BA Good");
 	private CleanList<BattleActor> enemyActors = new CleanList<BattleActor>("BA Evil");
 	
-	private TextureExt basis = TextureController.loadExt("Resources/Images/battle.png", TextureController.M_NORMAL);
+	private TextureExt basis = TextureController.loadExt("Resources/Images/battle.png");
 	
 	public BattleController() {
 		super(false,false);
 		
 		name = "BattleController";	
-		
-		mod = Model.get("Battle-Pleasant_Path_1_Flowerless", true);
-		mod.addReference();
-		
+	
 		ActorPM pl = PlayerPM.getInstance(), pa = PartnerPM.getInstance();
 		if(pl != null)
 			pl.destroy();
@@ -72,23 +69,11 @@ public class BattleController extends Drawable {
 		enemyActors.add(new BattleEnemy("watt", 4, this));
 		//enemyActors.add(new BattleEnemy("geno", 36, this));
 		//enemyActors.add(new BattleEnemy("luigi", 72, this));
-		
-		float row1Y = 80, row2Y = 105;
-		float[] purple = {.73f,.43f,.61f};
-		float[] yellow = {.78f,.65f,.12f};
-		
-		new BattleFlower(-110,row2Y,19, purple);
-		new BattleFlower(-42,row2Y,36, purple);
-		new BattleFlower(-20,row2Y,29, yellow);
-		new BattleFlower(20,row1Y,22, purple);
-		new BattleFlower(48,row1Y,29, yellow);
-		new BattleFlower(87,row1Y,21, purple);
-		
+				
 		instance = this;
 		
 		startPlayerTurn();
 	}
-	
 	
 	public void checkDead() {
 		boolean isDead = false;
@@ -108,7 +93,7 @@ public class BattleController extends Drawable {
 		}
 	}
 	public void continueDeathAnimations() {
-		start("BattleController.continueDeathAnimations()");
+		//start("BattleController.continueDeathAnimations()");
 		
 		boolean isDead = false;
 		for(BattleActor b : enemyActors) {
@@ -132,31 +117,27 @@ public class BattleController extends Drawable {
 				focusPlayer();
 			}
 
-		end("BattleController.continueDeathAnimations()");
+		//end("BattleController.continueDeathAnimations()");
 	}
 	
 	public void continueTurn() {
-		start("BattleController.continueTurn()");
-		
 		checkDead();
 		
 		if(state == ST_PLAYER)
 			continuePlayerTurn();
 		else if(state == ST_ENEMY)
 			continueEnemyTurn();
-		
-		end("BattleController.continueTurn()");
 	}
 		
 	private void startPlayerTurn() {
-		start("BattleController.startPlayerTurn()");
+		//start("BattleController.startPlayerTurn()");
 		
 		state = ST_PLAYER;
 		for(BattleActor b : playerActors)
 			b.resetHasAttacked();
 		continuePlayerTurn();
 		
-		end("BattleController.startPlayerTurn()");
+		//end("BattleController.startPlayerTurn()");
 	}
 	public void continuePlayerTurn() {	
 		//Run this after each player attacks.
@@ -207,7 +188,7 @@ public class BattleController extends Drawable {
 	
 	
 	public void destroy() {
-		mod.removeReference();
+		//mod.removeReference();
 		
 		//for(BattleActor b : playerActors)
 		//	b.destroy();
@@ -250,12 +231,8 @@ public class BattleController extends Drawable {
 	}
 
 
-	public BattleActor getPlayer() {
-		return playerActors.get(0);
-	}
-	public BattleActor getEnemy() {
-		return enemyActors.get(0);
-	}
+	public BattleActor getPlayer()	{return playerActors.get(0);}
+	public BattleActor getEnemy()	{return enemyActors.get(0);}
 
 
 	public void remove(BattleActor act) {
@@ -396,12 +373,12 @@ public class BattleController extends Drawable {
 	public void draw() {
 		float dH, dY;
 		dH = -1f*basis.getHeight()/basis.getWidth()*640;
-		dY = GL.getScreenHeight()/2f - dH/2;
+		dY = GL.getInternalHeight()/2f - dH/2;
 		
 		
 		GL.setPerspective();
 		GL.setColor(RGBA.WHITE);
-			mod.draw();
+			//mod.draw();
 			
 		
 		if(Keyboard.checkDown('a')) {		

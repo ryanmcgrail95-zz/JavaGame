@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import cont.GameController;
+import cont.Log;
 import object.actor.Actor;
 import object.environment.Floor;
 import object.primitive.Positionable;
@@ -33,7 +34,7 @@ public class Room {
 	private final static String BASE_DIRECTORY = "Resources/Rooms/";
 	private static String nextRoom = "", curRoom = "Toad Town Center", prevRoom;
 	private static List<Resource> resourceList = new ArrayList<Resource>();
-	private static boolean isLoading, inBattle;
+	private static boolean isLoading;
 	
 	private String prevMusic;
 	
@@ -43,6 +44,10 @@ public class Room {
 	
 	public static boolean isLoading() {
 		return isLoading;
+	}
+	
+	public static boolean inBattle() {
+		return curRoom == "Battle";
 	}
 	
 	public static void resetRoom() {
@@ -132,7 +137,7 @@ public class Room {
 	public static void instantiateRoom(String roomName) {
 		String path = BASE_DIRECTORY + roomName + "/layout.dat";
 
-		Script.exec(FileExt.readFile2String(path));
+		Script.exec(GL.memory, FileExt.readFile2String(path));
 		
 		/*if(true)
 			return;
@@ -192,10 +197,6 @@ public class Room {
 					z1 = parseValue(words[6], varMap);
 										
 					curObj = new Floor(x1,y1,x2,y2,z1, null);
-					break;
-
-				case "BattleController":
-					new BattleController();
 					break;
 					
 				case "}":
@@ -281,11 +282,14 @@ public class Room {
 		
 		
 		// Unload All Unnecessary Resources
+		Log.println(Log.ID.RESOURCE, true, "Unloading unneeded resources.");
 		Loadbar bar = new Loadbar(unloadResourceList.size() + loadResourceList.size());
 		for(Resource r : unloadResourceList) {
 			r.unload();
+			r.destroy();
 			bar.step();
 		}
+		Log.println(Log.ID.RESOURCE, false, "");
 
 		
 		// Load New Resources

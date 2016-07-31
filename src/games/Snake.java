@@ -4,16 +4,32 @@ import functions.Math2D;
 import functions.MathExt;
 
 public class Snake {
-	private byte grid[][];
-	private int xNum, yNum, len, maxLen, prevDir, snakeDir, snakeX, snakeY;
+	private Cell grid[][];
+	private int xNum, yNum, snakeLength, snakeLengthMax, prevDir, snakeDir, snakeX, snakeY;
 	public byte CELL_EMPTY = 0, CELL_PELLET;
+	private int[] tempPoint = new int[2];
+	
+	public class Cell {
+		public int snakeAmount;
+		public int snakeDirection;
+		public boolean hasItem;
+		
+		public String toString() {
+			return "Cell[Snake]: " + snakeAmount + ", " + snakeDirection + ", " + hasItem;
+		}
+	}
 	
 	public Snake(int xNum, int yNum, int maxLen) {
 		this.xNum = xNum;
 		this.yNum = yNum;
-		grid = new byte[xNum][yNum];
-		len = 1;
-		this.maxLen = maxLen;
+		
+		grid = new Cell[xNum][yNum];
+		for(int y = 0; y < yNum; y++)
+			for(int x = 0; x < xNum; x++)
+				grid[x][y] = new Cell();
+		
+		snakeLength = 1;
+		this.snakeLengthMax = maxLen;
 		
 		CELL_PELLET = (byte)(maxLen+1);
 		
@@ -21,69 +37,78 @@ public class Snake {
 	}
 	
 	public void update() {
-		
+				
 		int aX,aY;
-		aX = (int) Math2D.calcLenX(snakeDir);
-		aY = (int) -Math2D.calcLenY(snakeDir);
-		
-		
-		if(checkOnBoard(snakeX+aX,snakeY+aY)) {
-			snakeX += aX;
-			snakeY += aY;
+		aX = (int) Math.round(Math2D.calcLenX(snakeDir));
+		aY = (int) -Math.round(Math2D.calcLenY(snakeDir));
+						
+		if(!checkOnBoard(snakeX,snakeY))
+			reset();
+		else {
+			snakeX = (int) MathExt.wrap(0, snakeX+aX, xNum-1);
+			snakeY = (int) MathExt.wrap(0, snakeY+aY, yNum-1);
 			
+				
 			prevDir = snakeDir;
 			incrementBoard();
-		
-			byte st = get(snakeX,snakeY);
-			if(st == CELL_PELLET) {
+					
+			Cell cell = getCell(snakeX,snakeY);
+
+			if(cell.hasItem) {
+				cell.hasItem = false;
 				increaseLength();
 				createPellet();
 			}
 			
-			set(snakeX,snakeY,len);
-			
-			if(st != CELL_EMPTY && st != CELL_PELLET)
+			if(cell.snakeAmount != 0)
 				reset();
+			else {			
+				cell.snakeAmount = snakeLength;
+				cell.snakeDirection = snakeDir;
+			}
 		}
-		else if(!checkOnBoard(snakeX,snakeY))
-			reset();
 	}
 	
 	
 	private void incrementBoard() {
-		byte st;
+		Cell cell;
 		for(int c = 0; c < xNum; c++)
 			for(int r = 0; r < yNum; r++) {
-				st = get(c,r);
-				if(st != CELL_EMPTY && st != CELL_PELLET)
-					set(c,r,st-1);
+				cell = getCell(c,r);
+				cell.snakeAmount = Math.max(0, --cell.snakeAmount);
 			}
 				
 	}
 
 	public void increaseLength() {
-		len = Math.min(maxLen, len+1);
+		snakeLength = Math.min(snakeLengthMax, snakeLength+1);
 	}
 	
-	public void set(int x, int y, int state) {
-		grid[x][y] = (byte) state;
-	}
-	public byte get(int x, int y) {
+	public Cell getCell(int x, int y) {
 		return grid[x][y];
 	}
+	public int getSnakeAmount(int x, int y) {
+		return getCell(x,y).snakeAmount;
+	}
+	
 	
 	public void reset() {
+		Cell cell;
 		for(int c = 0; c < xNum; c++)
-			for(int r = 0; r < yNum; r++)
-				set(c,r,CELL_EMPTY);
+			for(int r = 0; r < yNum; r++) {
+				cell = getCell(c,r);
+				cell.snakeAmount = 0;
+				cell.hasItem = false;
+			}
 
-		len = 1;
+		snakeLength = 1;
+		
 		createPellet();
 		createSnake();
 	}
 	
-	public void setDirection(int newDir) {
-		if(Math.abs(Math2D.calcAngDiff(newDir,prevDir)) != 180)
+	public void setSnakeDirection(int newDir) {
+		if(Math.abs(Math2D.calcAngleDiff(newDir,prevDir)) != 180)
 			snakeDir = newDir; 
 	}
 	
@@ -91,36 +116,33 @@ public class Snake {
 		return (x >= 0 && x < xNum && y >= 0 && y < yNum);
 	}
 	
-	public void createSnake() {
+	private void generateBoardPoint() {
+		System.out.println("Generating point...");
+		
+		Cell cell;
 		int x,y;
-		
-		do {
-			x = (int) MathExt.rnd(xNum);
-			y = (int) MathExt.rnd(yNum);
-		} while(!checkOnBoard(x,y));
-		snakeX = x;
-		snakeY = y;
-		
-		set(snakeX,snakeY,len);
-	}
-	public void createPellet() {
-		int x,y;
-		
 		do {
 			do {
-				x = (int) MathExt.rnd(xNum);
-				y = (int) MathExt.rnd(yNum);
+				x = (int) MathExt.rndi(xNum);
+				y = (int) MathExt.rndi(yNum);
 			} while(!checkOnBoard(x,y));
-		} while(get(x,y) != CELL_EMPTY);
-
-		set(x,y,CELL_PELLET);
+			cell = getCell(x,y);
+		} while(! (!cell.hasItem && cell.snakeAmount == 0) );
+		
+		tempPoint[0] = x;
+		tempPoint[1] = y;
 	}
 	
+	public void createSnake() {
+		generateBoardPoint();
+		grid[snakeX = tempPoint[0]][snakeY = tempPoint[1]].snakeAmount = snakeLength;
+	}
+	public void createPellet() {		
+		generateBoardPoint();
+		getCell(tempPoint[0],tempPoint[1]).hasItem = true;
+	}	
 	
-	public int getLen() {
-		return len;
-	}
-	public int getMaxLen() {
-		return maxLen;
-	}
+	public int getSnakeLength()		{return snakeLength;}
+	public int getSnakeLengthMax() 	{return snakeLengthMax;}
+	public int getSnakeDirection() 	{return snakeDir;}
 }

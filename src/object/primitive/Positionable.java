@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import script.Variable;
+import script.Register;
 import time.Delta;
 import io.Mouse;
 import ds.vec3;
@@ -22,10 +22,10 @@ public abstract class Positionable extends Drawable {
 	
 	private static CleanList<Positionable> positionableList = new CleanList<Positionable>("Positionable");
 	
-	private List<Variable> varList = new ArrayList<Variable>();
-	private Map<String, Variable> varMap = new HashMap<String, Variable>();
+	private List<Register> varList = new ArrayList<Register>();
+	private Map<String, Register> varMap = new HashMap<String, Register>();
 	
-	private Variable 	x,y,z,
+	private Register 	x,y,z,
 						vX,vY,vZ,
 						xP,yP,zP;
 	private boolean
@@ -56,11 +56,11 @@ public abstract class Positionable extends Drawable {
 		if(isDestroyed())
 			return;
 		
-		start("Positionable[" + name + "].destroy()");
+		//start("Positionable[" + name + "].destroy()");
 		
 		super.destroy();
 		
-		for(Variable v : varList)
+		for(Register v : varList)
 			v.destroy();
 		
 		varList.clear();
@@ -68,7 +68,7 @@ public abstract class Positionable extends Drawable {
 		varMap.clear();
 			varMap = null;
 			
-		end("Positionable[" + name + "].destroy()");
+		//end("Positionable[" + name + "].destroy()");
 	}
 	
 	
@@ -255,8 +255,10 @@ public abstract class Positionable extends Drawable {
 	
 	public float getXYSpeed() {return Math2D.calcPtDis(0,0,vX(),vY());}
 	public void setXYSpeed(float newSpd) {
-		vX( Math2D.calcLenX(newSpd,direction) );
-		vY( Math2D.calcLenY(newSpd,direction) );
+		float dir = direction;
+		vX( Math2D.calcLenX(newSpd,dir) );
+		vY( Math2D.calcLenY(newSpd,dir) );
+		direction = dir;
 	}
 	public void addXYSpeed(float addAmt) {
 		setXYSpeed(getXYSpeed() + addAmt);
@@ -267,12 +269,11 @@ public abstract class Positionable extends Drawable {
 			direction = calcDirection();
 	}
 	public void setDirection(float direction) {
-		this.direction = direction;
-		
 		float spd = getXYSpeed();
 
 		vX( Math2D.calcLenX(spd,direction) );
-		vY( Math2D.calcLenY(spd,direction) );		
+		vY( Math2D.calcLenY(spd,direction) );	
+		this.direction = direction;
 	}
 	public float getDirection() {return direction;}
 	public float getDirectionPrevious() {return directionPrevious;}
@@ -299,18 +300,18 @@ public abstract class Positionable extends Drawable {
 			return false;
 	}
 	
-	public Variable addVar(String name) {
-		Variable v = new Variable(name, false,true);
+	public Register addVar(String name) {
+		Register v = new Register(name, false,true);
 		varMap.put(name, v);
 		varList.add(v);
 		return v;
 	}
 	
-	public Variable setVar(String name, double value) {return varMap.get(name).set(value);}
-	public Variable setVar(String name, String value) {return varMap.get(name).set(value);}
-	public Variable setVar(String name, Object value) {return varMap.get(name).set(value);}
+	public Register setVar(String name, double value) {return varMap.get(name).set(value);}
+	public Register setVar(String name, String value) {return varMap.get(name).set(value);}
+	public Register setVar(String name, Object value) {return varMap.get(name).set(value);}
 
-	public Variable getVar(String name) {
+	public Register getVar(String name) {
 		return varMap.get(name);
 	}
 }

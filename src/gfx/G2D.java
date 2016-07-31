@@ -1,20 +1,74 @@
 package gfx;
 
+import functions.ArrayMath;
 import functions.Math2D;
 import functions.MathExt;
 import resource.font.Font;
 import resource.font.MergedFont;
 import resource.font.SplitFont;
 
+import java.util.List;
+
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
 import ds.PrintString;
-import ds.StringExt2;
+import ds.StringExt;
 
 public class G2D extends GL {
+	private static boolean stringShadow;
+	private static final float[]
+		BOUNDS_STD = {0,0, 1,1};
+	
+	//public static void enableStringShadow(boolean stringShadow) {
+	//	G2D.stringShadow = stringShadow;
+	//}
+	
+	public static void setLineWidth(float w) {gl.glLineWidth(w);}
+	public static void drawLine(float x1, float y1, float x2, float y2) {drawLine(x1,y1,x2,y2,1);};
+	public static void drawLine(float x1, float y1, float x2, float y2, float w) {
+		setLineWidth(w);
+		gl.glBegin(GL2.GL_LINES);
+			gl.glVertex3f(x1-1,y1-1, orthoLayer);
+			gl.glVertex3f(x2,y2, orthoLayer);
+	    gl.glEnd();
+	    setLineWidth(1);
+	}
+	
+	public static void drawLine(List<float[]> pts) {
+		gl.glBegin(GL2.GL_LINES);
+			int i = 0, si = pts.size();
+			for(float[] pt : pts) {
+				gl.glVertex3f(pt[0],pt[1], orthoLayer);
+				if(i > 0 && i < si-1)
+					gl.glVertex3f(pt[0],pt[1], orthoLayer);
+				i++;
+			}
+	    gl.glEnd();
+	}
+	
+	
+	public static void drawRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,false);}
+	public static void drawRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,false);}
+	public static void fillRectangle() {rectangle(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,true);}
+	public static void fillRectangle(float x, float y, float w, float h) {rectangle(x,y,w,h,true);}
+	public static void fillRectangle(float x, float y, float w, float h, float[] bounds) {rectangle(x,y,w,h,bounds,true);}
+	public static void rectangle(float x, float y, float w, float h, boolean fill) {rectangle(x,y,w,h,BOUNDS_STD,fill);}
+	public static void rectangle(float x, float y, float w, float h, float[] bounds, boolean fill) {
+		gl.glBegin((fill ? GL2.GL_QUADS : GL2.GL_LINE_LOOP));
+			gl.glTexCoord2d(bounds[0], bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
+			gl.glTexCoord2d(bounds[2], bounds[1]);	gl.glVertex3f(x+w, y, orthoLayer);
+			gl.glTexCoord2d(bounds[2], bounds[3]);	gl.glVertex3f(x+w, y+h, orthoLayer);
+			gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);		
+			if(!fill) {
+				gl.glTexCoord2d(bounds[0], bounds[1]);	gl.glVertex3f(x, y, orthoLayer);
+			}
+        gl.glEnd();
+	}
+	
+	
 	public static void drawTexture(float x, float y, Texture tex) 									{drawTexture(x,y,tex.getWidth(),tex.getHeight(),tex);}
-	public static void drawTexture(float x, float y, float w, float h, Texture tex) 				{drawTexture(x,y,w,h,tex,new float[] {0,0,1,1});}
+	public static void drawTexture(float x, float y, float w, float h, Texture tex) 				{drawTexture(x,y,w,h,tex,BOUNDS_STD);}
 	public static void drawTexture(float x, float y, float w, float h, Texture tex, float[] bounds) {
 		if(tex == null)
 			return;
@@ -41,7 +95,7 @@ public class G2D extends GL {
 	
 
 	private static float curLineHeight, curWidth, curHeight, curSWidth, curSHeight, curHangFrac;
-	private static Texture curTex;
+	//private static Texture curTex;
 	private static boolean isSplit;
 	
 	public static void initialize() {
@@ -50,7 +104,7 @@ public class G2D extends GL {
 		new MergedFont("8bit", .1f);
 		new SplitFont("OoT", .25f);
 		
-		setFont("OoT");
+		setFont("8bit");
 	}
 	
 	
@@ -61,7 +115,7 @@ public class G2D extends GL {
 		// Set Font Variables
 		curWidth = curFont.getWidth();
 		curHeight = curFont.getHeight();
-		curTex = curFont.getTexture();
+		//curTex = curFont.getTexture();
 		isSplit = curFont.isSplit();
 		curLineHeight = curFont.getHeight();
 		curHangFrac = curFont.getHangFrac();
@@ -94,8 +148,8 @@ public class G2D extends GL {
 			y += curLineHeight*yS*curHangFrac; //.25
 			
 		if(fontEffect == F_SHAKE) {
-			x += MathExt.rnd(-1,1);
-			y += MathExt.rnd(-1,1);
+			x += MathExt.rndf(-1,1);
+			y += MathExt.rndf(-1,1);
 		}
 		else if(fontEffect == F_SPIN) {
 			float l = 2;
@@ -124,7 +178,7 @@ public class G2D extends GL {
 		
 		if(!isSplit) {
 			setScale(xS,yS);
-			bind(curTex);
+			bind(curFont.getTexture());
 		}
 		
 		float fH = curFont.getHeight();		
@@ -165,7 +219,7 @@ public class G2D extends GL {
 		
 		if(!isSplit) {
 			setScale(xS,yS);
-			bind(curTex);
+			bind(curFont.getTexture());
 		}
 		
 		spin = getTime()*5;
@@ -219,15 +273,15 @@ public class G2D extends GL {
 	public static void drawStringCentered(float x, float y, float xS, float yS, String str) {
 		y -= getStringHeight(xS,yS,str)/2;
 					
-		StringExt2 all = new StringExt2(str);
-		String line = all.chompLine();
+		StringExt all = new StringExt(str);
+		String line = all.munchLine();
 		
-		while(line != "") {
+		while(!line.equals("")) {
 			drawString(x-getStringWidth(xS,yS,line)/2,y,xS,yS,line);
 		
 			y += curLineHeight*yS;
 			
-			line = all.chompLine();
+			line = all.munchLine();
 		}
 	}
 
@@ -281,7 +335,27 @@ public class G2D extends GL {
 		rrectangle(x,y,w,h, r, new float[] {0,0,1,1}, true);
 	}
 	public static void rrectangle(float x, float y, float w, float h, float r, float[] bounds, boolean fill) {
-		GL.rectangle(x, y, w, h, bounds, fill);
+		rectangle(x, y, w, h, bounds, fill);
+		
+		boolean doInside = true;
+		
+		if(w/2 < r) {
+			r = w/2;
+			doInside = false;
+		}
+		if(h/2 < r) {
+			r = h/2;
+			doInside = false;
+		}
+		
+		float u1,v1,u2,v2;
+		u1 = bounds[0];
+		v1 = bounds[1];
+		
+		// Draw Top
+		
+		
+		
 /*		float 
 			bX1 = bounds[0],
 			bY1 = bounds[1],

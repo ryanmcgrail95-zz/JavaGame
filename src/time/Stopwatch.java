@@ -24,6 +24,10 @@ public class Stopwatch {
 		return (endTime - startTime)/1000000f;
 	}
 	
+	public double getCurrentMilli() {
+		return (getTime() - startTime)/1000000f;
+	}
+	
 	public void println() {
 		System.out.println(getMilli());
 	}

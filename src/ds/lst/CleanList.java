@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import functions.MathExt;
+
 
 public class CleanList<T> extends ArrayList<T> implements Iterable<T> {
 	private static CleanList<CleanList> completeList = new CleanList<CleanList>("CleanLists");
@@ -188,6 +190,10 @@ public class CleanList<T> extends ArrayList<T> implements Iterable<T> {
 	}
 	public static int getNumber() {
 		return completeList.size();
+	}
+	
+	public T getRandom() {
+		return get(MathExt.rndi(0, size()-1));
 	}
 
 	public String getName() {

@@ -2,6 +2,8 @@ package functions;
 
 public class ArrayMath {
 	
+	protected static int[]
+		tempInt4 = new int[4];
 	public static float[]
 		tempArray3 = new float[3];
 	public static float[] 
@@ -12,11 +14,16 @@ public class ArrayMath {
 		tempOut16 = new float[16],
 		tempMath16 = new float[16];
 	
-	public static float[] set(float[] array, float... values) {
-		int len = array.length;
-		for(int i = 0; i < len; i++)
-			array[i] = values[i];
-		return array;
+	public static float[] set(float[] a, float... b) {
+		int	aLen = a.length,
+				bLen = b.length;
+			
+		if(aLen != bLen)
+			throw new UnsupportedOperationException("Arrays are not same size.");
+			
+		for(int i = 0; i < aLen; i++)
+			a[i] = b[i];
+		return a;
 	}
 	public static float[] fill(float[] array, float values) {
 		int aLen = array.length;
@@ -27,6 +34,32 @@ public class ArrayMath {
 		return array;
 	}
 	
+	
+	public static boolean equals(float[] a, float[] b) {
+		int	aLen = a.length,
+			bLen = b.length;
+		
+		if(aLen != bLen)
+			throw new UnsupportedOperationException("Arrays are not same size.");
+		
+		for(int i = 0; i < aLen; i++)
+			if(a[i] != b[i])
+				return false;
+		return true;
+	}
+	
+	public static void assertEquals(float[] a, float[] b) {
+		int	aLen = a.length,
+			bLen = b.length;
+		
+		if(aLen != bLen)
+			throw new UnsupportedOperationException("Arrays are not same size.");
+		
+		for(int i = 0; i < aLen; i++) {
+			//System.out.println("asserting: " + a[i] + " == " + b[i] + "?");
+			assert a[i] == b[i];
+		}
+	}
 	
 	public static float[] setTemp3(float a, float b, float c) {
 		return set(tempArray3,a,b,c);
@@ -41,7 +74,7 @@ public class ArrayMath {
 	public static float[] multMV(float[] mat, float[] vec) {
 		fill(tempMath4, 0);
 
-		for(int r = 0; r < 3; r++)
+		for(int r = 0; r < 4; r++)
 			for(int c = 0; c < 4; c++)
 				tempMath4[r] += mat[4*r+c]*vec[c];
 
@@ -57,7 +90,7 @@ public class ArrayMath {
 		for(int r = 0; r < 4; r++)
 			for(int c = 0; c < 4; c++)
 				for(int i = 0; i < 4; i++)
-					tempMath16[4*r+c] += mat1[4*c+i]*mat2[4*r+i];		
+					tempMath16[4*r+c] += mat1[4*r+i]*mat2[4*i+c];		
 		return set(tempOut16, tempMath16);
 	}
 	public static float[] multMM(float[] mat1, float[] mat2, float[] dst) {
@@ -170,9 +203,27 @@ public class ArrayMath {
 		dst[1] = a[2]*b[0] - a[0]*b[2];
 		dst[2] = a[0]*b[1] - a[1]*b[0];
 	}
-	public static void println(float[] a) {
+
+	public static void println(int... a) {		
+		int len = a.length;
+		if(len <= 4) {
+			System.out.print("<");
+			for(int n : a)
+				System.out.print(n + " ");
+			System.out.println();
+		}
+		else {
+			for(int n = 0; n < 4; n++) {
+				for(int k = 0; k < 4; k++)
+					System.out.print(a[4*n+k] + " ");
+				System.out.println();
+			}
+		}			
+	}
+	
+	public static void println(float... a) {		
 		int i = a.length;
-		if(i <= 4) {
+		if(i != 16) {
 			for(float n : a)
 				System.out.print(n + " ");
 			System.out.println();

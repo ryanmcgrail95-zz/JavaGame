@@ -1,4 +1,5 @@
 package object.primitive;
+import functions.ArrayMath;
 import functions.Math2D;
 import gfx.Camera;
 import gfx.CameraFX;
@@ -43,7 +44,7 @@ public abstract class Drawable extends Updatable {
 	private static Timer selectTimer;
 
 
-	protected int R, G, B;
+	protected int idRGB;
 	protected boolean visible = true, isHoverable = false, isRenderable = false;		
 
 	
@@ -61,7 +62,7 @@ public abstract class Drawable extends Updatable {
 	
 	private void generateHoverColor() {
 				
-		R = colR; G = colG; B = colB;
+		idRGB = RGBA.convertRGB2Int(colR, colG, colB);
 		
 		colR++;
 		if(colR > 255) {
@@ -127,7 +128,7 @@ public abstract class Drawable extends Updatable {
 			if(d.visible) {
 				if(d.checkOnscreen()) {
 					depth = d.calcDepth();
-					if(depth >= 0 && depth < GL.getCamera().getViewFar()) {
+					if(depth >= 0 && depth < GL.getCamera().getMaxDistance()) {
 						if(d.shouldAdd)
 							onscreenAddList.add(d);
 						else
@@ -148,7 +149,7 @@ public abstract class Drawable extends Updatable {
 	
 		public static void display() {
 			
-			GL.start("Drawable.display()");
+			//GL.start("Drawable.display()");
 			
 			if(selectTimer == null)
 				selectTimer = new Timer(5);
@@ -158,48 +159,32 @@ public abstract class Drawable extends Updatable {
 			
 			//onscreenHoverList
 			int hSi = hoverList.size(), dSi = onscreenList.size();
-			
-			Mouse.resetCursor();
 			        	
 			GL.setOrtho();
 			for(Drawable d : renderList)
 				d.render();
-			//Window.renderAll();
+			Window.renderAll();
 			
-						
-        	GL.setViewport(0,0,640,480);
+        	GL.setViewport(0,0, GL.getInternalWidth(),GL.getInternalHeight());
 			GL.setPerspective();
 			
 
-			if(canSelectHoverable() && onscreenHoverList.size() > 0) {
+			/*if(canSelectHoverable() && onscreenHoverList.size() > 0) {
 				GL.allowLighting(false);
 				GL.clear();
 				
 				for(Drawable d : onscreenHoverList) {
 					d.isSelected = false;
 					
-					GL.forceColor(RGBA.createi(d.R,d.G,d.B));
+					GL.forceColor(d.idRGB);
 					d.draw();
 				}
 			
-				RGBA idRGBA = Mouse.getPixelRGBA();
-				
-				int r,g,b;
-				r = idRGBA.Ri();
-				g = idRGBA.Gi();
-				b = idRGBA.Bi();
-				
-				if(r < 0)	r += 256;
-				if(g < 0)	g += 256;
-				if(b < 0)	b += 256;
+				int idRGB = Mouse.getPixelRGB();
 
 				int cR, cG, cB;
 				for(Drawable d : onscreenHoverList) {
-					cR = d.R;
-					cG = d.G;
-					cB = d.B;
-
-					if(cR == r && cG == g && cB == b) {
+					if(idRGB == d.idRGB) {
 						d.isSelected = true;
 						d.hover();
 						break;
@@ -209,9 +194,7 @@ public abstract class Drawable extends Updatable {
 				
 				GL.allowLighting(true);
 				GL.unforceColor();
-			}
-
-		GL.end("Drawable.display()");
+			}*/
 	}
 
 	public static int getNumber() {return drawList.size();}
@@ -219,7 +202,6 @@ public abstract class Drawable extends Updatable {
 	public static int getOnscreenNumber() {return onscreenList.size();}
 	public static int getOnscreenHoverableNumber() {return onscreenHoverList.size();}
 
-	
 	public static class Comparators {
 		public final static Comparator<Drawable> DEPTH = new Comparator<Drawable>() {
             public int compare(Drawable o1, Drawable o2) {
@@ -234,7 +216,7 @@ public abstract class Drawable extends Updatable {
 	}
 
 	public static void draw3D() {
-		GL.start("Drawable.draw3D()");
+		//GL.start("Drawable.draw3D()");
 
 		Camera cam = GL.getCamera();
 		
@@ -253,29 +235,11 @@ public abstract class Drawable extends Updatable {
 				d.draw();
 			return;
 		}*/
-		
-		GL.allowLighting(true);
-		GL.enableLighting();
-		GL.begin(GL.P_TRIANGLES);
-		for(Drawable d : onscreenAddList) {
-			//d.isSelected)
-				d.add();//d.draw();
-			/*else { 
-				//GOGL.forceColor(new RGBA(1,1,1,.2f));
-				d.draw();
-				d.hover();
-				//GOGL.unforceColor();
-			}*/
-		}
-		GL.end();
-		GL.disableLightings();
-		
+				
 		for(Drawable d : onscreenList)
 			d.draw();
-
-		//Floaties.draw();
 		
-		GL.end("Drawable.draw3D()");
+		//GL.end("Drawable.draw3D()");
 	}
 
 	public static void printList() {

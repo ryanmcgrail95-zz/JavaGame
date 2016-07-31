@@ -1,60 +1,72 @@
 package script;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public abstract class Action extends PML {
-	private final static Map<String, Action> actionMap = new HashMap<String, Action>();
-	private Variable[] parameterList;
-	private String name;
-	private boolean hasOutput;
+import cont.Log;
+import ds.nameid.ID;
+import ds.nameid.NameIDMap;
+import gfx.GL;
 
+public abstract class Action extends PML {
+	protected String 					name;
+	protected int						regNum;
+	protected int[] 					argIndList;
+	protected ConstantRegister[] 		constList;	
+	protected boolean 					hasOutput;
+
+	//private List<Integer>
+	
 	// Temp Action
-	public Action() {
-	}
-	public Action(String name, Variable[] parameterList, boolean hasOutput) {
-		this.parameterList = parameterList;
+	public Action(PMLMemory mem, String name, int regNum, int[] argIndList, ConstantRegister[] constList, boolean hasOutput) {
+		Log.println(Log.ID.PML, true, "Action()");
+		this.name = name;
+		
+		this.regNum = regNum;
+		this.argIndList = argIndList;
+		this.constList = constList;
 		
 		this.hasOutput = hasOutput;
 		
-		// Ensure Action Does NOT Already Exist!!
-		if(actionMap.containsKey(name))
-			throw new UnsupportedOperationException("Action " + name + " already exists.");
-		else
-			actionMap.put(this.name = name, this);
+		mem.addAction(this);		
+		
+		Log.println(Log.ID.PML, false, "");
 	}
 			
-	public abstract Variable run(Variable output, Variable[] parameters);
-	
-	public boolean checkParameters(Variable... parameters) {
-		return true;
-		//if()
+	public Register run(Register output, Register[] parameters, PMLMemory stack) {
+		boolean created = false;
+		
+		Log.println(Log.ID.PML, true, "Action["+name+"].run()");
+
+		if(regNum > 0)
+			stack.pushLevel(regNum, constList);
+		
+		call(output, parameters, stack);
+
+		if(regNum > 0)
+			stack.popLevel();
+
+		Log.println(Log.ID.PML, false, "");
+
+		return output;
 	}
+	public abstract void call(Register output, Register[] parameters, PMLMemory stack);
 	
-	public static Action getAction(String name) {
-		Action a = actionMap.get(name);
-		if(a == null)
-			throw new UnsupportedOperationException("No action exists with the name, \"" + name + "\".");
-		return a;
+	public boolean checkParameters(Register... parameters) {
+		return true;
 	}
 	
 	public void destroy() {
-		actionMap.remove(name);
-		
-		if(parameterList != null) {
-			for(Variable v : parameterList)
-				v.destroy();
-			
-			parameterList = null;
-		}
+		//TODO: add destroy
 	}
 	
 	public void setName(String name) 				{this.name = name;}
-	public void setParameterList(Variable[] param) 	{this.parameterList = param;}
 	public void setHasOutput(boolean output) 		{this.hasOutput = output;}
 	
 	
-	public static void ini() 	{MiscAction.ini();}
+	public static void ini(PMLMemory mem) 	{MiscAction.ini(mem);}
 	public String getName() 	{return name;}
 	public boolean hasOutput() 	{return hasOutput;}
 }

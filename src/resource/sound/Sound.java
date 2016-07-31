@@ -1,3 +1,11 @@
+/* TODO: ADD SOURCE QUEUING WITH:
+ * http://stackoverflow.com/questions/5885114/how-to-play-a-sound-instantly-after-another-sound-ended
+ * alGetSourcei(source, AL_BUFFERS_PROCESSED, &num_done)
+ * alSourceQueueBuffers 
+ * alSourceUnqueueBuffers
+*/
+
+
 package resource.sound;
 
 import java.awt.Component;
@@ -26,6 +34,8 @@ import fl.FileExt;
 import functions.Array;
 import functions.ArrayMath;
 import gfx.Camera;
+import gfx.ErrorPopup;
+import object.primitive.Positionable;
 
 public class Sound {
 	private static Map<String, SoundBuffer> bufferMap = new HashMap<String, SoundBuffer>();
@@ -35,6 +45,8 @@ public class Sound {
     	velArray = {0,0,0},
     	upArray = {0,0,1};
     
+    private static Positionable
+    	listenerObject;
     private static float listenerX, listenerY, listenerZ;
     
     private static SoundSource curMusic = null, newMusic = null;
@@ -44,9 +56,8 @@ public class Sound {
 	private static List<String> musicList = new ArrayList<String>();
     private static Map<String, List<String>> playlistMap = new HashMap<String, List<String>>();
 	
-    private static boolean musicLock = false;
     
-	public static void ini() {
+	public static void ini() {		
 		boolean success = false;
 		
 		do {
@@ -65,7 +76,7 @@ public class Sound {
         //LOAD SOUNDS
 		//loadSound("button", "Resources/Sounds/FX/button.ogg",80);
 		loadSound("Resources/Sounds/FX/blockCrumble.ogg");
-        loadSound("Resources/Sounds/FX/footstep.ogg",.15f);
+        loadSound("Resources/Sounds/FX/footstep.ogg",10); //.15f
         loadSound("Resources/Sounds/FX/spin.ogg");
         loadSound("Resources/Sounds/FX/jump.ogg", 70);
         loadSound("Resources/Sounds/FX/blipMale.ogg", 80);
@@ -107,69 +118,35 @@ public class Sound {
 			newMusic = new SoundSource(music, true);
 	}
 
-	public static void playMusic(String intro, String music) {
-		playMusic(get(intro), get(music), false);
-	}
-	public static void playMusic(String intro, String music, boolean fade) {
-		playMusic(get(intro), get(music), fade);
-	}
-	private static void playMusic(SoundBuffer intro, SoundBuffer music, boolean fade) {
-		if(curMusic == null) {
-			curMusic = new SoundSource(intro, false);
-			if(fade)
-				curMusic.setFadeAmount(0);
-			if(!musicLock)
-				curMusic.play();
-			newMusic = null;
-			afterMusic = music;
-		}
-		else if(curMusic.getParentBuffer() != intro && curMusic.getParentBuffer() != music) {
-			
-			if(fade)
-				newMusic = new SoundSource(intro, false);
-			else {
-				curMusic.stop();
-				curMusic.destroy();
-				
-				curMusic = new SoundSource(intro, false);
-				if(!musicLock)
-					curMusic.play();
-			}
-			afterMusic = music;
-		}
-	}
 	
-	public static void playMusic(String intro, String music, float volume) {
-		playMusic(intro, music, volume, false, false);
+	public static void playMusic(String music, float volume, boolean fadeOut, boolean fadeIn) {
+		playMusic(get(music, volume), volume, fadeOut, fadeIn);
 	}
-	public static void playMusic(String intro, String music, float volume, boolean fadeOut, boolean fadeIn) {
-		playMusic(get(intro, volume), get(music, volume), volume, fadeOut, fadeIn);
-	}
-	private static void playMusic(SoundBuffer intro, SoundBuffer music, float volume, boolean fadeOut, boolean fadeIn) {
+	private static void playMusic(SoundBuffer music, float volume, boolean fadeOut, boolean fadeIn) {
 		if(curMusic == null) {
-			curMusic = new SoundSource(intro, false);
+			curMusic = new SoundSource(music, false);
 			if(fadeIn)
 				curMusic.setFadeAmount(0);
 			if(!musicLock)
 				curMusic.play();
 			newMusic = null;
-			afterMusic = music;
 		}
-		else if(curMusic.getParentBuffer() != intro && curMusic.getParentBuffer() != music) {
-			newMusic = null;	
-			curMusic.shift(intro, fadeOut, fadeIn);
-			afterMusic = music;
+		else if(curMusic.getParentBuffer() != music) {
+			newMusic = null;
+			curMusic.shift(music, fadeOut, fadeIn);
 		}
 	}
 
 	public static void update() {
 		
+		if(true)
+			return;
 		
 		// UPDATE MUSIC
 		// If newMusic is not NULL, fade out current music then fade in new music.
 		// Otherwise, fade in new music;
 		
-		if(!musicLock)
+		if(curMusic != null)
 			if(curMusic.wasNeverPlayed())
 				curMusic.play();
 		
@@ -178,8 +155,7 @@ public class Sound {
 				curMusic.destroy();
 				curMusic = new SoundSource(afterMusic, true);
 				curMusic.setFadeAmount(1);
-				if(!musicLock)
-					curMusic.play();
+				curMusic.play();
 				
 				afterMusic = null;
 			}
@@ -197,8 +173,7 @@ public class Sound {
 				newMusic = null;
 
 				curMusic.setFadeAmount(0);
-				if(!musicLock)
-					curMusic.play();
+				curMusic.play();
 				curMusic.fadeTo(1);
 			}
 		}
@@ -223,7 +198,10 @@ public class Sound {
 	public static void clean() {
 		for(SoundSource src : sourceList) {
 			src.update();
-			if(src.isALStopped()) {
+			
+			if(src.isDestroyed())
+				sourceList.remove(src);
+			else if(src.isALStopped()) {
 				src.destroy();
 				sourceList.remove(src);
 			}
@@ -289,7 +267,8 @@ public class Sound {
 	
 	
 	public static void updateListener(Camera camera) {
-		updateListener(camera.getPosition(), velArray, camera.getNormal(), upArray);
+		listenerObject = camera;
+		//updateListener(camera.getPosition(), velArray, camera.getNormal(), upArray);
 	}
 	public static void updateListener(double cX, double cY, double cZ, double vX, double vY, double vZ, double nDirX, double nDirY, double nDirZ, double nUpX, double nUpY, double nUpZ) {
 		// Position of the listener.
@@ -312,43 +291,54 @@ public class Sound {
 			s.destroy();
 		for(SoundBuffer s : bufferList)
 			s.destroy();
+		
 		try {
 			ALut.alutExit();
 		}
-		catch(Exception e) {
-		}
+		catch(Exception e) {}
 	}
 
 	
 	public static SoundSource play(String name) {
-		return play(name, listenerX, listenerY, listenerY, 0,0,0, false);
+		return play(name, false);
 	}
 	public static SoundSource play(String name, boolean doLoop) {
-		return play(name, listenerX, listenerY, listenerY, 0,0,0, doLoop);
+		return play(name, null, doLoop);
 	}
-	public static SoundSource play(String name, double x, double y, double z, double vX, double vY, double vZ) {
-		return play(name, x,y,z, vX,vY,vZ, false);
+	public static SoundSource play(String name, Positionable sourceObject) {
+		return play(name, sourceObject, false);
 	}
-	public static SoundSource play(String name, double x, double y, double z, double vX, double vY, double vZ, boolean doLoop) {
-		
-	    float[] sourcePos = {(float) x, (float) y, (float) z};
-	    float[] sourceVel = {(float) vX, (float) vY, (float) vZ};
-
-        SoundSource src = new SoundSource(get(name), sourcePos, sourceVel, doLoop);
+	public static SoundSource play(String name, Positionable sourceObject, boolean doLoop) {
+        SoundSource src = new SoundSource(get(name), sourceObject, doLoop);
         src.play();
         
         sourceList.add(src);
         
         return src;
 	}
+
 	
+	public static SoundSource play(SoundBuffer sb) {
+		return play(sb, false);
+	}
+	public static SoundSource play(SoundBuffer sb, boolean doLoop) {
+		return play(sb, null, doLoop);
+	}
+	public static SoundSource play(SoundBuffer sb, Positionable sourceObject) {
+		return play(sb, sourceObject, false);
+	}
+	public static SoundSource play(SoundBuffer sb, Positionable sourceObject, boolean doLoop) {
+        SoundSource src = new SoundSource(sb, sourceObject, doLoop);
+        src.play();
+        
+        sourceList.add(src);
+        
+        return src;
+	}
+
 	
 	
 	public static AL al() {return al;}
-
-	public static vec3 getListenerPosition() {return new vec3(listenerX,listenerY,listenerZ);}
-	public static vec3 getListenerVelocity() {return new vec3(0,0,0);}
-	
 	
 	public static class Loader {
 		public static void loadInto(SoundBuffer s) {
@@ -394,6 +384,7 @@ public class Sound {
 	        	buffStream.close();
 	        	inputStream.close();
 			} catch (Exception e) {
+				ErrorPopup.open("Error opening file \""+fileName+"\".", false);
 			    throw new ALException(e);
 			}
 	        	        
@@ -458,11 +449,23 @@ public class Sound {
 		return musicList;
 	}
 	public static boolean isPlaying(String name) {
+		return getSourceNumber(name) > 0;
+	}	
+	public static boolean isPlaying(SoundBuffer sb) {
+		return isPlaying(sb.getName());
+	}
+
+	public static int getSourceNumber(String name) {
+		int sourceNumber = 0;
 		for(SoundSource src : sourceList)
 			if(src.getParentBuffer().getName() == name)
-				return true;
-		return false;
+				sourceNumber++;
+		return sourceNumber;
+	}	
+	public static int getSourceNumber(SoundBuffer sb) {
+		return getSourceNumber(sb.getName());
 	}
+
 	
 	public static int getBufferNumber() {
 		return bufferList.size();
@@ -474,6 +477,7 @@ public class Sound {
 		curMusic.fadeTo(frac);
 	}
 
-	public static void lockMusic() {musicLock = true;}
-	public static void unlockMusic() {musicLock = false;}
+	public static Positionable getListenerObject() {
+		return listenerObject;
+	}
 }

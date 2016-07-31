@@ -7,7 +7,7 @@ import time.Stopwatch;
 import ds.lst.CleanList;
 import gfx.GL;
 
-public abstract class Updatable extends Printable {
+public abstract class Updatable {
 	private static CleanList<Updatable> instanceList = new CleanList<Updatable>("Inst");
 	private static CleanList<Updatable> updateList = new CleanList<Updatable>("Upd");
 	protected boolean doUpdates;
@@ -48,7 +48,7 @@ public abstract class Updatable extends Printable {
 		
 	//Global Functions
 		public static void transition() {
-			GL.start("Updatable.transition()");
+			//GL.start("Updatable.transition()");
 			
 			Drawable.printList();
 			
@@ -61,10 +61,10 @@ public abstract class Updatable extends Printable {
 			
 			Drawable.printList();
 
-			GL.end("Updatable.transition()");
+			//GL.end("Updatable.transition()");
 		}
 		public static void updateAll() {
-			GL.start("Updatable.updateAll()");
+			//GL.start("Updatable.updateAll()");
 			
 			Stopwatch s = new Stopwatch();
 						
@@ -86,7 +86,7 @@ public abstract class Updatable extends Printable {
 						
 			Sound.clean();
 
-			GL.end("Updatable.updateAll()");
+			//GL.end("Updatable.updateAll()");
 		}
 
 		public static int getNumber() {
@@ -96,10 +96,10 @@ public abstract class Updatable extends Printable {
 		protected void disableUpdates() {
 			updateList.remove(this);
 		}
-		protected void setDoUpdates(boolean should) {
-			doUpdates = should;
-		}
 
+		protected void setDoUpdates(boolean should) 	{doUpdates = should;}
+		protected boolean getDoUpdates(boolean should) 	{return doUpdates;}
+		
 		public static void unload() {
 			for(Updatable u : instanceList)
 				u.destroy();

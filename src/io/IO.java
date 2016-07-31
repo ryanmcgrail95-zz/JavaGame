@@ -5,7 +5,8 @@ public final class IO {
 		C_DOWN = 0,
 		C_RIGHT = 1,
 		C_LEFT = 2,
-		C_UP = 3;
+		C_UP = 3,
+		A = 4;
 
 	private IO() {
 	}
@@ -28,6 +29,19 @@ public final class IO {
 			case C_LEFT:	return Keyboard.checkPressed('j');
 			case C_RIGHT:	return Keyboard.checkPressed('l');
 			case C_UP:		return Keyboard.checkPressed('i');
+			case A:			return Keyboard.checkPressed('u');
+		
+			default: return false;
+		}
+	}
+	
+	public static boolean eatPressed(byte button) {
+		switch(button) {
+			case C_DOWN:	return Keyboard.eatPressed('k');
+			case C_LEFT:	return Keyboard.eatPressed('j');
+			case C_RIGHT:	return Keyboard.eatPressed('l');
+			case C_UP:		return Keyboard.eatPressed('i');
+			case A:			return Keyboard.eatPressed('u');
 		
 			default: return false;
 		}

@@ -6,6 +6,7 @@ import gfx.GL;
 import gfx.TextureExt;
 import image.filter.BGEraserFilter;
 import image.filter.GrayscaleAlphaFilter;
+import resource.image.Img;
 import time.Stopwatch;
 
 import java.awt.Graphics;
@@ -30,17 +31,12 @@ import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
 import ds.lst.CleanList;
 
 
-public class TextureController {
-	public final static byte M_NORMAL = 0, M_BGALPHA = 1, M_MASK = 2;
+public class TextureController implements Img {
 	private static CleanList<Texture> texList = new CleanList<Texture>("Tex");
 	private static CleanList<TextureExt> texExtList = new CleanList<TextureExt>("TexExt");
 	private static Map<String, TextureExt> texMap = new HashMap<String, TextureExt>();
 	private static float time = 0;
-	
-	private static BGEraserFilter bgEraser = new BGEraserFilter();
-	private static GrayscaleAlphaFilter gaFilter = new GrayscaleAlphaFilter();
-	
-	private Stopwatch s = new Stopwatch(), k = new Stopwatch();
+		
 
 	/*public static start(Stopwatch s, String e) {
 		System.out.println(e);
@@ -56,25 +52,16 @@ public class TextureController {
 		return time;
 	}
 	
-	public static TextureExt loadExt(String fileName, byte method) {
-	    TextureExt texExt;
 
-	    try {
-		    if(fileName.endsWith(".gif"))
-		    	texExt = loadMulti(fileName, method);
-		    else
-		    	texExt = loadSingle(fileName, method);
-		    	        	
-	        return texExt;
-	    } catch(IOException e) {
-	    	ErrorPopup.open("Failed to load texture: " + fileName + ".", true);
-	    }
-	    
-	    return null;
+	public static TextureExt loadExt(String fileName) { 
+	    return loadExt(fileName, AlphaType.NORMAL);
+	}
+	public static TextureExt loadExt(String fileName, AlphaType method) { 
+	    return new TextureExt(fileName, method);
 	}
 	
 	
-	public static TextureExt load(String fileName, String name, byte method) {
+	public static TextureExt load(String fileName, String name, AlphaType method) {
 	    TextureExt texExt = loadExt(fileName, method);
 
 	    texMap.put(name, texExt);
@@ -83,115 +70,36 @@ public class TextureController {
 	}
 	
 	
-	private static TextureExt loadSingle(String fileName, byte method) throws IOException {
-
-		//Load Image
-		BufferedImage img = ImageLoader.load(fileName);
-		img = addAlpha(img);
-		
-		if(method == M_BGALPHA)
-			bgEraser.filter(img,img);
-		
-		TextureExt texExt = new TextureExt(img, fileName);
-		img.flush();
-		
-        return texExt;
-	}
-	
-	private static TextureExt loadMulti(String fileName, byte method) throws IOException {
-		List<BufferedImage> frames;
-		
-		InputStream str;
-		if((str = FileExt.get(fileName)) == null)
-			return null;
-		
-		frames = getFrames(str);
-		str.close();
-		BufferedImage img;
-		
-		if(method == M_BGALPHA) {
-			for(int i = 0; i < frames.size(); i++) {
-				img = addAlpha(frames.get(i));
-				bgEraser.filter(img,img);
-				frames.set(i,img);
-			}
-		}
-		else if(method == M_MASK) {
-			for(BufferedImage i : frames)
-				gaFilter.filter(i,i);
-		}
-		
-		TextureExt outTex = new TextureExt(frames, fileName);
-		
-		for(BufferedImage i : frames)
-			i.flush();
-		frames.clear();
-		
-		return outTex;
-	}
-	
-	
-	
-	public static ArrayList<BufferedImage> getFrames(InputStream gif) throws IOException {
-	    ArrayList<BufferedImage> frames = new ArrayList<BufferedImage>();
-	    ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
-	    ImageInputStream imgStr = ImageIO.createImageInputStream(gif);
-	    
-	    ir.setInput(imgStr);
-	    
-		//s.start();
-	    for(int i = 0; i < ir.getNumImages(true); i++)
-	        frames.add(ir.read(i));
-	    //s.stop(true);
-	    
-	    ir.dispose();
-	    imgStr.close();
-	    
-	    return frames;
-	}
-	
-	
-	public static BufferedImage addAlpha(BufferedImage bi) {
-	     int w = bi.getWidth();
-	     int h = bi.getHeight();
-	     int type = BufferedImage.TYPE_INT_ARGB;
-	     BufferedImage bia = new BufferedImage(w,h,type);
-	     Graphics g = bia.createGraphics();
-	     g.drawImage(bi, 0, 0, null);
-	     g.dispose();
-	     return bia;
-	}
-	
 	public static TextureExt getTextureExt(String name) {return texMap.get(name);}
 	public static Texture getTexture(String name) 		{return texMap.get(name).getTexture();}
 
 	public static void ini() {
-		load("Resources/Images/Shadows/shadow.png", "texShadow", TextureController.M_NORMAL);
+		load("Resources/Images/Shadows/shadow.png", "texShadow", TextureController.AlphaType.NORMAL);
 	
-		load("Resources/Images/wall.png", "texBricks", TextureController.M_NORMAL);
-        load("Resources/Images/Shadows/blockShadow.png", "texBlockShadow", M_NORMAL);
+		load("Resources/Images/wall.png", "texBricks", TextureController.AlphaType.NORMAL);
+        load("Resources/Images/Shadows/blockShadow.png", "texBlockShadow", AlphaType.NORMAL);
 
-        load("Resources/Images/fireMask.png", "fireMask", M_MASK);
-        load("Resources/Images/fireAni.png", "fireAni", M_MASK);
+        load("Resources/Images/fireMask.png", "fireMask", AlphaType.GRAYSCALE_MASK);
+        load("Resources/Images/fireAni.png", "fireAni", AlphaType.GRAYSCALE_MASK);
         
-        load("Resources/Images/Items/coin.gif", "texCoin", M_BGALPHA);
+        load("Resources/Images/Items/coin.gif", "texCoin", AlphaType.BG_ALPHA);
         
-        load("Resources/Images/bg.png", "texPicross", M_NORMAL);
-        load("Resources/Images/loop.png", "loop", M_NORMAL);
+        load("Resources/Images/bg.png", "texPicross", AlphaType.NORMAL);
+        load("Resources/Images/loop.png", "loop", AlphaType.NORMAL);
         
-        load("Resources/Images/Battle/dodgeStar.png", "texDodgeStar", M_BGALPHA);
+        load("Resources/Images/Battle/dodgeStar.png", "texDodgeStar", AlphaType.BG_ALPHA);
         
         //Load Particles
-        load("Resources/Images/Particles/dust.gif", "texDust", M_BGALPHA);
+        load("Resources/Images/Particles/dust.gif", "texDust", AlphaType.BG_ALPHA);
         
-        load("Resources/Images/gameboy.png", "texGameboy", M_NORMAL);
-        load("Resources/Images/iphone.png", "iphone", M_NORMAL);
+        load("Resources/Images/gameboy.png", "texGameboy", AlphaType.NORMAL);
+        load("Resources/Images/iphone.png", "iphone", AlphaType.NORMAL);
 
         //BattleStar Images
-        load("Resources/Images/Battle/star.png", "texDamageStar", M_BGALPHA);
+        load("Resources/Images/Battle/star.png", "texDamageStar", AlphaType.BG_ALPHA);
         //load("Resources/Images/Battle/damageStar1.gif", "texDamageStar1", M_BGALPHA);
         
-        load("Resources/Images/Backgrounds/mountains.png", "bacMountains", M_NORMAL);
+        load("Resources/Images/Backgrounds/mountains.png", "bacMountains", AlphaType.NORMAL);
 	}
 
 	public static int getNumber() {

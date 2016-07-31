@@ -7,7 +7,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import cont.ImageLoader;
+
+import cont.ImgIO;
+import cont.Log;
+import cont.TextureController;
 import ds.StringExt;
 import fl.FileExt;
 import gfx.GL;
@@ -39,7 +42,7 @@ public final class OBJLoader {
 		StringExt lineExt = new StringExt(), fileText = new StringExt(FileExt.readFile2String(fileName));
 					
 		
-		start(k, "Loading Materials: ");
+		//start(k, "Loading Materials: ");
 		
 		while(!fileText.isEmpty()) {
 			lineExt.set(line = fileText.munchLine());
@@ -60,13 +63,12 @@ public final class OBJLoader {
 			else if(type.equals("map_Kd")) {
 				String n = curDirectory + lineExt.munchLine();
 				
-				start(s, "Loading n: " + n);
+				//start(s, "Loading map_Kd: " + n);
 				try {
-					BufferedImage i = ImageLoader.load(n);
-					curMaterial.setTexture(GL.createTexture(i, false));
+					curMaterial.setTexture(TextureController.loadExt(n,ImgIO.AlphaType.NORMAL));
 				} catch(Exception e) {}
 				
-				stop(s);
+				//stop(s);
 			}
 		}
 		
@@ -102,7 +104,7 @@ public final class OBJLoader {
 		int[] face;
 
 		
-		j.start();
+		//j.start();
 
 		float munchTime = 0, mtlTime = 0, faceTime = 0, vertTime = 0;
 		
@@ -196,20 +198,20 @@ public final class OBJLoader {
 		}
 		
 		
-		start(s, "Creating: ");
+		//start(s, "Creating: ");
 		mod.create(Model.TRIANGLES, pointList, normalList, uvList, colorList, vertexList);
 		mod.attachMaterials(matsArray);
-		stop(s);
+		//stop(s);
 
+		//Log.println(Log.ID.RESOURCE, tr"Loading \"" + fileName + "\" ");
 		mats.clear();
 
-		System.out.println();
-		System.out.println(munchTime);
-		System.out.println(mtlTime);
-		System.out.println(vertTime);
-		System.out.println(faceTime);
-		System.out.println();
-		j.stop(true);
-		System.out.println();
+		/*System.out.println("munchTime: " + munchTime);
+		System.out.println("mtlTime: " + mtlTime);
+		System.out.println("vertTime: " + vertTime);
+		System.out.println("faceTime: " + faceTime);
+		System.out.println();*/
+		//j.stop(true);
+		//System.out.println();
 	}
 }

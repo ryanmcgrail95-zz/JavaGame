@@ -17,10 +17,7 @@ limitations under the License.
 package image.filter;
 
 import gfx.RGBA;
-
 import java.awt.*;
-import java.awt.image.*;
-
 import com.jhlabs.image.WholeImageFilter;
 
 /**
@@ -37,7 +34,7 @@ public class BGEraserFilter extends WholeImageFilter {
 		int[] outPixels = new int[width * height];
 
 		bg = RGBA.convertInt2RGBA(inPixels[0]);
-		
+				
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				RGBA.convertInt2RGBA(inPixels[index], col);

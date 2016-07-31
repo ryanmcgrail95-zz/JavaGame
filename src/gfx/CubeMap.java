@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import cont.TextureController;
+import resource.image.Img;
 
 public class CubeMap {
 	private TextureExt left, right, top, bottom, back, front;
@@ -31,8 +32,8 @@ public class CubeMap {
 	
 	public static void ini() {
 		TextureExt gb1, gb1s;
-		gb1 = TextureController.loadExt("Resources/Images/Blocks/gb1E.bmp", TextureController.M_NORMAL);
-        gb1s =  TextureController.loadExt("Resources/Images/Blocks/gb1S.bmp", TextureController.M_NORMAL);
+		gb1 = TextureController.loadExt("Resources/Images/Blocks/gb1E.bmp");
+        gb1s =  TextureController.loadExt("Resources/Images/Blocks/gb1S.bmp");
         
 		
 		new CubeMap("cmGroundBlock1", gb1s, gb1s, gb1s, gb1, gb1s, gb1s);

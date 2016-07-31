@@ -8,6 +8,7 @@ import ds.vec2;
 import fl.FileExt;
 import functions.Math2D;
 import functions.MathExt;
+import object.primitive.Positionable;
 import resource.Resource;
 
 import java.io.*;
@@ -50,7 +51,8 @@ public class SoundBuffer extends Resource {
 	private static AL al() {return Sound.al();}
 
 
-	public void destroy() {
+	public void unload() {
+		super.unload();
 		al().alDeleteBuffers(1, buffer, 0);
 	}
 
@@ -145,12 +147,24 @@ public class SoundBuffer extends Resource {
 		return 1f*getPacketNum()/frequency[0];
 	}
 	
+	public boolean isPlaying() {
+		return Sound.isPlaying(this);
+	}
+	public int getSourceNumber() {
+		return Sound.getSourceNumber(this);
+	}
+	
 	public void setAlbumName(String albumName) {this.albumName = albumName;}
 	public String getAlbumName() {return albumName;}
 
 
 	@Override
-	public void load(String fileName) {
+	public void load(String fileName, int... args) {
 		Sound.Loader.loadInto(this);
 	}
+		
+	public SoundSource play() {return Sound.play(this);}
+	public SoundSource play(boolean doLoop) {return Sound.play(this, doLoop);}
+	public SoundSource play(Positionable sourceObject) {return Sound.play(this, sourceObject);}
+	public SoundSource play(Positionable sourceObject, boolean doLoop) {return Sound.play(this, sourceObject, doLoop);}
 }

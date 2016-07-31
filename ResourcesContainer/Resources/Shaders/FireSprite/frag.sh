@@ -20,7 +20,7 @@ void main() {
 	float x = gl_TexCoord[0].x;
 	float y = gl_TexCoord[0].y;
 	
-	float aY = (y*64 - iGlobalTime/360*50*64)/64;
+	float aY = (y*64 - iGlobalTime/360*2*50*64)/64;
 	
 	vec3 colorInnerFire = vec3(1., .3,.1),
 		colorOuterFire = vec3(1.,1.,.2);

@@ -5,172 +5,181 @@ import obj.env.blk.GroundBlock;
 import object.primitive.Positionable;
 import paper.Boundary;
 import paper.EnemyPM;
+import paper.NPCPM;
 import paper.PlayerPM;
 import paper.SpinningEyes;
 import paper.Switch;
 import resource.model.Model;
 import resource.sound.Sound;
 import btl.BattleController;
-import functions.FastMath;
+import btl.BattleEnvironment;
+import ds.nameid.ID;
+import functions.Math2D;
 import functions.MathExt;
+import gfx.GL;
 import gfx.ModelRenderer;
+import gfx.OKPopup;
 
 public class MiscAction extends Action {
-	private final static int M_PRINTLN = 0, M_RETURN = 1, M_MIN = 2, M_ADD = 3, M_SUB = 4, M_MULT = 5, M_DIV = 6, M_POW = 7, M_MAX = 8, M_SET = 9, M_SINR = 10, M_SIND = 11, M_COSR = 12, M_COSD = 13, M_MEAN = 14, M_TASK_MOVE = 15, M_CREATE = 16, M_ACCESSVAR = 17, M_IF = 18, M_COMPARE = 19, M_CREATEBOUNDARY = 20, M_PLAYMUSIC = 21;
-	private int miscType;
-	
-	public MiscAction(String name, boolean hasOutput, int type) {
-		super(name, null, hasOutput);
-		miscType = type;
+	public MiscAction(PMLMemory mem, String name, int regNum, int[] argIndList, ConstantRegister[] constList, boolean hasOutput) {
+		super(mem, name, regNum, argIndList, constList, hasOutput);
 	}
 
-	public static void ini() {
-		new MiscAction("println", false, M_PRINTLN);
-		new MiscAction("min", true, M_MIN);
-		new MiscAction("max", true, M_MAX);
+	public static void ini(PMLMemory mem) {
+		int[]	arg1 = {0},
+				arg2 = {0, 1},
+				arg4 = {0, 1, 2, 3};
 		
-		new MiscAction("taskMove", false, M_TASK_MOVE);
+		new MiscAction(mem, "println", 1, arg1, null, false);
+		
+		new MiscAction(mem, "popupOK", 1, arg1, null, false);
 
-		new MiscAction("playMusic", false, M_PLAYMUSIC);
+		new MiscAction(mem, "_get", 1, arg1, null, true);
 
-		new MiscAction("add", true, M_ADD);
-		new MiscAction("sub", true, M_SUB);
-		new MiscAction("mult", true, M_MULT);
-		new MiscAction("div", true, M_DIV);
-		new MiscAction("pow", true, M_POW);
-		
-		new MiscAction("set", true, M_SET);
-		
-		new MiscAction("return", true, M_RETURN);
-		
-		new MiscAction("sinr", true, M_SINR);
-		new MiscAction("sind", true, M_SIND);
-		new MiscAction("cosr", true, M_COSR);
-		new MiscAction("cosd", true, M_COSD);
-		
-		new MiscAction("create", true, M_CREATE);
-		
-		new MiscAction("accessVar", true, M_ACCESSVAR);
-		
-		new MiscAction("if", true, M_IF);
+		new MiscAction(mem, "_if", 1, arg1, null, true);
+		new MiscAction(mem, "_move", 1, arg1, null, true);
 
-		new MiscAction("createBoundary", true, M_CREATEBOUNDARY);
-	}
-	
-	public boolean isReturn() {return miscType == M_RETURN;}
-	public boolean isTaskMove() {return miscType == M_TASK_MOVE;}
-	
-	public static Task createAddTask(Variable dst, Variable a, Variable b) {
-		return new Task(getAction("add"), new Variable[] {a, b}, dst);
-	}
-	public static Task createSubtractTask(Variable dst, Variable a, Variable b) {
-		return new Task(getAction("sub"), new Variable[] {a, b}, dst);
-	}
-	public static Task createMultiplyTask(Variable dst, Variable a, Variable b) {
-		return new Task(getAction("mult"), new Variable[] {a, b}, dst);
-	}
-	public static Task createDivideTask(Variable dst, Variable a, Variable b) {
-		return new Task(getAction("div"), new Variable[] {a, b}, dst);
-	}
-	public static Task createExponentTask(Variable dst, Variable a, Variable b) {
-		return new Task(getAction("pow"), new Variable[] {a, b}, dst);
-	}
-	public static Task createSetTask(Variable dst, Variable a) {
-		return new Task(getAction("set"), new Variable[] {a}, dst);
+		new MiscAction(mem, "_<", 2, arg2, null, true);
+		new MiscAction(mem, "_<=", 2, arg2, null, true);
+		new MiscAction(mem, "_>", 2, arg2, null, true);
+		new MiscAction(mem, "_>=", 2, arg2, null, true);
+		new MiscAction(mem, "_==", 2, arg2, null, true);
+		new MiscAction(mem, "_!=", 2, arg2, null, true);
+
+		new MiscAction(mem, "_+", 2, arg2, null, true);
+		new MiscAction(mem, "_-", 2, arg2, null, true);
+		new MiscAction(mem, "_*", 2, arg2, null, true);
+		new MiscAction(mem, "_/", 2, arg2, null, true);
+		new MiscAction(mem, "_^", 2, arg2, null, true);
+		new MiscAction(mem, "_%", 2, arg2, null, true);
+		new MiscAction(mem, "_&&", 2, arg2, null, true);
+		new MiscAction(mem, "_||", 2, arg2, null, true);
+		new MiscAction(mem, "_!", 1,	arg1, null, true);
+		
+		new MiscAction(mem, "_return", 1, arg1, null, true);
+		
+		new MiscAction(mem, "sinr", 1, arg1, null, true);
+		new MiscAction(mem, "sind", 1, arg1, null, true);
+		new MiscAction(mem, "cosr", 1, arg1, null, true);
+		new MiscAction(mem, "cosd", 1, arg1, null, true);
+		new MiscAction(mem, "tanr", 1, arg1, null, true);
+		new MiscAction(mem, "tand", 1, arg1, null, true);
+		
+		new MiscAction(mem, "asinr", 1, arg1, null, true);
+		new MiscAction(mem, "asind", 1, arg1, null, true);
+		new MiscAction(mem, "acosr", 1, arg1, null, true);
+		new MiscAction(mem, "acosd", 1, arg1, null, true);
+		new MiscAction(mem, "atanr", 1, arg1, null, true);
+		new MiscAction(mem, "atand", 1, arg1, null, true);
+
+		new MiscAction(mem, "fact", 1, arg1, null, true);
+
+		new MiscAction(mem, "nPr", 2, arg2, null, true);
+		new MiscAction(mem, "nCr", 2, arg2, null, true);
+
+		new MiscAction(mem, "sqrt", 1, arg1, null, true);
+		
+		new MiscAction(mem, "ln", 1, arg1, null, true);
+
+		new MiscAction(mem, "mean", 1, arg1, null, true);
+		new MiscAction(mem, "max", 1, arg1, null, true);
+		new MiscAction(mem, "min", 1, arg1, null, true);
+		
+		new MiscAction(mem, "ptDis", 4, arg4, null, true);
+		new MiscAction(mem, "ptDir", 4, arg4, null, true);
+
+		new MiscAction(mem, "createBoundary", 1, arg1, null, true);
+		new MiscAction(mem, "playMusic", 1, arg1, null, true);
+		new MiscAction(mem, "_create", 1, arg1, null, true);
+		new MiscAction(mem, "_accessVar", 1, arg1, null, true);		
 	}
 
-	public static Task createTaskMoveTask(Variable a) {
-		return new Task(getAction("taskMove"), new Variable[] {a}, null);
-	}
-	public static Task createIfTask(Variable dst, Variable a) {
-		return new Task(getAction("if"), new Variable[] {a}, dst);
-	}
-	
-	public static Task createCreateTask(Variable dst, Variable type) {
-		return new Task(getAction("create"), new Variable[] {type}, dst);
-	}
-	
-	public static Task createAccessVarTask(Variable dst, Variable owner, Variable name) {
-		return new Task(getAction("accessVar"), new Variable[] {owner,name}, dst);
-	}
-	
-	public static Task createCompareTask(Variable dst, Variable a, Variable b, Variable type) {
-		return new Task(getAction("compare"), new Variable[] {a,b,type}, dst);
-	}
 	
 	
 	@Override
-	public Variable run(Variable output, Variable[] parameters) {
+	public void call(Register output, Register[] parameters, PMLMemory stack) {
+		int len = parameters.length;
+		
 		double a, b;
-		switch(miscType) {
-			case M_PRINTLN:		for(Variable v : parameters)
-									System.out.print(v + " ");
+		switch(name) {
+			case "popupOK":		OKPopup.open(parameters[0].toPureString());
+								return;
+		
+			case "println":		if(len > 0)
+									for(Register r : parameters)
+										System.out.print(r.toPureString() + " ");
 								System.out.println();
-								return null;
+								return;
 
-			case M_MEAN:		if(parameters.length < 1)
-									throw new UnsupportedOperationException("The function mean() requires at least one argument.");
-								a = 0;
+
+			case "sqrt":		output.set(Math.sqrt(parameters[0].getNumber()));							return;
+
+			case "rnd":			output.set(MathExt.rndf());
+								return;
+								
+			case "mean":		a = 0;
 								b = parameters.length;
-								for(Variable v : parameters)
+								for(Register v : parameters)
 									a += v.getNumber();
-								return output.set(a/b);
+								output.set(a/b);
+								return;
 								
-			case M_MIN:			if(parameters.length < 1)
-									throw new UnsupportedOperationException("The function min() requires at least one argument.");
-								a = Double.MAX_VALUE;
-								for(Variable v : parameters)
+			case "min":			a = Double.MAX_VALUE;
+								for(Register v : parameters)
 									a = ((b=v.getNumber()) < a) ? b : a;
-								return output.set(a);
+								output.set(a);
+								return;
 								
-			case M_MAX:			if(parameters.length < 1)
-									throw new UnsupportedOperationException("The function max() requires at least one argument.");
-								a = Double.MIN_VALUE;
-								for(Variable v : parameters)
+			case "max":			a = Double.MIN_VALUE;
+								for(Register v : parameters)
 									a = ((b=v.getNumber()) > a) ? b : a;
-								return output.set(a);
+								output.set(a);
+								return;
 								
-			case M_ADD:			return output.set(parameters[0].getNumber() + parameters[1].getNumber());
-			case M_SUB:			return output.set(parameters[0].getNumber() - parameters[1].getNumber());
-			case M_MULT:		return output.set(parameters[0].getNumber() * parameters[1].getNumber());
-			case M_DIV:			return output.set(parameters[0].getNumber() / parameters[1].getNumber());
-			case M_POW:			return output.set(Math.pow(parameters[0].getNumber(),parameters[1].getNumber()));
-
-			case M_SET:			if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function set() requires one argument.");
-								return output.set(parameters[0]);
-								
-			case M_SINR:		if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function sinr() requires one argument.");
-								return output.set(FastMath.sin(parameters[0].getNumber()));
-			case M_SIND:		if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function sind() requires one argument.");
-								return output.set(FastMath.sind(parameters[0].getNumber()));
-			case M_COSR:		if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function cosr() requires one argument.");
-								return output.set(FastMath.cos(parameters[0].getNumber()));
-			case M_COSD:		if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function cosd() requires one argument.");
-								return output.set(FastMath.cosd(parameters[0].getNumber()));
 			
-			case M_RETURN:		if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function return() requires one argument.");
-								return parameters[0];
-								
-			case M_TASK_MOVE:	if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function taskMove() requires one argument.");
-								return parameters[0];
-								
-			case M_IF:			if(parameters.length != 1)
-									throw new UnsupportedOperationException("The function if() requires one argument.");
-								return output.set(parameters[0].getBoolean() ? 1 : 0);
-								
-			case M_ACCESSVAR:	if(parameters.length != 2)
-									throw new UnsupportedOperationException("The function accessVar() requires two arguments.");
-								Variable v = output.point(((Positionable) parameters[0].getObject()).getVar(parameters[1].getString()));
-								return v;
+			case "_>":		output.set(parameters[0].getNumber() > parameters[1].getNumber());				return;
+			case "_>=":		output.set(parameters[0].getNumber() >= parameters[1].getNumber());				return;
+			case "_<":		output.set(parameters[0].getNumber() < parameters[1].getNumber());				return;
+			case "_<=":		output.set(parameters[0].getNumber() <= parameters[1].getNumber());				return;
+			case "_==":		output.set(parameters[0].getNumber() == parameters[1].getNumber());				return;
+			case "_!=":		output.set(parameters[0].getNumber() != parameters[1].getNumber());				return;
 
-			case M_CREATE:		if(parameters.length < 1)
+			case "_||":		output.set(parameters[0].getBoolean() || parameters[1].getBoolean());			return;
+			case "_&&":		output.set(parameters[0].getBoolean() && parameters[1].getBoolean());			return;
+			case "_!":		output.set( !parameters[0].getBoolean() );										return;
+
+			
+			case "_+":		output.set(parameters[0]); 	output.adde(parameters[1]);							return;
+			case "_-":		output.set(parameters[0].getNumber() - parameters[1].getNumber());				return;
+			case "_*":		output.set(parameters[0].getNumber() * parameters[1].getNumber());				return;
+			case "_/":		output.set(parameters[0].getNumber() / parameters[1].getNumber());				return;
+			case "_^":		output.set(Math.pow(parameters[0].getNumber(),parameters[1].getNumber()));		return;
+			case "_%":		output.set( parameters[0].getNumber() % parameters[1].getNumber() );			return;
+											
+			case "sinr":	output.set(Math2D.sinr(parameters[0].getNumber()));							return;
+			case "sind":	output.set(Math2D.sind(parameters[0].getNumber()));							return;
+			case "cosr":	output.set(Math2D.cosr(parameters[0].getNumber()));							return;
+			case "cosd":	output.set(Math2D.cosd(parameters[0].getNumber()));							return;
+			case "tanr":	output.set(Math.tan(parameters[0].getNumber()));								return;
+			case "tand":	output.set(Math.tan(parameters[0].getNumber()/180*3.14159265));					return;
+			
+			case "ln":		output.set( Math.log(parameters[0].getNumber()) );	return;
+			
+			case "_if":		output.set(parameters[0].getBoolean() == true ? 1 : 0);	return;
+
+			case "_return":
+			case "_get":
+			case "_move":	output.set(parameters[0]);	return;
+
+			
+			
+			case "_accessVar":	if(parameters.length != 2)
+									throw new UnsupportedOperationException("The function accessVar() requires two arguments.");
+								Register v = output.point(((Positionable) parameters[0].getObject()).getVar(parameters[1].getString()));
+								//output.set(v);
+								return;
+
+			case "_create":		if(parameters.length < 1)
 									throw new UnsupportedOperationException("The function create() requires at least one argument.");
 								
 								Object o;
@@ -182,8 +191,15 @@ public class MiscAction extends Action {
 										else
 											o = PlayerPM.create((float) parameters[1].getNumber(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber());
 										break;
+									
 									case "Enemy":
 										o = new EnemyPM(parameters[1].getString(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber(), (float) parameters[4].getNumber());
+										break;
+
+									case "NPC":
+										o = new NPCPM(parameters[1].getString(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber(), (float) parameters[4].getNumber());
+										break;
+										
 									case "SpinningEyes":	o = new SpinningEyes(0,0,0); 	break;
 									case "Switch":			o = new Switch(0,0,0); 			break;
 									case "GroundBlock":		o = new GroundBlock(0,0,0); 	break;
@@ -193,19 +209,21 @@ public class MiscAction extends Action {
 										else
 											o = new AirBlock((float) parameters[1].getNumber(), (float) parameters[2].getNumber(), (float) parameters[3].getNumber(), parameters[4].getBoolean());
 										break;
-									case "ModelRenderer":	o = new ModelRenderer(parameters[1].getString());	break;
+									case "BattleEnvironment":	o = new BattleEnvironment(parameters[1].getString());	break;
+									case "ModelRenderer":		o = new ModelRenderer(parameters[1].getString());	break;
 									case "BattleController":	o = new BattleController();	break;
 									default:	throw new UnsupportedOperationException("The function create() was passed an invalid object, " + parameters[0] + ".");
 								}
 			
-								return output.set(o);
+								output.set(o);
+								return;
 
-			case M_CREATEBOUNDARY:
+			case "createBoundary":
 								if(parameters.length % 2 != 0)
 									throw new UnsupportedOperationException("The function createBoundary() requires sets of coordinates (x,y)--the last set is incomplete.");
 								if(parameters.length < 4)
 									throw new UnsupportedOperationException("The function createBoundary() requires more than 1 coordinate.");
-								int len, numPts;
+								int numPts;
 								len = parameters.length;
 								numPts = parameters.length/2;
 								float[][] pts = new float[numPts][2];
@@ -215,50 +233,30 @@ public class MiscAction extends Action {
 									pts[k][1] = (float) parameters[i+1].getNumber();
 								}
 								
-								return output.set(new Boundary(pts));
-
-			case M_PLAYMUSIC:
+								output.set(new Boundary(pts));
+								return;
+								
+			case "playMusic":
 								int le = parameters.length;
 								if(le < 1 || le > 5)
 									throw new UnsupportedOperationException("The function playMusic() requires one, two, or three arguments.");
 				
 								switch(le) {
-									case 1: Sound.playMusic(parameters[0].getString()); 
+									/*case 1: Sound.playMusic(parameters[0].getString()); 
 										break;
 									case 2: Sound.playMusic(parameters[0].getString(), parameters[1].getString());	
 										break;
 									case 3: Sound.playMusic(parameters[0].getString(), parameters[1].getString(), (float) parameters[2].getNumber());
 										break;
-									case 5: Sound.playMusic(parameters[0].getString(), parameters[1].getString(), (float) parameters[2].getNumber(), parameters[3].getBoolean(), parameters[4].getBoolean());
+									case 4: Sound.playMusic(parameters[0].getString(), (float) parameters[1].getNumber(), parameters[2].getBoolean(), parameters[3].getBoolean());
 										break;
+									case 5: Sound.playMusic(parameters[0].getString(), parameters[1].getString(), (float) parameters[2].getNumber(), parameters[3].getBoolean(), parameters[4].getBoolean());
+										break;*/
 								}
-								return null;
-								
-			case M_COMPARE:		if(parameters.length != 3)
-									throw new UnsupportedOperationException("The function compare() requires one argument.");
-								
-								a = output.getNumber();
-								b = output.getNumber();
-								
-								boolean out = false;
-			
-								switch((int) parameters[2].getNumber()) {
-									case I_EQUAL:			out = a == b; break;
-									case I_NOT_EQUAL:		out = a != b; break;
-									case I_LESS:			out = a < b; break;
-									case I_LESS_EQUAL:		out = a <= b; break;
-									case I_GREATER:			out = a > b; break;
-									case I_GREATER_EQUAL:	out = a >= b; break;
-								}
-			
-								return output.set(out);
+								return;
 								
 			default:
 				throw new RuntimeException("The misc. action " + getName() + " was not defined.");
 		}
-	}
-
-	public boolean isTaskIf() {
-		return miscType == M_IF;
 	}
 }

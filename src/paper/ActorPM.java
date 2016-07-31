@@ -7,7 +7,6 @@ import collision.C3D;
 import ds.vec2;
 import ds.lst.CleanList;
 import dialog.Dialog;
-import functions.FastMath;
 import functions.Math2D;
 import functions.Math3D;
 import functions.MathExt;
@@ -22,10 +21,22 @@ import object.primitive.Updatable;
 import resource.model.Model;
 import resource.model.ModelCreator;
 import resource.sound.Sound;
+import sun.misc.Queue;
 import time.Delta;
+import time.Timer;
 
 public abstract class ActorPM extends Physical implements AnimationsPM {	
-	private BodyPM myBody;
+	protected BodyPM myBody;
+	
+	public static enum MOVEMENT{
+		STILL,
+		PACING,
+		WANDERING,
+		PLAYER,
+		ENEMY
+	};
+	protected MOVEMENT movementType = null;
+	
 	private byte state;
 	private final static byte
 		ST_NULL = 0, 
@@ -45,12 +56,17 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	private float swX, swY, swZ, swPerc = 0;
 	private String swChar;
 	
-	protected static float 	SP_WALK = 1,
-							SPEED_RUN = 3;
+	protected float SP_WALK = 1,
+					SP_RUN = 3,
+					SP_SPIN = 5;
+		
+	private boolean isMoving, didJump = false;
 	
-	protected float SP_RUN = SPEED_RUN;
-	
-	private boolean isMoving, isSpinning, didJump = false;
+	// SPIN VARIABLES
+	private boolean
+		isSpinning;
+	private Timer
+		spinTimer = new Timer(0,60);
 	
 
 	public void setCanMoveAll(boolean canMove) {
@@ -80,8 +96,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		canSee = true;
 	
 	
-	private List<Instant> instantList = new LinkedList<Instant>();
-	private final static int INSTANT_NUMBER = 10;
+	private Queue<Instant> instantList = new Queue<Instant>();
 	
 	private class Instant {
 		public float x,y,z, direction;
@@ -151,7 +166,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		size = 8;
 		this.name = name;
 
-		myBody = new BodyPM(name);
+		myBody = new BodyPM(this, name);
 			myBody.setAutoIndex(false);
 			myBody.enableSteps();
 		setAnimationStill();
@@ -164,57 +179,76 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		mod = creator.endModel();
 		mod.addReference();
 		
-		for(int i = 0; i < INSTANT_NUMBER; i++)
-			addInstant();
+		myBounds.addCylinder(0,0,0, 1.2f*size/2, myBody.getHeight()-4);
 		
 		actorList.add(this);
 	}
 	
+	@Override	
 	public void update() {
-		start("ActorPM.update()");
 		super.update();
 		
 		if(isDestroyed())
 			return;
 		
-		start("ActorPM.update()-control");
+		//start("ActorPM.update()-control");
 		if(canControl) {
-			if(followActor == null)
-				control();
-			else
+			if(followActor != null)
 				follow();
+			else {
+				switch(movementType) {
+					case STILL:
+					break;
+					
+					case PACING:
+					break;
+
+					case WANDERING:
+					break;
+
+					case PLAYER:
+					case ENEMY:
+						control();
+					break;
+					
+					default:
+						throw new NullPointerException("Undefined movement type for " + this + ".");
+				}
+				// control
+				updateSpin();
+			}
 		}
-		end("ActorPM.update()-control");
 		addInstant();
 		
-		start("ActorPM.update()-animation");
+		//start("ActorPM.update()-animation");
 		modelUpdate();
 		updateState();
 		myBody.animateModel();
-		end("ActorPM.update()-animation");
+		//end("ActorPM.update()-animation");
 		
-		start("ActorPM.update()-collision");
+		//start("ActorPM.update()-collision");
 		collideSplit();		
-		end("ActorPM.update()-collision");
+		//end("ActorPM.update()-collision");
 
-		end("ActorPM.update()");
+		//end("ActorPM.update()");
 	}
 	
 	public float getHeight() {
 		return myBody.getHeight();
 	}
 	
+	@Override
 	public void destroy() {
 		if(isDestroyed())
 			return;
 		
-		start("ActorPM["+ name + "]().destroy()");
+		//start("ActorPM["+ name + "]().destroy()");
 		super.destroy();
 
 		myBody.destroy();
 		mod.removeReference();
 		
-		instantList.clear();
+		//instantList.dequeue(3);
 		
 		actorList.remove(this);
 		
@@ -223,7 +257,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		instantList = null;
 		followActor = null;
 
-		end("ActorPM["+ name + "]().destroy()");
+		//end("ActorPM["+ name + "]().destroy()");
 	}
 
 	
@@ -250,10 +284,8 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	
 	@Override
 	public void draw() {
-		if(myBody != null) {
-			GL.setPerspective();
+		if(myBody != null)
 			myBody.draw();
-		}
 	}
 
 	@Override
@@ -267,11 +299,17 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	@Override
 	public void land() {
 		setZVelocity(0);
+		
+		
 	}
 
 	
 	protected void turn(float turnAmt) {
 		setDirection(getDirection() + turnAmt);
+	}
+
+	protected void face(ActorPM other) {
+		setDirection(calcDir(other));
 	}
 
 
@@ -480,7 +518,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 					oXN = triangleNormal[0];
 					oYN = triangleNormal[1];
 					
-					if(Math.abs(FastMath.calcAngleDiff(Math2D.calcPtDir(0,0,oXN,oYN), dir)) < 90) {
+					if(Math.abs(Math2D.calcAngleDiff(Math2D.calcPtDir(0,0,oXN,oYN), dir)) < 90) {
 						oXN *= -1;
 						oYN *= -1;
 					}
@@ -560,12 +598,44 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 			didJump = inAir = true;
 			setZVelocity(JUMP_SPEED);
 			addZ(getZVelocity());
-			Sound.play("jump");
+			Sound.play("jump", this);
+			
+			stopSpin();
 		}
 	}
 	
-	protected void startSpin() {
-		
+	protected void spin() {
+		if(!isSpinning)
+			if(!this.inAir) {
+				isSpinning = true;
+				spinTimer.reset();	
+				
+				myBody.setAnimationSpin();	
+				myBody.enableDoBlur(true);
+				
+				Sound.play("spin");
+			}
+	}
+	
+	protected void stopSpin() {
+		isSpinning = false;
+		myBody.enableDoBlur(false);
+	}
+	
+	public boolean isSpinning() {
+		return isSpinning;
+	}
+	
+	private void updateSpin() {
+		if(isSpinning) {
+			float frac = spinTimer.getFraction();
+			this.setXYSpeed((frac < .7) ? SP_SPIN : 0);
+			
+			if(spinTimer.checkOnce()) {
+				stopSpin();
+				myBody.setAnimationStill();
+			}
+		}
 	}
 	
 	private void setAnimation(Byte animation) {
@@ -580,7 +650,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		/*if(isPlayer())
 			if(isSpinning && spinTimer % 5 == 0)
 				d3d_instance_create(x+lengthdir_x(5,direction+180),y+lengthdir_y(5,direction+180),z,objSmoke);*/
-		start("ActorPM.modelUpdate()");
+		//start("ActorPM.modelUpdate()");
 
 		float addAmt = 0;
 		
@@ -614,7 +684,7 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 			stepZ += -stepZ/1.5;
 			imageIndex = 0;
 		}*/
-		end("ActorPM.modelUpdate()");
+		//end("ActorPM.modelUpdate()");
 	}
 
 	public void stop() {
@@ -628,14 +698,18 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	}
 	
 	protected abstract void control();
+	
 	private void follow() {
 		Instant i = followActor.getInstant();
-		move(true, i.x,i.y, followActor.size/2, false);
-		if(i.didJump)
-			jump();
 		
-		if(calcDis3D(followActor) > 120)
-			setPos(followActor);
+		if(i != null) {
+			move(true, i.x,i.y, followActor.size/2, false);
+			if(i.didJump)
+				jump();
+			
+			if(calcDis3D(followActor) > 120)
+				setPos(followActor);
+		}
 	}
 	
 	protected final void hammer() {
@@ -659,13 +733,13 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 	}
 
 	private void addInstant() {
-		while(instantList.size() >= INSTANT_NUMBER)
+		/*while(instantList.size() >= INSTANT_NUMBER)
 			instantList.remove(0);
 		instantList.add(new Instant(getX(),getY(),getZ(),getDirection(),didJump));
-		didJump = false;
+		didJump = false;*/
 	}
 	public Instant getInstant() {
-		return instantList.get(0);
+		return null; //return instantList.get(0);
 	}
 
 	public void setCharacter(String name) {myBody.setCharacter(name);}
