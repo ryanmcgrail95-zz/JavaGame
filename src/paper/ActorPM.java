@@ -15,6 +15,7 @@ import gfx.GL;
 import gfx.GT;
 import gfx.RGBA;
 import obj.env.blk.GroundBlock;
+import object.actor.Player;
 import object.primitive.Physical;
 import object.primitive.Positionable;
 import object.primitive.Updatable;
@@ -475,13 +476,14 @@ public abstract class ActorPM extends Physical implements AnimationsPM {
 		float[][][] myMod = mod.getTriangles();
 		
 		float height =  myBody.getHeight(),
-			buffer = height/2, safety = height/4,
+			buffer = height/2, 
+			safety = height/4,
 			floorDis = C3D.raycastSplit(getX(),getY(),getZ()+buffer,0,0,-1, size/2);
-				
+		
 		if(floorDis != -1) {
 			float newFloorZ = z()+buffer-floorDis;
 			
-			if(floorDis <= buffer + 1) {
+			if(floorDis <= buffer + safety) {
 				floorDis -= buffer;
 				didCollideFloor(newFloorZ);
 			}

@@ -434,7 +434,10 @@ public final class C3D extends ArrayMath {
 			return between(rect[0], pt, rect[1]);
 		}
 		public static boolean intersectLineBlock(float lx1, float ly1, float lz1, float lx2, float ly2, float lz2, float rx1, float ry1, float rz1, float rx2, float ry2, float rz2) {
-			return (lx1 <= rx2 && lx2 >= rx1) && (ly1 <= ry2 && ly2 >= ry1) && (lz1 <= rz2 && lz2 >= rz1);
+			return 	(Math.min(lx1,lx2) <= Math.max(rx1,rx2) && Math.max(lx1,lx2) >= Math.min(rx1,rx2)) &&
+					(Math.min(ly1,ly2) <= Math.max(ry1,ry2) && Math.max(ly1,ly2) >= Math.min(ry1,ry2)) &&
+					(Math.min(lz1,lz2) <= Math.max(rz1,rz2) && Math.max(lz1,lz2) >= Math.min(rz1,rz2));
+			//return (lx1 <= rx2 && lx2 >= rx1) && (ly1 <= ry2 && ly2 >= ry1) && (lz1 <= rz2 && lz2 >= rz1);
 		}
 		
 		public static boolean intersectTriangleBlock(float tx1,float ty1,float tz1, float tx2,float ty2,float tz2, float tx3,float ty3,float tz3, float rx1, float ry1, float rz1, float rx2, float ry2, float rz2) {

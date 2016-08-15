@@ -134,10 +134,15 @@ public class Model extends Resource {
 			gl.glNormalPointer( GL2.GL_FLOAT, TOT_SIZE, NORM_OFFSET);
 			//gl.glColorPointer(4, GL2.GL_FLOAT, TOT_SIZE, COL_OFFSET);
 			
-			int colorAttrib = gl.glGetAttribLocation(GL.getShaderProgram(), "iColor");
-			gl.glVertexAttribPointer(colorAttrib, 4, GL2.GL_FLOAT,false, TOT_SIZE, COL_OFFSET);
-			gl.glEnableVertexAttribArray(colorAttrib);
-		
+			int colorAttrib = -1;
+			
+			GL.passShaderFloat("hasColor", hasColor ? 1 : 0);
+			if(hasColor) {
+				colorAttrib = gl.glGetAttribLocation(GL.getShaderProgram(), "iColor");
+				gl.glVertexAttribPointer(colorAttrib, 4, GL2.GL_FLOAT,false, TOT_SIZE, COL_OFFSET);
+				gl.glEnableVertexAttribArray(colorAttrib);
+			}
+			
 			// Draw the buffer
 			gl.glPolygonMode( GL2.GL_FRONT, GL2.GL_FILL );
 			gl.glDrawArrays(modelType, 0, subVertexNum);
@@ -151,7 +156,9 @@ public class Model extends Resource {
 			gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 			gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
 			//gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
-			gl.glDisableVertexAttribArray(colorAttrib);
+			
+			if(hasColor)
+				gl.glDisableVertexAttribArray(colorAttrib);
 
 		
 			if(mat != null)
@@ -451,14 +458,17 @@ public class Model extends Resource {
         // create vertex buffer data store without initial copy
         for(int i = 0; i < numBuffers; i++) {
         	gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, bufferInd[i]);
-        	gl.glBufferData(GL2.GL_ARRAY_BUFFER, bufferSizes[i]*TOT_SIZE, null, GL2.GL_DYNAMIC_DRAW );
+        	gl.glBufferData(GL2.GL_ARRAY_BUFFER, bufferSizes[i]*TOT_SIZE, null, GL2.GL_DYNAMIC_DRAW );        	
         }
         
 	    // map the buffer and write vertex and color data directly into it
         curBuff = 0;
+
+        ByteBuffer bytebuffer = null;
         
-	    gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[curBuff] );
-	    ByteBuffer bytebuffer = gl.glMapBuffer( GL2.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
+        // TODO: Remove materials with zero vertices!
+        gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[curBuff] );
+		bytebuffer = gl.glMapBuffer( GL2.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
 	    
 	    int[] lastPositions = new int[numBuffers];
 	    for(int i : lastPositions)
@@ -476,9 +486,9 @@ public class Model extends Resource {
 	    	    //System.out.println(curBuff + ": " + bytebuffer.position() + " / " + bytebuffer.capacity());
 
 	    		curBuff = v[1];
-	    		bytebuffer.position(0);
 	    		
-	    	    gl.glUnmapBuffer(GL2.GL_ARRAY_BUFFER);
+    			bytebuffer.position(0);
+    			gl.glUnmapBuffer(GL2.GL_ARRAY_BUFFER);
 	    	    gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, bufferInd[curBuff]);
 	    	    bytebuffer = gl.glMapBuffer( GL2.GL_ARRAY_BUFFER, GL2.GL_WRITE_ONLY );
 	    	    	    	    
@@ -571,9 +581,6 @@ public class Model extends Resource {
 	public void load(String fileName, int... args) {
 		if(getTemporary())
 			return;
-		
-		
-
 		
 		if(fileName != "") {
 			// Necessary for Fixing Model

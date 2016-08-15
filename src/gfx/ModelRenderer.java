@@ -16,7 +16,12 @@ public class ModelRenderer extends Drawable {
 		
 		name = "ModelRenderer: " + modelName;
 		
-		C3D.splitModel(mod, 10,10,48);
+		//C3D.splitModel(mod, 10,10,48);
+
+		C3D.splitModel(mod, 10,10,32);
+
+		// 1,1 works PERFECTLY??
+		//C3D.splitModel(mod, 1,1,64);
 	}
 	
 	public void destroy() {
@@ -60,6 +65,9 @@ public class ModelRenderer extends Drawable {
 			mod.drawFast();
 			GL.disableShaders();
 		GT.transformClear();
+				
+		G3D.draw3DFloor(0,0,20,20,0);
+		
 		//end("ModelRenderer.draw()");
 	}
 

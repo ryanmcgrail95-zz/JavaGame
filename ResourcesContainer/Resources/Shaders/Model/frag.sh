@@ -1,5 +1,5 @@
 uniform vec2 iResolution;
-uniform float iGlobalTime;
+uniform float iGlobalTime, hasColor;
 uniform sampler2D tex0, tex1;
 
 varying vec4 vColor;
@@ -21,7 +21,7 @@ void main() {
 	vec3 lightNorm = normalize(vec3(0,-1,-1));
 	
 	vec4 col = texture2D(tex0, 1. - vec2(abs(1 - mod(gl_TexCoord[0].s,2.0)), abs(1 - mod(gl_TexCoord[0].t,2.0)) ));
-	vec4 mixed = mix(col, vColor);
+	vec4 mixed = (1.-hasColor) * col + hasColor * mix(col, vColor);
 	
 	gl_FragColor = vec4((dot(lightNorm,vNormal)*.5 + .5) * mixed.rgb, mixed.a);
 }

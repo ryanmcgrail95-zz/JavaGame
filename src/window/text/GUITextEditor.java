@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 
 import cont.GameController;
-import ds.ChompException;
 import ds.StringExt;
 import fl.FileExt;
 import functions.Math2D;
@@ -30,6 +29,8 @@ import io.Keyboard;
 import io.Mouse;
 import resource.font.MergedFont;
 import script.Script;
+import script.exception.ChompException;
+import script.exception.ParseException;
 import window.EditorWindow;
 import window.GUIDrawable;
 import window.GUIEditor;
@@ -240,16 +241,21 @@ public class GUITextEditor extends GUIDrawable implements GUIEditor {
 		StringExt str = new StringExt(s);
 		String[] lineArray = str.split('\n');
 
+		if(lineArray.length > 1)
+			splitLine(lineNumber, index);
+
 		for (int i = 0, l = lineArray.length; i < l; i++) {
-			if (i == 0) {
-
+			if (i == 0)
+				line.insert(index, lineArray[i]);
+			else if(i == l-1) {
+				lines.get(lineNumber+i).insert(0, lineArray[i]);
 			}
+			else
+				lines.add(lineNumber+i, new StringExt(lineArray[i]));
 		}
-
-		line.insert(index, s);
-		index += s.length();
 	}
-
+	
+	
 	public void appendChar(char c) {
 		StringExt line = lines.get(lineNumber);
 		int len = line.length();
@@ -607,7 +613,7 @@ public class GUITextEditor extends GUIDrawable implements GUIEditor {
 			Script.exec(GL.memory, toString());
 			currentError = "";
 			currentErrorExpected = "";
-		} catch (ChompException e) {
+		} catch (ParseException e) {
 			currentError = e.getError();
 			currentErrorExpected = e.getExpected();
 			

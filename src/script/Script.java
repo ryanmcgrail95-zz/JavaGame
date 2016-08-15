@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Stack;
 
 import cont.Log;
-import ds.ChompException;
 import ds.StringExt;
 import ds.nameid.ID;
 import ds.nameid.NameIDMap;
+import script.exception.ParseException;
+import script.exception.UnknownConstantException;
 
 public class Script extends Action {
 	private Task[] taskList;
@@ -87,7 +88,7 @@ public class Script extends Action {
 		taskList = null;
 	}
 
-	public static Register exec(PMLMemory mem, String code) throws ChompException {
+	public static Register exec(PMLMemory mem, String code) throws ParseException {
 		Log.println(Log.ID.PML, true, "exec()");
 
 		NameIDMap<RegisterBlueprint> varMap = new NameIDMap<RegisterBlueprint>();
@@ -160,7 +161,7 @@ public class Script extends Action {
 	 */
 
 	public static Script compile(PMLMemory mem, String name, String code, NameIDMap<RegisterBlueprint> regIDMap,
-			ID<RegisterBlueprint>[] argList) throws ChompException {
+			ID<RegisterBlueprint>[] argList) throws ParseException {
 		Log.println(Log.ID.PML, true, "compile()");
 
 		StringExt str = new StringExt(code);
@@ -203,11 +204,11 @@ public class Script extends Action {
 				return c() == StringExt.NULL_CHAR;
 			}
 
-			Script parse() throws ChompException {
+			Script parse() throws ParseException {
 				ID<RegisterBlueprint> v = parseStatements(), r;
 
 				if (c() != StringExt.NULL_CHAR)
-					throw new ChompException(str, "Unexpected: " + c(), str.getPosition());
+					throw new ParseException(str, "Unexpected: " + c(), str.getPosition());
 
 				Log.println(Log.ID.PML, true, "Finalizing script...");
 
@@ -260,7 +261,7 @@ public class Script extends Action {
 				return false;
 			}
 
-			ID<RegisterBlueprint> parseStatements() throws ChompException {
+			ID<RegisterBlueprint> parseStatements() throws ParseException {
 				Log.println(Log.ID.PML, true, "parseStatements()");
 
 				ID<RegisterBlueprint> v = parseStatement();
@@ -275,7 +276,7 @@ public class Script extends Action {
 
 					if (c() == '}')
 						break;
-					else if ((str.didEat(';') || didEatComment()) && !done()) {
+					else if ((str.didEatNonWS(';', '}') || didEatComment()) && !done()) {
 						str.munchSpace();
 						v = parseStatement();
 					} else
@@ -289,7 +290,7 @@ public class Script extends Action {
 				return v;
 			}
 
-			ID<RegisterBlueprint> parseStatement() throws ChompException {
+			ID<RegisterBlueprint> parseStatement() throws ParseException {
 
 				if(parseComment())
 					return null;
@@ -429,7 +430,7 @@ public class Script extends Action {
 				return s;
 			};
 
-			void parseScript(String subName) throws ChompException {
+			void parseScript(String subName) throws ParseException {
 				String substr = "";
 
 				str.munchSpace();
@@ -492,7 +493,7 @@ public class Script extends Action {
 				return i.get().get().isTempBuffer();
 			}
 
-			void parseParameters(List<ID<RegisterBlueprint>> parameters) throws ChompException {
+			void parseParameters(List<ID<RegisterBlueprint>> parameters) throws ParseException {
 				Log.println(Log.ID.PML, true, "parseParameters()");
 
 				ID<RegisterBlueprint> v = parseExpression();
@@ -516,7 +517,7 @@ public class Script extends Action {
 				}
 			}
 
-			ID<RegisterBlueprint> parseExpression() throws ChompException {
+			ID<RegisterBlueprint> parseExpression() throws ParseException {
 				Log.println(Log.ID.PML, true, "parseExpression()");
 
 				ID<RegisterBlueprint> v = parseTerm(), pv, dst;
@@ -583,7 +584,7 @@ public class Script extends Action {
 				return v;
 			}
 
-			ID<RegisterBlueprint> parseTerm() throws ChompException {
+			ID<RegisterBlueprint> parseTerm() throws ParseException {
 				ID<RegisterBlueprint> v = parseFactor(), dst, pv;
 
 				boolean didEq, eq = false;
@@ -636,7 +637,7 @@ public class Script extends Action {
 				}
 			}
 
-			ID<RegisterBlueprint> parseFactor() throws ChompException {
+			ID<RegisterBlueprint> parseFactor() throws ParseException {
 				Log.println(Log.ID.PML, true, "parseFactor()");
 
 				ID<RegisterBlueprint> v, dst;
@@ -682,7 +683,7 @@ public class Script extends Action {
 
 						if (type == P_STRING) {
 							if(str.indexOf("\"") == -1)
-								throw new ChompException(str, "\"", str.getOriginal().length());
+								throw new ParseException(str, "\"", str.getOriginal().length());
 							s = str.munchTo('"');
 						}
 						else {
@@ -801,7 +802,7 @@ public class Script extends Action {
 				return false;
 			}
 
-			ID<RegisterBlueprint> parseValue(final String sb, byte type) throws ChompException {
+			ID<RegisterBlueprint> parseValue(final String sb, byte type) throws ParseException {
 				Log.println(Log.ID.PML, true, "parseValue(" + sb + ")");
 
 				ID<RegisterBlueprint> out;
@@ -881,7 +882,7 @@ public class Script extends Action {
 						double d = Double.parseDouble(sb);
 						out = addConstant(d);
 					} catch (NumberFormatException e) {
-						throw new ChompException(str, "double", str.getPosition());
+						throw new ParseException(str, "double", str.getPosition());
 					}
 				} else if (type == P_NEW_ACTION) {
 					parseScript(sb);
@@ -889,7 +890,7 @@ public class Script extends Action {
 					out = null;
 				} else if (type == P_ACTION) {
 					List<ID<RegisterBlueprint>> parameters = new ArrayList<ID<RegisterBlueprint>>();
-
+					
 					str.chomp('(');
 					parseParameters(parameters);
 					str.chomp(')');
@@ -924,7 +925,7 @@ public class Script extends Action {
 						out = addConstant(Math.E);
 						break;
 					default:
-						out = null;
+						throw new UnknownConstantException(str,"_",str.getPosition() - sb.length());
 					}
 				} else
 					out = null;

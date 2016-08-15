@@ -47,6 +47,7 @@ public class FileExt {
 			is.close();
 			
 		} catch(Exception e) {
+			System.err.println("Failure loading: " + fileName);
 			e.printStackTrace();
 		}
 		

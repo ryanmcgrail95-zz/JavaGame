@@ -182,12 +182,12 @@ public final class OBJLoader {
 					
 					if(hasColor) {
 						for(int k = 0; k < 3; k++)
-							face[k] = Integer.parseInt(indices[k])-1;
+							face[k] = Integer.parseInt(indices[k].trim())-1;
 						face[3] = face[0];
 					}
 					else
 						for(int k = 0; k < 3; k++)
-							face[k] = Integer.parseInt(indices[k])-1;
+							face[k] = Integer.parseInt(indices[k].trim())-1;
 					
 					vertexList.add(face);
 				}

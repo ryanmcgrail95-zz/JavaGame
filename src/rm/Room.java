@@ -6,7 +6,6 @@ import java.util.Map;
 
 import cont.GameController;
 import cont.Log;
-import ds.ChompException;
 import ds.StringExt2;
 import fl.FileExt;
 import gfx.GL;
@@ -16,6 +15,8 @@ import resource.Loadbar;
 import resource.Resource;
 import resource.model.Model;
 import script.Script;
+import script.exception.ChompException;
+import script.exception.ParseException;
 
 public class Room {
 	private final static String BASE_DIRECTORY = "Resources/Rooms/";
@@ -127,7 +128,7 @@ public class Room {
 		try {
 			Script.exec(GL.memory, FileExt.readFile2String(path));
 		}
-		catch(ChompException e) {
+		catch(ParseException e) {
 			e.printStackTrace();
 			GameController.end();
 		}

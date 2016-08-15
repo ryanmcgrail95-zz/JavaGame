@@ -77,6 +77,10 @@ public class GL {
 	private static boolean canLight = true;
 	private static int shaderProgram;
 	
+	public static float 
+		UNIT_PER_METER = 20,
+		METER_PER_UNIT = 1/UNIT_PER_METER;
+	
 	private static boolean 
 		enableTextures = true;	
 	private static float[]
@@ -1719,7 +1723,8 @@ public class GL {
         //new ModelRenderer(m);
         //Room.changeRoom("Battle");
         
-        Room.changeRoom("Toad Town Center");
+        //Room.changeRoom("Toad Town Center");
+		Room.changeRoom("Test");
 	}
 	public static void iniPMRoom() {
         Sound.iniLoad();

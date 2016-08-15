@@ -5,6 +5,8 @@ import java.util.List;
 
 import ds.lst.RandomList;
 import functions.MathExt;
+import io.Keyboard;
+import script.exception.ChompException;
 
 public class StringExt {
 	protected String str = "";
@@ -456,6 +458,25 @@ public class StringExt {
 				if(c == o)
 					return true;
 			return false;
-		}		
+		}
+	}
+
+	public boolean didEatNonWS(char... options) {
+		if(pos == 0)
+			return false;
+		else {
+			int p = 0;
+			char c = Keyboard.C_NULL;
+			while(--p >= -pos) {
+				c = charAt(p);
+				if(!Character.isWhitespace(c))
+					break;
+			}
+			
+			for(char o : options)
+				if(c == o)
+					return true;
+			return false;
+		}
 	}
 }

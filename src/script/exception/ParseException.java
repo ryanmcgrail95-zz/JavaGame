@@ -1,11 +1,13 @@
-package ds;	
+package script.exception;
 
-public class ChompException extends Throwable {
-	private StringExt str;
-	private String expected;
-	private int index;
+import ds.StringExt;
+
+public class ParseException extends Throwable {
+	protected StringExt str;
+	protected String expected;
+	protected int index;
 	
-	public ChompException(StringExt str, String expected, int index) {
+	public ParseException(StringExt str, String expected, int index) {
 		this.str = str;
 		this.expected = expected;
 		this.index = index;
@@ -36,6 +38,6 @@ public class ChompException extends Throwable {
 
 	public String getError() {
 		// TODO Auto-generated method stub
-		return "Expected " + expected + " at index " + index + ".";
+		return "Error at index " + index + ".";
 	}
 }

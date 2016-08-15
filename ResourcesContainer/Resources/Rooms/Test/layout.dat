@@ -1,0 +1,51 @@
+// Objects
+
+//#playMusic("pleasantIntro", "pleasantLoop", .1, TRUE, FALSE);
+//#playMusic("bgm3", .1, TRUE, FALSE);
+
+#popupOK("TEST");
+
+&ModelRenderer("test");
+
+&Player(0,0,117);
+
+//&Enemy("mario", -200,103,117);
+&NPC("geno", -200,103,117) {
+	$text = "This is pretty damn cool.\nhe\nhe\nhe\n";
+};
+
+&Enemy("mario", -300,103,117);
+
+&SpinningEyes {
+	$x = -285;
+	$y = 103;
+	$z = 117;
+};
+
+#createBoundary(
+	-467,-47,
+	-369,-47,
+	-369,-99,
+	-363,-150,
+	-333,-162,
+	-330,-194,
+	-287,-218,
+	-204,-250
+);
+
+&AirBlock(-240,97,117);
+&AirBlock(-220,97,117, FALSE);
+
+//&Switch {
+//	$x = -240;
+//	$y = 97;
+//	$z = 117;
+//}
+
+//&GroundBlock {
+//	$x = -240;
+//	$y = 97;
+//	$z = 117;
+//}
+
+//Floor ( -128 -128 128 128 0 )

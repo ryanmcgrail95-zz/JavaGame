@@ -30,21 +30,12 @@ public class MiscAction extends Action {
 				arg2 = {0, 1},
 				arg4 = {0, 1, 2, 3};
 		
+		new MiscAction(mem, "print", 1, arg1, null, false);
 		new MiscAction(mem, "println", 1, arg1, null, false);
 		
 		new MiscAction(mem, "popupOK", 1, arg1, null, false);
 
 		new MiscAction(mem, "_get", 1, arg1, null, true);
-
-		new MiscAction(mem, "_if", 1, arg1, null, true);
-		new MiscAction(mem, "_move", 1, arg1, null, true);
-
-		new MiscAction(mem, "_<", 2, arg2, null, true);
-		new MiscAction(mem, "_<=", 2, arg2, null, true);
-		new MiscAction(mem, "_>", 2, arg2, null, true);
-		new MiscAction(mem, "_>=", 2, arg2, null, true);
-		new MiscAction(mem, "_==", 2, arg2, null, true);
-		new MiscAction(mem, "_!=", 2, arg2, null, true);
 
 		new MiscAction(mem, "_+", 2, arg2, null, true);
 		new MiscAction(mem, "_-", 2, arg2, null, true);
@@ -52,12 +43,21 @@ public class MiscAction extends Action {
 		new MiscAction(mem, "_/", 2, arg2, null, true);
 		new MiscAction(mem, "_^", 2, arg2, null, true);
 		new MiscAction(mem, "_%", 2, arg2, null, true);
+		
+		new MiscAction(mem, "_move", 1, arg1, null, true);
+		new MiscAction(mem, "_return", 1, arg1, null, true);
+		new MiscAction(mem, "_if", 1, arg1, null, true);
+
+		new MiscAction(mem, "_<=", 2, arg2, null, true);
+		new MiscAction(mem, "_>=", 2, arg2, null, true);
+		new MiscAction(mem, "_<", 2, arg2, null, true);
+		new MiscAction(mem, "_>", 2, arg2, null, true);
+		new MiscAction(mem, "_==", 2, arg2, null, true);
 		new MiscAction(mem, "_&&", 2, arg2, null, true);
 		new MiscAction(mem, "_||", 2, arg2, null, true);
 		new MiscAction(mem, "_!", 1,	arg1, null, true);
-		
-		new MiscAction(mem, "_return", 1, arg1, null, true);
-		
+		new MiscAction(mem, "_!=", 2, arg2, null, true);
+
 		new MiscAction(mem, "sinr", 1, arg1, null, true);
 		new MiscAction(mem, "sind", 1, arg1, null, true);
 		new MiscAction(mem, "cosr", 1, arg1, null, true);
@@ -99,12 +99,16 @@ public class MiscAction extends Action {
 	@Override
 	public void call(Register output, Register[] parameters, PMLMemory stack) {
 		int len = parameters.length;
-		
+				
 		double a, b;
 		switch(name) {
 			case "popupOK":		OKPopup.open(parameters[0].toPureString());
 								return;
 		
+			case "print":		if(len > 0)
+									for(Register r : parameters)
+										System.out.print(r.toPureString() + " ");
+								return;
 			case "println":		if(len > 0)
 									for(Register r : parameters)
 										System.out.print(r.toPureString() + " ");

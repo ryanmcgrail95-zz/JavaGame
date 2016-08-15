@@ -123,8 +123,13 @@ public class Register extends PML {
 	}*/
 	public Register adde(Register other) {
 		switch(type) {
-			case V_NUMBER: numValue += other.numValue;	break;
-			case V_STRING: strValue += other.get();		break;
+			case V_NUMBER: 	if(other.type == V_STRING)
+								set("" + get() + other.get());
+							else
+								numValue += other.numValue;	
+							break;
+			case V_STRING: strValue += other.get();	
+							break;
 		}
 		return this;
 	}
@@ -134,8 +139,8 @@ public class Register extends PML {
 	public Register adde(double other) {
 		switch(type) {
 			case V_NUMBER: numValue += other;		break;
+			case V_STRING: strValue += other;	break;
 		}
-		type = V_NUMBER;
 		return this;
 	}
 	
