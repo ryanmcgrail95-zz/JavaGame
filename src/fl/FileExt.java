@@ -5,6 +5,7 @@ import gfx.ErrorPopup;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
@@ -35,6 +36,29 @@ public class FileExt {
 		
 		try {
 			InputStream is = get(fileName);
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader reader = new BufferedReader(isr);
+			
+			while((line = reader.readLine()) != null)
+				sb.append(line+"\n");
+			
+			reader.close();
+			isr.close();
+			is.close();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return sb.toString();
+	}
+	
+	public static String readFile2String(File file) {		
+		String line;
+		StringBuilder sb = new StringBuilder();
+		
+		try {
+			InputStream is = new FileInputStream(file);
 			InputStreamReader isr = new InputStreamReader(is);
 			BufferedReader reader = new BufferedReader(isr);
 			

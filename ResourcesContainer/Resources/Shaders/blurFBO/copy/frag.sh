@@ -14,8 +14,7 @@ void main() {
 	//ivec2 tSi = textureSize(tex0);
 
 
-	vec4 cw = texture2D(tex0, uv);
-	vec3 c = cw.rgb;
+	vec3 c = texture2D(tex0, uv).rgb;
 	
 	//declare stuff
 	const int mSize = 11;
@@ -26,34 +25,31 @@ void main() {
 	//create the 1-D kernel
 	float sigma = 7.0;
 	float Z = 0.0;
-	for (int j = 0; j <= kSize; ++j) {
+	for (int j = 0; j <= kSize; ++j)
+	{
 		kernel[kSize+j] = kernel[kSize-j] = normpdf(float(j), sigma);
 	}
 	
 	//get the normalization factor (as the gaussian has been clamped)
-	for (int j = 0; j < mSize; ++j) {
+	for (int j = 0; j < mSize; ++j)
+	{
 		Z += kernel[j];
 	}
-	
-	float dep = texture2D(tex1, uv).r;
-	float blurScale = abs(focalPoint-dep) * focalScale;
+		
+	float blurScale = abs(focalPoint-texture2D(tex1, uv).r) * focalScale;
 		
 	//read out the texels
-	vec2 uvo;
-	vec3 o;
-	float depo, tot = 0;
-	for (int i=-kSize; i <= kSize; ++i) {
+	for (int i=-kSize; i <= kSize; ++i)
+	{
 		for (int j=-kSize; j <= kSize; ++j) {
-			uvo = (uv*iResolution + blurScale*vec2(float(i),float(j)))/iResolution;
-			o = texture2D(tex0, uvo).rgb;
-			
-			// TODO: Reduce blur spread between different depthed regions.
-			depo = 1. - pow(abs(texture2D(tex1, uvo).r - dep), 10);
-			tot += depo;
-			
-			final_colour += kernel[kSize+j]*kernel[kSize+i]*depo*o;
+		
+		
+			//final_colour += kernel[kSize+j]*kernel[kSize+i]*texture2D(tex0, (uv*tSi+vec2(float(i),float(j))) / tSi).rgb;
+			final_colour += kernel[kSize+j]*kernel[kSize+i]*texture2D(tex0, (uv*iResolution + blurScale*vec2(float(i),float(j)))/iResolution ).rgb;
+
 		}
 	}
-		
-	gl_FragColor = vec4(final_colour/(Z*Z), cw.a);
+	
+	
+	gl_FragColor = vec4(final_colour/(Z*Z), 1.0);
 }

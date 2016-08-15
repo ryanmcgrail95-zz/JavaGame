@@ -27,6 +27,9 @@ public class StringExt {
 	
 	private int pos = 0;
 	
+	public String getOriginal() {
+		return str;
+	}
 	
 	// CONSTRUCTORS
 	
@@ -63,6 +66,7 @@ public class StringExt {
 		this.str = str;
 		pos = 0;
 		rLen = str.length();
+		temp.set(str);
 	}
 	public String get() 		{return toString();}
 	
@@ -91,13 +95,12 @@ public class StringExt {
 	// CHOMPING FUNCTIONS
 	// These functions will "chomp" (remove and return) a certain amount of data. These are very helpful
 	// for iterating through files.
-	public void chomp(char c) {chomp(""+c);}
-	public void chomp(String substr) {		
+	public void chomp(char c) throws ChompException {chomp(""+c);}
+	public void chomp(String substr) throws ChompException {		
 		if(!nibble(substr))
-        	throw new RuntimeException("Expected: " + substr);	
+        	throw new ChompException(this, substr, pos);
 	}
-	
-	
+		
 	public char munchChar() {
 		if(isEmpty())
 			return ' ';
@@ -125,10 +128,10 @@ public class StringExt {
 	public float munchFloat() 	{return Float.parseFloat(munchNumber());}
 	public double munchDouble()	{return Double.parseDouble(munchNumber());}
 	
-	public int indexOf(String... substrs) {
+	public int indexOf(String... substrs) {		
 		int curInd, minInd = -1;
 		for(String substr : substrs)
-			if((curInd = str.indexOf(substr)) != -1)
+			if((curInd = str.indexOf(substr, pos)) != -1)
 				if(minInd == -1 || curInd < minInd)
 					minInd = curInd;
 		return minInd;
@@ -327,7 +330,7 @@ public class StringExt {
 				
 		while(!isEmpty()) {
 			curStr = munchTo(true, splitter);
-			if(!curStr.equals(""))
+			//if(!curStr.equals(""))
 				spl.add(curStr);
 		}
 
@@ -414,5 +417,45 @@ public class StringExt {
 	public boolean equals(String other) {
 		return toString().equals(other);
 	}
+	
+	public void insert(int index, String s) {
+		temp.insert(index, s);
+		str = temp.toString();
+		rLen += s.length();
+	}
+	
+	public void backspaceAt(int index) {
+		if(index > 0) {
+			temp.backspaceAt(index);
+			str = temp.toString();
+			rLen--;
+		}
+	}
+	
+	public void deleteAt(int index) {
+		if(index < rLen) {
+			temp.deleteAt(index);
+			str = temp.toString();
+			rLen--;
+		}
+	}
+	
+	public String substring(int i1, int i2) {
+		return temp.substring(i1, i2);
+	}
+	public int getPosition() {
+		return pos;
+	}
 
+	public boolean didEat(char... options) {
+		if(pos == 0)
+			return false;
+		else {
+			char c = charAt(-1);
+			for(char o : options)
+				if(c == o)
+					return true;
+			return false;
+		}		
+	}
 }

@@ -1,17 +1,14 @@
 package window;
 
-import functions.Math2D;
+import ds.lst.CleanList;
 import functions.MathExt;
 import gfx.G2D;
 import gfx.GL;
+import gfx.MultiTexture;
 import gfx.RGBA;
+import gfx.Sprite;
 import io.Mouse;
-
-import java.util.List;
-
-import com.jogamp.opengl.util.awt.TextureRenderer;
-
-import ds.lst.CleanList;
+import window.text.GUITextEditor;
 
 public class Window extends GUIFrame {	
 	private static CleanList<Window> windowList = new CleanList<Window>("Window");
@@ -22,16 +19,19 @@ public class Window extends GUIFrame {
 		colorBorder = RGBA.createi(70,70,80),//RGBA.createi(80,73,55),
 		colorTitle = RGBA.createi(240,240,255);//RGBA.createi(255,152,31);
 	
-	private String name;
-	private boolean canDrag = false, isDragging;
+	protected MultiTexture buttons = new MultiTexture("Resources/Images/window.png", 8,8);
 	
+	private String name;
+	private boolean canDrag = false;
+	protected boolean isDragging;
+		
 	private int mouseX,mouseY;
 
 	public Window(String name, int x, int y, int w, int h, boolean canDrag) {
 		super(x, y, w, h);
 		this.name = name;
 		windowList.add(this);
-		
+				
 		this.canDrag = canDrag;
 	}
 	
@@ -40,17 +40,73 @@ public class Window extends GUIFrame {
 		windowList.remove(this);
 	}
 	
+	protected boolean drawButton(float x, float y, float w, float h, Sprite sprite, float frame) {
+		sprite.draw(x, y, w, h, frame);
+		if(Mouse.checkRectangle(x + 1,y + 1,w-2,h-2)) {
+			
+			G2D.setAlpha(.6f);
+			//G2D.fillRectangle(x,y,w,h);
+			GL.forceColor(RGBA.WHITE);
+			sprite.draw(x, y, w, h, frame);
+			GL.unforceColor();
+			G2D.setAlpha(1);
+			
+			Mouse.setFingerCursor();
+			if(Mouse.getLeftClick()) {
+				isDragging = false;
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public static void ini() {
-		new SnakeWindow(100,100);
+		GUITextEditor.createWindow(100,100);
+		
+		//GUIPaint.createWindow(100,100);
+		
+		//GUISnake.createWindow(100,100);
 		//GUIPicross.createWindow(100,100);
 		//GuiOverlay.createWindow(100,100);
 		//StoreGUI.open("POOP");
 	}
 	
+	public void drawBorder() {
+		float bX,bY,bS;
+		bS = 12;
+		bX = x()+SIDE_BORDER+w() - 2*bS;
+		bY = y()+TOP_BORDER/2-bS/2;
+		
+		// Minimize window.
+		if(drawButton(bX,bY, bS,bS, buttons, 8)) {
+		}
 
+		// Close window.
+		bX += bS;
+		if(drawButton(bX,bY, bS,bS, buttons, 0)) {
+			close();
+		}
+		
+		int h, iH, sB = 1;
+		h = (int) h();
+		iH = getInternalHeight();
+		
+		if(iH > h) {
+			int vY = getViewY();
+			float vFY = vY / (iH);
+			
+			float y1, y2;
+			y1 = h * vY / iH;
+			y2 = h * (vY + h) / iH;
+			
+			GL.setColor(RGBA.GRAY_LIGHT);
+			G2D.fillRectangle(x()+SIDE_BORDER+w()+sB,y()+TOP_BORDER+y1, SIDE_BORDER-2*sB,y2-y1);
+			G2D.drawOutline(x()+SIDE_BORDER+w()+sB,y()+TOP_BORDER+y1, SIDE_BORDER-2*sB,y2-y1, true);
+			GL.resetColor();
+		}
+	}
 	
-	public byte draw() {
+	public final byte draw() {
 		super.draw(x()+SIDE_BORDER,y()+TOP_BORDER);
 
 		GL.setColor(colorBorder);
@@ -76,21 +132,12 @@ public class Window extends GUIFrame {
 		
 		GL.setColor(RGBA.BLACK);
 		//G2D.drawRectangle(x(),y(), w()+2*SIDE_BORDER,h()+SIDE_BORDER+TOP_BORDER);
+		GL.resetColor();
+
+		drawBorder();
 		
-		float bX,bY,bS;
-		bS = 12;
-		bX = x()+SIDE_BORDER+w() - bS;
-		bY = y()+TOP_BORDER/2-bS/2;
-		GL.setColorf(1,0,0);
-		G2D.fillRectangle(bX,bY,bS,bS);
-		G2D.drawOutline(bX,bY,bS,bS, true);
-		if(Mouse.checkRectangle(bX,bY, bS,bS)) {
-			Mouse.setFingerCursor();
-			if(Mouse.getLeftClick()) {
-				close();
-				return W_CLOSE;
-			}
-		}
+		if(isDestroyed())
+			return 0;
 		
 		if(canDrag) {
 			if(Mouse.checkRectangle(x(),y(),w()+2*SIDE_BORDER,TOP_BORDER)) {
@@ -148,4 +195,8 @@ public class Window extends GUIFrame {
 	
 	public float getScreenX() {return x()+SIDE_BORDER;}
 	public float getScreenY() {return y()+TOP_BORDER;}
+
+	public void setTitle(String name) {
+		this.name = name;
+	}
 }

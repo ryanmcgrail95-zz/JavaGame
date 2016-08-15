@@ -242,13 +242,15 @@ public class FBO {
 	public int getDepthTexture() {return texDepth;}
 
 	
-	public int getTextureRGB(GL gl, int x, int y) {
-	    gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, fbo);
+	public int getTextureRGB(GL gl, int x, int y) {	
+		gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, fbo);
 		
 			y = height - y;
 			
 			ByteBuffer RGB = ByteBuffer.allocateDirect(3);
 			gl.glReadPixels(x,y, 1,1, GL2.GL_RGB , GL2.GL_UNSIGNED_BYTE, RGB);
+			
+			//gl.gl
 						
 			int r, g, b;
 			r = RGB.get(0);
@@ -311,6 +313,10 @@ public class FBO {
 	
 	public int getWidth() {return width;}
 	public int getHeight() {return height;}
+	
+	public int getFBOTarget() {
+		return fbo;
+	}
 	
 	public void save(String fileName) {
 		try {

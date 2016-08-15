@@ -17,8 +17,8 @@ public class MathExt {
 		return n;
 	}
 	
-	public static int rndi(int cap) 		{return Math.round(cap*rndf());}
-	public static int rndi(int mi, int ma) 	{return mi + rndi(ma-mi);}	
+	public static int rndi(int cap) 		{return (int) Math.floor(cap*rndf());}
+	public static int rndi(int mi, int ma) 	{return mi + rndi(1+ma-mi);}	
 	
 	
 	public static float sqr(float n) {return n*n;}

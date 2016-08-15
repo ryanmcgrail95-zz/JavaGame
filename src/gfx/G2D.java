@@ -20,6 +20,9 @@ public class G2D extends GL {
 	private static final float[]
 		BOUNDS_STD = {0,0, 1,1};
 	
+	private static int tabWidth = 4;
+
+	
 	//public static void enableStringShadow(boolean stringShadow) {
 	//	G2D.stringShadow = stringShadow;
 	//}
@@ -127,6 +130,11 @@ public class G2D extends GL {
 		}
 	}
 
+	
+	public static float drawChar(float x, float y, char c) {
+		return drawChar(x,y, 1,1, c);
+	}
+	
 	public static float drawChar(float x, float y, float xS, float yS, char c) {					
 		Texture cTex = null;
 		
@@ -184,17 +192,30 @@ public class G2D extends GL {
 		float fH = curFont.getHeight();		
 		float dX = x, dY = y;
 		
+		//TODO: Only write code once.
+		
+		int xAcross = 0;
+		
 		for(int i = 0; i < len; i++) {
 			c = str.charAt(i);
 
-			if(c == ' ')
+			if(c == ' ') {
 				dX += curFont.getWidth()*xS;
+				xAcross++;
+			}
+			else if(c == '\t') {
+				dX += (tabWidth - xAcross % tabWidth) * curFont.getWidth() * xS;
+				xAcross = 0;
+			}
 			else if(c == '\n') {
 				dX = x;
-				dY += fH*yS;				
+				dY += fH*yS;
+				xAcross = 0;
 			}
-			else
+			else {
 				dX += drawChar(dX,dY,xS,yS,c);
+				xAcross++;
+			}
 		}
 		
 		bind(0);
@@ -227,17 +248,25 @@ public class G2D extends GL {
 		float dX = x, dY = y, a, aa, uX, uY;
 		int n = str.getFallNumber();
 
-		
+		int xAcross = 0;
 		for(int i = 0; i < len; i++) {
 			c = str.charAt(i);
 
-			if(c == ' ')
+			if(c == ' ') {
+				xAcross++;
 				dX += curWidth*xS;
+			}
+			else if(c == '\t') {
+				//dX += (tabWidth - (xAcross % tabWidth)) * curWidth*xS;
+				dX += tabWidth*curWidth*xS;
+				xAcross = 0;
+			}
 			else if(c == '\n') {
+				xAcross = 0;
 				dX = x;
 				dY += (curLineHeight+lineSpace)*yS;
 			}
-			else {				
+			else {	
 				if(i+n >= len) {
 					a = str.getLastAlpha(len-(i+1));
 					aa = (float) Math.sqrt(a);
@@ -252,6 +281,7 @@ public class G2D extends GL {
 				
 				setColorf(0,0,0,a);
 				dX += drawChar(uX,uY,xS,yS,c);
+				xAcross++;
 			}
 		}
 		
@@ -288,7 +318,7 @@ public class G2D extends GL {
 	public static float getStringWidth(String str) {return getStringWidth(1,1,str);}
 	public static float getStringWidth(float scale, String str) {return getStringWidth(scale,scale,str);}
 	public static float getStringWidth(float xS, float yS, String str) {
-		int len = str.length();
+		int len = str.length(), xAcross = 0;
 		char c;
 		
 		float dX = 0, dY = 0, maxW = 0;
@@ -296,16 +326,25 @@ public class G2D extends GL {
 		for(int i = 0; i < len; i++) {
 			c = str.charAt(i);
 
-			if(c == ' ')
+			if(c == ' ') {
 				dX += curWidth*xS;
+				xAcross++;
+			}
+			else if(c == '\t') {
+				dX += (tabWidth - xAcross % tabWidth) * curFont.getWidth() * xS;
+				xAcross = 0;
+			}
 			else if(c == '\n') {
 				maxW = Math.max(dX, maxW);
 				
 				dX = 0;
 				dY += curLineHeight*yS;
+				xAcross = 0;
 			}
-			else
+			else {
 				dX += curFont.getCharWidth(c)*xS;
+				xAcross++;
+			}
 		}
 		
 		maxW = Math.max(dX, maxW);
@@ -379,5 +418,8 @@ public class G2D extends GL {
 				gl.glTexCoord2d(bounds[0], bounds[3]);	gl.glVertex3f(x,y+h, orthoLayer);		
 			gl.glEnd();
 		}*/
+	}
+	public static Font getFont() {
+		return curFont;
 	}
 }

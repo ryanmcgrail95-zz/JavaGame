@@ -10,7 +10,8 @@ public class Gameboy extends Drawable {
 
 	private static Gameboy inst;
 	private GUIFrame screen, innerFrame;
-	
+	public final static RGBA GRAY_L = RGBA.createi(168,168,168),  GRAY_D = RGBA.createi(96,96,96);
+
 	public Gameboy() {
 		super(false,true);
 		

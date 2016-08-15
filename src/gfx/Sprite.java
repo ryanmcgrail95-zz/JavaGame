@@ -52,7 +52,7 @@ public abstract class Sprite extends Resource implements Img {
 		//GL.start("Sprite.draw(...)");
 		
 		Texture t = getTexture(frame);
-		G2D.drawTexture(x,y,t.getWidth(),t.getHeight(),t,getBounds(frame));
+		G2D.drawTexture(x,y, getWidth(),getHeight(),t,getBounds(frame));
 
 		//GL.end("Sprite.draw(...)");
 	}

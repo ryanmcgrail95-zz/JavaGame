@@ -29,9 +29,14 @@ public class GUIFrame extends GUIDrawable {
 	private GUIDrawable selectedObject = null;
 	
 	private int bgColor;
+	private int viewX = 0, viewY = 0, internalWidth, internalHeight;
+	
 	
 	public GUIFrame(int x, int y, int w, int h) {
 		super(x,y, w, h);
+		
+		internalWidth = w;
+		internalHeight = h;
 		
 		drawList = new ArrayList<GUIDrawable>();
 		nondrawList = new ArrayList<GUIObject>();
@@ -46,12 +51,39 @@ public class GUIFrame extends GUIDrawable {
 			obj.destroy();		
 		drawList.clear();
 		nondrawList.clear();
-		//super.destroy();
+		super.destroy();
 	}
 	
 	public void setScale(float scale) {
 		this.scale = scale;
 	}
+	
+	public void setViewX(int viewX) {
+		this.viewX = viewX;
+	}
+	public int getViewX() {
+		return viewX;
+	}
+	public void setViewY(int viewY) {
+		this.viewY = viewY;
+	}
+	public int getViewY() {
+		return viewY;
+	}
+	
+	public void setInternalWidth(int internalWidth) {
+		this.internalWidth = internalWidth;
+	}
+	public int getInternalWidth() {
+		return internalWidth;
+	}
+	public void setInternalHeight(int internalHeight) {
+		this.internalHeight = internalHeight;
+	}
+	public int getInternalHeight() {
+		return internalHeight;
+	}
+
 	
 	public void add(GUIObject obj) {
 		obj.setParent(this);
@@ -66,7 +98,6 @@ public class GUIFrame extends GUIDrawable {
 	}
 	
 	public void render() {
-				
 		controlSelectionCursor();
 		
 		GL.attach(fbo);
@@ -77,7 +108,7 @@ public class GUIFrame extends GUIDrawable {
 			
 			GL.setColor(RGBA.WHITE);
 			for(GUIDrawable g : drawList)
-				g.draw(0,0);
+				g.draw(-viewX,-viewY);
 			
 		GL.detach(fbo);
 	}
@@ -145,6 +176,11 @@ public class GUIFrame extends GUIDrawable {
 	public GUIDrawable getSelected() {
 		return selectedObject;
 	}
+	
+	public void setScrollFractionY(float frac) {
+		setViewY((int) Math.round((internalHeight - h()) * MathExt.contain(0, frac, 1)));
+	}
+	
 	private GUIDrawable findNearestOther(float x, float y, float dir) {
 		float cX, cY, dX, dY, vX, vY, norm, curDis, minDis = -1, priority, minPri = -1, k = 0;
 		GUIDrawable closest = null;

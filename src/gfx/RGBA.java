@@ -55,7 +55,7 @@ public class RGBA extends ArrayMath {
 	public RGBA setf(float r, float g, float b) 					{return setf(r,g,b,1);}
 	
 	
-	// Getting Colors
+	// Getting Colors	
 		public int Ri() 		{return (argb>>16) & 0xFF;}
 		public int Gi() 		{return (argb>>8) & 0xFF;}
 		public int Bi() 		{return (argb>>0) & 0xFF;}

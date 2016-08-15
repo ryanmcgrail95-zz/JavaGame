@@ -25,7 +25,6 @@ public class MergedFont extends Font {
 
 	public TextureExt getChar(char c) 	{return null;}
 
-
 	public int getCharWidth(char c) 	{return width;}
 	public int getCharHeight(char c) 	{return height;}
 	public int getWidth() 				{return width;}
@@ -33,4 +32,5 @@ public class MergedFont extends Font {
 
 	public float[] getBounds(int c) 	{return tex.getBounds(c);}
 	public Texture getTexture() 		{return tex.getTexture();}
+	public MultiTexture getMultiTexture()  {return tex;};
 }

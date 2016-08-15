@@ -206,4 +206,8 @@ public class Mouse implements MouseListener, MouseMotionListener {
 	}
 	public static float getDeltaX() {return mouseXDelta;}
 	public static float getDeltaY() {return mouseYDelta;}
+	
+	public static void setTextCursor() {
+		setCursor(C_TEXT);
+	}
 }

@@ -118,7 +118,7 @@ public class TileEditor {
 			viewY += s;
 
 		int cX = (int) (dX - viewX), cY = (int) (dY - viewY);
-		drawMap(cX, cY);
+		drawMap(cX, cY, true);
 
 		drawHud(dX, dY);
 		
@@ -145,7 +145,7 @@ public class TileEditor {
 		G2D.setColor(RGBA.WHITE);
 	}
 	
-	public void drawMap(float dX, float dY) {
+	public void drawMap(float dX, float dY, boolean showCollisions) {
 		G2D.setColor(RGBA.WHITE);
 		for(int y = 0; y < mapXNumber; y++)
 			for(int x = 0; x < mapYNumber; x++) {
@@ -154,7 +154,7 @@ public class TileEditor {
 				//if(isGrass)
 				//	GL.enableShader("Grass");
 					
-				if(collisions[x][y])
+				if(showCollisions && collisions[x][y])
 					GL.setColorf(1f,0,0);
 				G2D.drawTexture(dX + 8*x, dY + 8*y, 8,8, tileSprite, tiles[x][y]);
 				G2D.setColor(RGBA.WHITE);

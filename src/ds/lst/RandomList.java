@@ -10,11 +10,6 @@ public class RandomList<K> extends CleanList<K> {
 	}
 
 	public K get() {
-		int si = size(), i;
-		do
-			i = (int) Math.floor(MathExt.rnd(si));
-		while(i == si);
-		
-		return get(i);
+		return get(MathExt.rndi(0, size()-1));
 	}
 }

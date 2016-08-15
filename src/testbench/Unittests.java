@@ -83,7 +83,7 @@ public class Unittests {
 		PML.ini(mem);
 
 		//GL.enableLogging(true);
-		Script.exec(mem, "$a = 5; $b = 3; $b = $a; $i=0; ##fact($x){if($x <= 1) return $x; else return #fact($x-1) + #fact($x-2);} ##yo($x){return $x^4;} while($i < 10){#println(#yo($i += 1));} if(2 > 51){#println(\"wew\", 5);#println(2);}else #println(\"ewe\");	#println( $b + \"what\" + $a , $b, #mean(3, 8, 2), #min(-4, 100, -9,  -3) );");	
+		//Script.exec(mem, "$a = 5; $b = 3; $b = $a; $i=0; ##fact($x){if($x <= 1) return $x; else return #fact($x-1) + #fact($x-2);} ##yo($x){return $x^4;} while($i < 10){#println(#yo($i += 1));} if(2 > 51){#println(\"wew\", 5);#println(2);}else #println(\"ewe\");	#println( $b + \"what\" + $a , $b, #mean(3, 8, 2), #min(-4, 100, -9,  -3) );");	
 	}
 	
 	public static void testNameIDMap() {
@@ -165,9 +165,25 @@ public class Unittests {
 		System.out.println("testMat passed!");
 	}
 	
+	public static void testChar() {
+		char[] cs = new char[256];
+		
+		for(int i = 0; i < 256; i++) {
+			cs[i] = (char) i;
+			System.out.println(cs[i]);
+		}
+	}
+	
+	
+	
 	public static void main(String[] args) {
 		
-		testWrap();
+		//TestRandomList.run();
+		TestCFG.run();
+		
+		
+		//testChar();
+		//testWrap();
 		//testSinCos();
 		//testWeightedRandom();
 		//testRandom();

@@ -1,34 +1,21 @@
 package rm;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
 
 import cont.GameController;
 import cont.Log;
-import object.actor.Actor;
-import object.environment.Floor;
-import object.primitive.Positionable;
+import ds.ChompException;
+import ds.StringExt2;
+import fl.FileExt;
+import gfx.GL;
 import object.primitive.Updatable;
-import paper.ActorPM;
 import paper.CharacterPM;
-import paper.PlayerPM;
 import resource.Loadbar;
 import resource.Resource;
 import resource.model.Model;
-import resource.sound.Sound;
 import script.Script;
-import time.Stopwatch;
-import ds.StringExt2;
-import ds.lst.CleanList;
-import de.jarnbjo.oggtools.Player;
-import fl.FileExt;
-import gfx.GL;
-import btl.BattleController;
 
 public class Room {
 	private final static String BASE_DIRECTORY = "Resources/Rooms/";
@@ -137,7 +124,13 @@ public class Room {
 	public static void instantiateRoom(String roomName) {
 		String path = BASE_DIRECTORY + roomName + "/layout.dat";
 
-		Script.exec(GL.memory, FileExt.readFile2String(path));
+		try {
+			Script.exec(GL.memory, FileExt.readFile2String(path));
+		}
+		catch(ChompException e) {
+			e.printStackTrace();
+			GameController.end();
+		}
 		
 		/*if(true)
 			return;

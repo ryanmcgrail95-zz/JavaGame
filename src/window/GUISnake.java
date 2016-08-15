@@ -42,7 +42,7 @@ public class GUISnake extends GUIDrawable {
 	private MultiTexture tileSprite = new MultiTexture("Resources/Images/environment.png", 16, 16);
 
 	private float index = 0;
-	
+
 	private int mapW, mapH;
 
 	private boolean inEditor = false;
@@ -66,7 +66,7 @@ public class GUISnake extends GUIDrawable {
 		this.yNum = yNum;
 
 		board = new Snake(xNum, yNum, xNum + yNum);
-		
+
 		tileEditor = new TileEditor();
 		mapW = tileEditor.getMapXNumber();
 		mapH = tileEditor.getMapYNumber();
@@ -116,7 +116,7 @@ public class GUISnake extends GUIDrawable {
 		int w = tileEditor.getMapWidth(), h = tileEditor.getMapHeight();
 		for (int y = 0; y < 3; y++)
 			for (int x = 0; x < 3; x++)
-				tileEditor.drawMap(dX + x * w, dY + y * h);
+				tileEditor.drawMap(dX + x * w, dY + y * h, false);
 	}
 
 	public void runGame(float frameX, float frameY) {
@@ -247,6 +247,11 @@ public class GUISnake extends GUIDrawable {
 				return (int) (o1.value - o2.value);
 			}
 		};
+		public final static Comparator<Node> H_COST = new Comparator<Node>() {
+			public int compare(Node o1, Node o2) {
+				return (int) (o1.hCost - o2.hCost);
+			}
+		};
 	}
 
 	private static LinkedList<Node> nodeList = new LinkedList<Node>();
@@ -291,9 +296,9 @@ public class GUISnake extends GUIDrawable {
 
 			float r = MathExt.rndf();
 
-			/*if (r < .3 && personList.size() > 0)
-				_followRandom();
-			else*/
+			/*
+			 * if (r < .3 && personList.size() > 0) _followRandom(); else
+			 */
 			randomAction();
 		}
 
@@ -326,31 +331,32 @@ public class GUISnake extends GUIDrawable {
 
 			boolean alreadyDone;
 
-			openQueue.add(new Node(x, y, 0, 0, 0, null));
+			float h = Math.abs(toX - x) + Math.abs(toY - y);
+			openQueue.add(new Node(x, y, h, 0, h, null));
 
 			Node current;
 			int steps = 1000;
-			float curX, curY, newX, newY, g, h;
+			float curX, curY, newX, newY, g;
 
 			int xi, yi, xi2, yi2;
 
 			while ((current = openQueue.peek()) != null && steps-- > 0) {
 				openQueue.remove();
 				closedList.add(current);
-				
+
 				curX = current.x;
 				curY = current.y;
 
 				xi = Math.round(curX / 8);
 				yi = Math.round(curY / 8);
-								
+
 				for (int i = 0; i < 4; i++) {
 					xi2 = xi + xs[i];
 					yi2 = yi + ys[i];
 					newX = 8 * xi2;
 					newY = 8 * yi2;
 
-					if(xi2 < 0 || xi2 >= mapW || yi2 < 0 || yi2 >= mapH)
+					if (xi2 < 0 || xi2 >= mapW || yi2 < 0 || yi2 >= mapH)
 						continue;
 					if (collisions[xi2][yi2])
 						continue;
@@ -377,23 +383,21 @@ public class GUISnake extends GUIDrawable {
 					break;
 			}
 
-			if(target != null) {
-				while (target != null) {
-					path.push(target);
-					target = target.parent;
-				}
-
-				System.out.println("------");
-				while(path.size() > 0) {				
-					current = path.pop();
-					System.out.println("(" + current.x + ", " + current.y + ")");
-					addTask(new Task(State.MOVING, 0, (int) Math.round(current.x), (int) Math.round(current.y)));					
-				}
-				System.out.println("______");
-
-				printTasks();
+			if (target == null) {
+				closedList.sort(Comparators.H_COST);
+				target = closedList.get(0);
 			}
-			
+				
+			while (target != null) {
+				path.push(target);
+				target = target.parent;
+			}
+
+			while (path.size() > 0) {
+				current = path.pop();
+				addTask(new Task(State.MOVING, 0, (int) Math.round(current.x), (int) Math.round(current.y)));
+			}
+
 			for (Node n : nodeList)
 				n.clear();
 			nodeList.clear();
@@ -403,7 +407,7 @@ public class GUISnake extends GUIDrawable {
 		}
 
 		private void _moveToRandom() {
-			_moveTo(MathExt.rndi(0, 16)*8, MathExt.rndi(0,16)*8);
+			_moveTo(MathExt.rndi(0, mapW) * 8, MathExt.rndi(0, mapH) * 8);
 		}
 
 		private void _followRandom() {
@@ -443,12 +447,11 @@ public class GUISnake extends GUIDrawable {
 		private boolean approachPoint(float toX, float toY, boolean horiFirst, boolean run) {
 			xDir = (int) Math.signum(toX - x);
 			yDir = (int) Math.signum(toY - y);
-			
+
 			float oriX = x, oriY = y;
 
 			float spd = (run) ? .5f : .25f;
 			boolean hasArrived = false;
-			
 
 			if (horiFirst) {
 				if (x != toX && (y % 8) == 0)
@@ -495,12 +498,12 @@ public class GUISnake extends GUIDrawable {
 
 		public void printTasks() {
 			System.out.println("Tasks[" + taskList.size() + "] [");
-			
+
 			Task t = getTask();
 			System.out.println(t.getX() + ", " + t.getY());
 			System.out.println("]");
 		}
-		
+
 		private int getXDir() {
 			return lastXDir;
 		}
@@ -534,8 +537,8 @@ public class GUISnake extends GUIDrawable {
 				if (s == State.MOVING) {
 					if (approachPoint(t.getX(), t.getY(), false)) {
 						completeTask();
-						
-						if(taskList.size() == 0)
+
+						if (taskList.size() == 0)
 							randomAction();
 					}
 
@@ -543,20 +546,21 @@ public class GUISnake extends GUIDrawable {
 						lastXDir = xDir;
 						lastYDir = yDir;
 					}
-				} /*else if (s == State.FOLLOW) {
-					Person other = t.getOther();
-					approachPoint(other.getLastX(), other.getLastY(), false);
-				} else if (s == State.APPROACH) {
-					Person other = t.getOther();
-					approachPoint(other.getX() - 8 * other.getXDir(), other.getY() - 8 * other.getYDir(), true);
-				}*/ else {
+				} /*
+					 * else if (s == State.FOLLOW) { Person other =
+					 * t.getOther(); approachPoint(other.getLastX(),
+					 * other.getLastY(), false); } else if (s == State.APPROACH)
+					 * { Person other = t.getOther(); approachPoint(other.getX()
+					 * - 8 * other.getXDir(), other.getY() - 8 *
+					 * other.getYDir(), true); }
+					 */ else {
 					xDir = t.getX();
 					yDir = t.getY();
 
 					if (t.getTime() == 0) {
 						completeTask();
-						
-						if(taskList.size() == 0)
+
+						if (taskList.size() == 0)
 							randomAction();
 					}
 				}
@@ -623,5 +627,11 @@ public class GUISnake extends GUIDrawable {
 	@Override
 	public boolean checkMouse() {
 		return false;
+	}
+	
+	public static void createWindow(int x, int y) {
+		Window w = new Window("Snake",x,y,160,144,true);
+		w.setScale(2);
+		w.add(new GUISnake(15,15));
 	}
 }

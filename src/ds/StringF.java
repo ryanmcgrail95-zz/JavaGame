@@ -1,10 +1,16 @@
 package ds;
 
 public class StringF {
-	private StringBuilder str = new StringBuilder();
+	private StringBuilder str;
 	private String rstr;
-	private boolean didChange = true;
+	private boolean hasLength = true;
 	private int length;
+	
+	public StringF() {
+		str = new StringBuilder("");
+		rstr = "";
+		length = 0;
+	}
 	
 	public char charAt(int i) {
 		return rstr.charAt(i);
@@ -15,12 +21,7 @@ public class StringF {
 	}
 	
 	public int length() {
-		if(didChange) {
-			didChange = false;
-			return length = str.length();
-		}
-		else
-			return length;
+		return length;
 	}
 
 	public int replacen(String substr, String newstr) {
@@ -38,7 +39,6 @@ public class StringF {
 			ind = str.indexOf(substr, ind);
 					
 			if(ind != -1) {
-				didChange = true;
 				str.replace(ind, ind+subLen, newstr);
 				numFinds++;
 				
@@ -47,10 +47,15 @@ public class StringF {
 			else
 				break;
 		}
-		
-		rstr = str.toString();
+				
+		updateRealString();
 		
 		return numFinds;
+	}
+	
+	private void updateRealString() {
+		rstr = str.toString();		
+		length = rstr.length();		
 	}
 
 	public String replace(String substr, String newstr) {
@@ -68,14 +73,13 @@ public class StringF {
 		if(ind == -1)
 			return;
 		
-		didChange = true;
 		str.replace(ind, ind+substr.length(), newstr);
-		rstr = str.toString();
+		updateRealString();
 	}
 
 	public void set(String newStr) {
-		didChange = true;
-		str = new StringBuilder(rstr = newStr);
+		str = new StringBuilder(newStr);
+		updateRealString();
 	}
 
 
@@ -87,7 +91,6 @@ public class StringF {
 	}
 	
 	public void substringe(int i1) {
-		didChange = true;
 		set(substring(i1));
 	}
 	public void substringe(int i1, int i2) {
@@ -116,12 +119,33 @@ public class StringF {
 	}
 
 	public void delete(int i1, int i2) {
-		didChange = true;
-		str.delete(i1, i2);
-		rstr = str.toString();
+		str.delete(i1, i2);		
+		updateRealString();
 	}
 	
 	public boolean equals(String other) {
 		return toString().equals(other);
+	}
+	
+	public void insert(int index, String s) {
+		set(substring(0,index) + s + substring(index,length));
+	}
+
+	public void backspaceAt(int index) {
+		if(index > 0) {
+			if(index == length)
+				set(substring(0,length-1));
+			else
+				set(substring(0,index-1) + substring(index,length));
+		}
+	}
+
+	public void deleteAt(int index) {
+		if(index < length) {
+			if(index == 0)
+				set(substring(1,length));
+			else
+				set(substring(0,index) + substring(index+1,length));
+		}
 	}
 }

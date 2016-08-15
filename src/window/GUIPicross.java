@@ -2,25 +2,24 @@ package window;
 
 import cont.TextureController;
 import ds.lst.CleanList;
-import time.Stopwatch;
-import time.Timer;
-import window.GUIDrawable;
-import io.Keyboard;
-import io.Mouse;
-import resource.sound.Sound;
-import resource.sound.SoundBuffer;
-import resource.sound.SoundSource;
 import functions.Math2D;
 import functions.MathExt;
 import games.Picross;
 import gfx.G2D;
 import gfx.GL;
+import gfx.Gameboy;
 import gfx.MultiTexture;
 import gfx.RGBA;
+import io.Keyboard;
+import io.Mouse;
+import resource.sound.Sound;
+import resource.sound.SoundBuffer;
+import resource.sound.SoundSource;
+import time.Stopwatch;
+import time.Timer;
 
 public class GUIPicross extends GUIDrawable {
 
-	private final static RGBA GRAY_L = RGBA.createi(168,168,168),  GRAY_D = RGBA.createi(96,96,96);
 	private Picross board;
 	
 	private final int
@@ -139,9 +138,9 @@ public class GUIPicross extends GUIDrawable {
 				if(frac > .66)
 					GL.setColor(RGBA.BLACK);
 				else if(frac > .33)
-					GL.setColor(GRAY_D);
+					GL.setColor(Gameboy.GRAY_D);
 				else
-					GL.setColor(GRAY_L);
+					GL.setColor(Gameboy.GRAY_L);
 				
 				relX += velX;
 				relY += velY;
@@ -207,9 +206,9 @@ public class GUIPicross extends GUIDrawable {
 				float frac = liveTimer/liveTimerMax;
 						
 				if(frac > .4)
-					GL.setColor(GRAY_D);
+					GL.setColor(Gameboy.GRAY_D);
 				else if(frac > .2)
-					GL.setColor(GRAY_L);
+					GL.setColor(Gameboy.GRAY_L);
 				else
 					GL.setColor(RGBA.WHITE);
 
@@ -427,7 +426,7 @@ public class GUIPicross extends GUIDrawable {
 				cX = cornerX + size*mX;
 				cY = cornerY + size*mY;
 				
-				GL.setColor(GRAY_D);
+				GL.setColor(Gameboy.GRAY_D);
 				drawTarget(mX,mY);
 				
 				boolean lM, rM;
@@ -511,13 +510,13 @@ public class GUIPicross extends GUIDrawable {
 	private void drawTarget(int xInd, int yInd) {		
 		float frac = blinkTimer.getFraction(), len = .35f;
 		if(frac < len)
-			GL.setColor(GRAY_D);
+			GL.setColor(Gameboy.GRAY_D);
 		else if(frac < .5)
-			GL.setColor(GRAY_L);
+			GL.setColor(Gameboy.GRAY_L);
 		else if(frac < .5+len)
 			GL.setColor(RGBA.WHITE);
 		else
-			GL.setColor(GRAY_L);
+			GL.setColor(Gameboy.GRAY_L);
 		G2D.drawRectangle(cornerX-1 + size*xInd,cornerY-1 + size*yInd,6,6);
 	}
 	
@@ -556,7 +555,7 @@ public class GUIPicross extends GUIDrawable {
 								if((st = mouse[r*mouseWidth + c]) != 0) {
 									
 									if(st == 2)
-										G2D.setColor(GRAY_L);
+										G2D.setColor(Gameboy.GRAY_L);
 									if(st == 1)
 										G2D.setColor(RGBA.WHITE);
 									
@@ -637,8 +636,7 @@ public class GUIPicross extends GUIDrawable {
 	public boolean checkMouse() {
 		return getParent().checkMouse();
 	}
-	
-	
+		
 	public static void createWindow(int x, int y) {
 		Window w = new Window("Picross",x,y,160,144,true);
 		w.setScale(2);

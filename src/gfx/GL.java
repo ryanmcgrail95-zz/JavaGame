@@ -89,6 +89,8 @@ public class GL {
 	// CURL VARIABLES
 	private static Texture prevScreenTex;
 	private static float curlTime = -1;
+	
+	private static float focalDepth = 0;
 		
 	private static Camera currentCamera, mainCamera, marioCamera;
 	
@@ -332,9 +334,11 @@ public class GL {
 		            	RGBA.convertInt2RGBA(dRGB, dRGBA);
 		            	
 		            	
-		            	float focalScale = 3; //(float) Math2D.calcAbsLenX(3, (float) (getUnboundTime()/10) % 360);
+		            	float focalScale = 5f; //3 //(float) Math2D.calcAbsLenX(3, (float) (getUnboundTime()/10) % 360);
 		            	
-		            	drawFBOBlur(0,0, getExternalWidth(),getExternalHeight(),mainCamera.getFBO(),mainCamera.getFBO().getDepthTexture(), dRGBA[0]/255f, focalScale);
+		            	focalDepth += (dRGBA[0]/255f - focalDepth)/5;
+		            	
+		            	drawFBOBlur(0,0, getExternalWidth(),getExternalHeight(),mainCamera.getFBO(),mainCamera.getFBO().getDepthTexture(), focalDepth, focalScale);
 		            	//drawFBOHeatwave(0,WINDOW_HEIGHT,WINDOW_WIDTH,-WINDOW_HEIGHT,mainCamera.getFBO(),mainCamera.getFBO().getDepthTexture());
             		}
 	            	else if(!Keyboard.checkDown('c')) {
@@ -520,6 +524,9 @@ public class GL {
 		gl.glBindTexture(GL2.GL_TEXTURE_2D, tex);
 	}
 	public static void unbind(int target) {
+		// TODO: Fix issue with windows when blurring??
+		// Something to do with unbind(1).
+		
 		//gl.glBindTexture(GL2.GL_TEXTURE0+target, 0);
 		//gl.glDisable(GL2.GL_TEXTURE0+target);
 		gl.glActiveTexture(GL2.GL_TEXTURE0+target);
